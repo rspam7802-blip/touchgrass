@@ -77,6 +77,20 @@ export const NOTIFICATION_TEMPLATES = {
     link: 'free',
     batch: true,
   },
+  squad_pulling_up: {
+    category: 'squad',
+    title: 'notifications.kinds.squadPullingUp.title',
+    body: 'notifications.kinds.squadPullingUp.body',
+    link: 'events/{{eventId}}',
+    batch: true,
+  },
+  squad_outside: {
+    category: 'squad',
+    title: 'notifications.kinds.squadOutside.title',
+    body: 'notifications.kinds.squadOutside.body',
+    link: 'discover',
+    batch: true,
+  },
   free_now_ping: {
     category: 'free_now',
     title: 'notifications.kinds.freeNowPing.title',

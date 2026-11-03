@@ -1755,6 +1755,14 @@ export const hi: Translation = {
         body: 'साथ में कुछ प्लॉट करें?',
       },
       freeNowNote: { body: '“{{note}}”' },
+      squadPullingUp: {
+        title: 'तुम्हारे स्क्वाड के {{count}} लोग आ रहे हैं',
+        body: '{{title}} · {{when}}',
+      },
+      squadOutside: {
+        title: 'तुम्हारा स्क्वाड बाहर है। और तुम?',
+        body: 'तुम्हारे स्क्वाड के {{count}} लोगों ने पिछले कुछ घंटों में प्लान पर चेक इन किया।',
+      },
       freeNowPing: {
         title: '{{name}} मिलना चाहते हैं',
         body: '{{name}} ने देखा कि तुम फ़्री हो। प्लान बनाने के लिए जवाब दो।',

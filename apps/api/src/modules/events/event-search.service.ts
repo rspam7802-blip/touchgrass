@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import type { GeoPoint, RsvpStatus } from '@touchgrass/shared';
-import { and, inArray, type SQL, sql } from 'drizzle-orm';
+import { and, eq, gte, inArray, type SQL, sql } from 'drizzle-orm';
 import { DB, DB_REPLICA, type Database } from '../../infra/database/database.module.js';
 import { eventInterests, eventVibeTags, rsvps } from '../../infra/database/schema/index.js';
 import { uuidArrayLiteral } from '../social/graph/social-graph.service.js';
@@ -164,6 +164,22 @@ export class EventSearchService {
   }
 
   /** Seat holders per plan, earliest first. */
+  /** Which of these people checked in to any plan since `since` ("your squad is outside", Phase 13). */
+  async checkedInSince(userIds: string[], since: Date): Promise<Set<string>> {
+    if (userIds.length === 0) return new Set();
+    const rows = await this.replica
+      .selectDistinct({ u: rsvps.userId })
+      .from(rsvps)
+      .where(
+        and(
+          inArray(rsvps.userId, userIds),
+          eq(rsvps.status, 'checked_in'),
+          gte(rsvps.checkedInAt, since),
+        ),
+      );
+    return new Set(rows.map((r) => r.u));
+  }
+
   async seatHoldersMany(eventIds: string[]): Promise<Map<string, string[]>> {
     const out = new Map<string, string[]>(eventIds.map((id) => [id, []]));
     if (eventIds.length === 0) return out;

@@ -1761,6 +1761,14 @@ export const te: Translation = {
         body: 'కలిసి ఏదైనా ప్లాట్ చేద్దామా?',
       },
       freeNowNote: { body: '“{{note}}”' },
+      squadPullingUp: {
+        title: 'నీ స్క్వాడ్ నుంచి {{count}} మంది వస్తున్నారు',
+        body: '{{title}} · {{when}}',
+      },
+      squadOutside: {
+        title: 'నీ స్క్వాడ్ బయట ఉంది. మరి నువ్వు?',
+        body: 'నీ స్క్వాడ్ నుంచి {{count}} మంది గత కొన్ని గంటల్లో ప్లాన్\u200cలలో చెక్ ఇన్ అయ్యారు.',
+      },
       freeNowPing: {
         title: '{{name}} కలవాలనుకుంటున్నారు',
         body: 'నువ్వు ఖాళీగా ఉన్నావని {{name}} చూశారు. ప్లాన్ చేయడానికి రిప్లై ఇవ్వు.',

@@ -17,6 +17,9 @@ import {
   FRIEND_REQUESTED_EVENT,
 } from '../social/graph/social-graph.service.js';
 import { RemindersService } from './reminders.service.js';
+import { SquadSignalsService } from './squad-signals.service.js';
+import { RSVP_CHECKED_IN_EVENT } from '../events/check-in.service.js';
+import { RSVP_GOING_EVENT } from '../events/plus-one/plus-one-claim.service.js';
 import { CITY_LAUNCHED_EVENT } from '../cities/city-waitlist.service.js';
 
 const ids = (v: unknown): string[] => (Array.isArray(v) ? v.map(String) : []);
@@ -34,6 +37,7 @@ export class RemindersHandlers {
     private readonly profiles: ProfilesService,
     private readonly store: EventStore,
     private readonly search: EventSearchService,
+    private readonly squadSignals: SquadSignalsService,
   ) {}
 
   private async name(userId: string): Promise<string> {
@@ -46,6 +50,13 @@ export class RemindersHandlers {
   }
 
   registerOn(bus: DomainEventBus): void {
+    // Social proof from the squad (Phase 13).
+    bus.subscribe(RSVP_GOING_EVENT, 'notify.squad-pulling-up', async (e) => {
+      await this.squadSignals.afterPullUp(String(e.payload.eventId), String(e.payload.userId));
+    });
+    bus.subscribe(RSVP_CHECKED_IN_EVENT, 'notify.squad-outside', async (e) => {
+      await this.squadSignals.afterCheckIn(String(e.payload.userId));
+    });
     // A city opened (F-GRW-03): everyone waiting for it hears first.
     bus.subscribe(CITY_LAUNCHED_EVENT, 'notify.city-launched', async (e) => {
       const userIds = ids(e.payload.userIds);

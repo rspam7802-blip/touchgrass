@@ -1750,6 +1750,14 @@ export const en = {
       },
       friendAccepted: { title: '{{name}} is in your squad now', body: 'Plot something together?' },
       freeNowNote: { body: '“{{note}}”' },
+      squadPullingUp: {
+        title: '{{count}} of your squad are pulling up',
+        body: '{{title}} · {{when}}',
+      },
+      squadOutside: {
+        title: 'Your squad is outside. Are you?',
+        body: '{{count}} of your squad checked in to plans in the last few hours.',
+      },
       freeNowPing: {
         title: '{{name}} wants to meet up',
         body: "{{name}} saw you're free. Reply to make a plan.",

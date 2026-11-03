@@ -14,6 +14,7 @@ import { toAnalytics } from '../src/modules/analytics/analytics.service.js';
 import { NotificationsService } from '../src/modules/notifications/notifications.service.js';
 import { RemindersHandlers } from '../src/modules/reminders/reminders.handlers.js';
 import { RemindersService } from '../src/modules/reminders/reminders.service.js';
+import { SquadSignalsService } from '../src/modules/reminders/squad-signals.service.js';
 import { DomainEventBus } from '../src/worker/domain-event-bus.js';
 import { idem, plot, rsvp, shiftEvent, verifiedMember } from './event-helpers.js';
 import {
@@ -548,5 +549,115 @@ describe('notification data in export and erase (DPDP)', () => {
       [a.id],
     );
     expect(rows[0]).toEqual({ inbox: 0, quiet: 0, feeds: 0 });
+  });
+});
+
+// ---------- Phase 13: social proof from the squad ----------
+
+describe('squad notifications (Phase 13)', () => {
+  const inbox = async (m: Member) =>
+    (
+      (await api(m).get('/v1/notifications').expect(200)).body as {
+        items: { kind: string; title: string; body: string }[];
+      }
+    ).items;
+  const squadOf = async (viewer: Member, n: number): Promise<Member[]> => {
+    const friends: Member[] = [];
+    for (let i = 0; i < n; i += 1) {
+      const f = await member(h);
+      await befriend(h, viewer, f);
+      friends.push(f);
+    }
+    return friends;
+  };
+
+  it('"3 of your squad are pulling up": once per plan, only plans you can see, only people who share', async () => {
+    const signals = h.app.get(SquadSignalsService);
+    const host = await verifiedMember(h);
+    const viewer = await member(h);
+    const [a, b, c, shy] = await squadOf(viewer, 4);
+    if (!a || !b || !c || !shy) throw new Error('squad');
+    const plan = await plot(h, host, { title: 'Chai walk' });
+    await shiftEvent(h, plan.id, 5 * H);
+    for (const m of [a, b]) await rsvp(h, m, plan.id).expect(200);
+    // Two is not enough.
+    expect(await signals.afterPullUp(plan.id, b.id)).toBe(0);
+    await rsvp(h, c, plan.id).expect(200);
+    expect(await signals.afterPullUp(plan.id, c.id)).toBeGreaterThanOrEqual(1);
+    const got = (await inbox(viewer)).filter((i) => i.kind === 'squad_pulling_up');
+    expect(got).toHaveLength(1);
+    expect(got[0]?.title).toBe('3 of your squad are pulling up');
+    expect(got[0]?.body).toMatch(/^Chai walk · /);
+    // Once per plan, however many more pull up.
+    await rsvp(h, shy, plan.id).expect(200);
+    expect(await signals.afterPullUp(plan.id, shy.id)).toBe(0);
+
+    // People who hide their activity are not counted, and do not trigger it.
+    await h.pool.query('UPDATE profiles SET share_activity = false WHERE user_id = $1', [a.id]);
+    const viewer2 = await member(h);
+    for (const m of [a, b, c]) await befriend(h, viewer2, m);
+    const plan2 = await plot(h, host, { title: 'Board games' });
+    await shiftEvent(h, plan2.id, 4 * H);
+    for (const m of [a, b, c]) await rsvp(h, m, plan2.id).expect(200);
+    expect(await signals.afterPullUp(plan2.id, a.id)).toBe(0);
+    expect(await signals.afterPullUp(plan2.id, c.id)).toBe(0);
+    expect((await inbox(viewer2)).some((i) => i.kind === 'squad_pulling_up')).toBe(false);
+  });
+
+  it('never names a plan the reader cannot see, and skips people already going', async () => {
+    const signals = h.app.get(SquadSignalsService);
+    const host = await verifiedMember(h);
+    const viewer = await member(h);
+    const squad = await squadOf(viewer, 3);
+    const secret = await plot(h, host, { title: 'Invite-only dinner', visibility: 'invite_only' });
+    await shiftEvent(h, secret.id, 3 * H);
+    // Squad members get in by invite; the viewer is never invited.
+    for (const m of squad) {
+      await befriend(h, host, m);
+      const invited = await api(host)
+        .post(`/v1/events/${secret.id}/invites`, { userIds: [m.id] })
+        .expect(200);
+      expect(invited.body).toEqual({ invited: 1 });
+      await rsvp(h, m, secret.id).expect(200);
+    }
+    const last = squad[2];
+    if (!last) throw new Error('squad');
+    expect(await signals.afterPullUp(secret.id, last.id)).toBe(0);
+    expect((await inbox(viewer)).some((i) => i.kind === 'squad_pulling_up')).toBe(false);
+
+    const open = await plot(h, host, { title: 'Open mic' });
+    await shiftEvent(h, open.id, 3 * H);
+    await rsvp(h, viewer, open.id).expect(200);
+    for (const m of squad) await rsvp(h, m, open.id).expect(200);
+    expect(await signals.afterPullUp(open.id, last.id)).toBe(0);
+  });
+
+  it('"Your squad is outside. Are you?": two checked in lately, once a day, not if you are out too', async () => {
+    const signals = h.app.get(SquadSignalsService);
+    const host = await verifiedMember(h);
+    const viewer = await member(h);
+    const outViewer = await member(h);
+    const [a, b] = await squadOf(viewer, 2);
+    if (!a || !b) throw new Error('squad');
+    await befriend(h, outViewer, a);
+    await befriend(h, outViewer, b);
+    const plan = await plot(h, host, { title: 'Run club' });
+    for (const m of [a, b, outViewer]) await rsvp(h, m, plan.id).expect(200);
+    const checkIn = (m: Member) =>
+      h.pool.query(
+        "UPDATE rsvps SET status = 'checked_in', checked_in_at = now() WHERE event_id = $1 AND user_id = $2",
+        [plan.id, m.id],
+      );
+    await checkIn(a);
+    expect(await signals.afterCheckIn(a.id)).toBe(0);
+    await checkIn(b);
+    await checkIn(outViewer);
+    expect(await signals.afterCheckIn(b.id)).toBe(1);
+    const got = (await inbox(viewer)).filter((i) => i.kind === 'squad_outside');
+    expect(got.map((i) => i.title)).toEqual(['Your squad is outside. Are you?']);
+    expect(got[0]?.body).toBe('2 of your squad checked in to plans in the last few hours.');
+    // Already out themselves: no nudge. Same day again: no repeat.
+    expect((await inbox(outViewer)).some((i) => i.kind === 'squad_outside')).toBe(false);
+    expect(await signals.afterCheckIn(b.id)).toBe(0);
   });
 });

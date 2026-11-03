@@ -214,6 +214,11 @@ export const LIMITS = {
     quietHoursStart: 22,
     quietHoursEnd: 8,
     squadGoingMaxPerHour: 1,
+    /** "N of your squad are pulling up" needs at least this many of your squad going (Phase 13). */
+    squadPullingUpMin: 3,
+    /** "Your squad is outside" needs at least this many of your squad checked in recently. */
+    squadOutsideMin: 2,
+    squadOutsideWindowMs: 3 * HOUR_MS,
     /** Low-priority notifications wait this long so several can go out as one digest. */
     batchWindowMs: 10 * MINUTE_MS,
     inboxPageMax: 50,

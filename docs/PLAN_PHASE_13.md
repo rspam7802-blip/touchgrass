@@ -27,7 +27,7 @@ Everything else in the PDF is built and tested (`docs/FEATURES.md`).
 ### M2: Squad notifications (API + shared)
 
 - `squad_pulling_up`: when a plan the viewer can see (re-checked with `canViewEvent`) reaches 3+ squad members going and starts within 24 h, notify once per viewer per plan; respects quiet hours, notification settings and members who hide their activity.
-- `squad_outside`: when 2+ squad members check in to plans within 3 km of the viewer's area in the same evening, notify once per evening; never reveals an exact location, only the area.
+- `squad_outside`: when 2+ squad members (who share their activity) checked in to any plan in the last 3 hours, and the reader has not, notify once per day. It names no plan and no place.
 - Driven by existing `rsvp.*` and `checkin.*` domain events through the outbox; dedupe via `reminder_log`. Integration tests for privacy (blocked, hidden activity, invisible plans, mystery plans) and dedupe.
 
 ### M3: Stories, photos (API + mobile + admin)
