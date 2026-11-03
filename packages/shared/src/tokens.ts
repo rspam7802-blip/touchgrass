@@ -1,10 +1,10 @@
 /**
  * Design tokens shared by mobile and web: the "matcha" look. Deep forest-black surfaces, frosted cards and a
- * neon lime (#CCFF00) accent; the app is dark-only, the web follows the system with a light variant.
+ * lime (#E5FB46, the logo's colour) accent; the app is dark-only, the web follows the system with a light variant.
  * All foreground/background pairs used for text are checked against WCAG AA in tokens.test.ts.
  */
 export const palette = {
-  lime400: '#CCFF00',
+  lime400: '#E5FB46',
   lime800: '#3D5E0F',
   lime100: '#EEF6DC',
   lime50: '#E3F7B0',

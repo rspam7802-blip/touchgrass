@@ -17,7 +17,7 @@ export interface GlyphProps {
 
 export type GlyphIcon = ComponentType<GlyphProps>;
 
-const LIME = '#CCFF00';
+const LIME = '#E5FB46';
 
 function glyph(name: GlyphName): GlyphIcon {
   function TouchGrassIcon({

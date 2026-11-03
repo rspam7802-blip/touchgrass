@@ -18,6 +18,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   scheme: 'touchgrass',
   version: VERSION,
   orientation: 'portrait',
+  // The company logo (D-152); generated from assets/brand/logo-source.png.
+  icon: './assets/icon.png',
   userInterfaceStyle: 'dark',
   ios: {
     bundleIdentifier: `app.touchgrass${SUFFIX}`,
@@ -30,6 +32,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   android: {
     package: `app.touchgrass${SUFFIX}`,
+    adaptiveIcon: { foregroundImage: './assets/adaptive-icon.png', backgroundColor: '#E5FB46' },
     // Tokens live in the Keystore, but cached screens and preferences must not ride along in cloud backups.
     allowBackup: false,
     // Pulled in by Expo modules but unused: no audio, no contact writes, media picked with the system picker.
@@ -59,7 +62,10 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     'expo-localization',
     // Tokens are not behind biometrics, so no Face ID prompt.
     ['expo-secure-store', { faceIDPermission: false }],
-    ['expo-splash-screen', { backgroundColor: '#0B130E' }],
+    [
+      'expo-splash-screen',
+      { image: './assets/splash.png', imageWidth: 200, backgroundColor: '#E5FB46' },
+    ],
     [
       'expo-camera',
       {
@@ -91,7 +97,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         microphonePermission: false,
       },
     ],
-    ['expo-notifications', { color: '#CCFF00' }],
+    ['expo-notifications', { color: '#E5FB46' }],
     [
       'expo-location',
       {

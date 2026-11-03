@@ -74,7 +74,7 @@ describe('theme and config', () => {
       minTouchTarget: 44,
     });
     expect(buildTheme('light', false).colors.primary).toBe('#3D5E0F');
-    expect(buildTheme('dark', false).colors.primary).toBe('#CCFF00');
+    expect(buildTheme('dark', false).colors.primary).toBe('#E5FB46');
   });
   it('reads build-time config', () => {
     expect(readAppEnvironment()).toEqual({

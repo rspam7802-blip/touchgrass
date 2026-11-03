@@ -1,7 +1,7 @@
-import { BRAND } from '@touchgrass/shared';
 import { useRouter } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { BrandLogo } from '../components/BrandLogo';
 import { LanguagePicker } from '../components/LanguagePicker';
 import { Button, ErrorState, LoadingState, OfflineState, Screen, Text } from '../components/ui';
 import { useAppConfig } from '../src/features/app-config/use-app-config';
@@ -51,9 +51,7 @@ export default function WelcomeScreen() {
   return (
     <Screen testID="welcome-screen">
       <View style={styles.hero}>
-        <Text variant="label" tone="primary">
-          {BRAND.name}
-        </Text>
+        <BrandLogo size={112} />
         <Text variant="display">{t('brand.tagline')}</Text>
         <Text variant="title">{t('welcome.headline')}</Text>
         <Text tone="muted">{t('welcome.body')}</Text>
@@ -84,7 +82,7 @@ export default function WelcomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  hero: { gap: 12, paddingTop: 24 },
+  hero: { gap: 16, paddingTop: 32 },
   card: { padding: 16 },
   actions: { gap: 12 },
 });

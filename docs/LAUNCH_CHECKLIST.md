@@ -50,7 +50,7 @@ All go into the providers secret (`terraform output provider_secret_name`) unles
 - [ ] ⏱ Google Play Console (organisation account, identity verification).
 - [ ] Create the apps: bundle ID / package `app.touchgrass`.
 - [ ] Play: download the app-signing key SHA-256 fingerprint → `android_sha256_cert_fingerprints` in Terraform (App Links); service account JSON for `eas submit` saved as `apps/mobile/play-service-account.json` (gitignored).
-- [ ] Design work (`STORE_LISTING.md` → Graphics): app icon, adaptive icon, notification icon, splash logo, Play feature graphic; add them to `app.config.ts`.
+- [ ] Design work (`STORE_LISTING.md` → Graphics): app icon, adaptive icon and splash are set from the company logo (D-152); still needed: a monochrome notification icon and the Play feature graphic.
 - [ ] Screenshots in English, Telugu and Hindi (`STORE_LISTING.md` lists the screens).
 - [ ] Native Telugu and Hindi speakers read the store descriptions (and spot-check the app).
 - [ ] Screen-reader pass on physical devices: VoiceOver (iOS) and TalkBack (Android) through sign-up, discover, plan detail, pull up, chat, check-in and safety, with the largest system font (`A11Y.md` → Phase 12).

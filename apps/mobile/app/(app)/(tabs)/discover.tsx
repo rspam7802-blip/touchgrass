@@ -9,6 +9,7 @@ import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { Search } from '../../../components/icons';
 import { BRAND } from '@touchgrass/shared';
 import { Avatar } from '../../../components/Avatar';
+import { BrandLogo } from '../../../components/BrandLogo';
 import { ChipGroup } from '../../../components/ChipGroup';
 import { DiscoverMap } from '../../../components/DiscoverMap';
 import { EventCard } from '../../../components/EventCard';
@@ -165,11 +166,7 @@ export default function DiscoverScreen() {
       <View style={styles.header}>
         <View style={styles.grow}>
           <View style={styles.brandRow}>
-            <View
-              style={[styles.dot, { backgroundColor: theme.colors.primary }]}
-              importantForAccessibility="no"
-              accessibilityElementsHidden
-            />
+            <BrandLogo size={36} decorative />
             <Text variant="title" accessibilityRole="header" style={styles.brand}>
               {BRAND.name}
               <Text variant="title" style={{ color: theme.colors.primary }}>
@@ -377,7 +374,6 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingTop: 8 },
   brandRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   brand: { fontSize: 28, lineHeight: 34, letterSpacing: -0.8 },
-  dot: { width: 10, height: 10, borderRadius: 5 },
   search: {
     flexGrow: 1,
     flexShrink: 1,
