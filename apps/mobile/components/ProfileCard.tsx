@@ -1,4 +1,4 @@
-import { BadgeCheck } from 'lucide-react-native';
+import { BadgeCheck } from './icons';
 import type {
   HostRatingSummary,
   Interest,

@@ -1,16 +1,7 @@
 import type { EventSummary, FeedItem } from '@touchgrass/shared';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
-import {
-  ArrowRight,
-  Calendar,
-  Check,
-  Compass,
-  EyeOff,
-  Heart,
-  Lock,
-  Users,
-} from 'lucide-react-native';
+import { ArrowRight, Calendar, Check, Compass, EyeOff, Heart, Lock, People } from './icons';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { localized } from '../src/features/catalog/api';
@@ -205,7 +196,7 @@ export function EventCard({
               { backgroundColor: theme.colors.surfaceAlt, borderRadius: theme.radii.sm },
             ]}
           >
-            <Icon icon={Users} size={13} color={theme.colors.primary} />
+            <Icon icon={People} size={13} color={theme.colors.primary} />
             <Text variant="caption" style={{ color: theme.colors.primary, fontWeight: '700' }}>
               {going}
             </Text>

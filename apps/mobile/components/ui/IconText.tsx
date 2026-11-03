@@ -1,6 +1,6 @@
 import { StyleSheet, View } from 'react-native';
 import { useTheme } from '../../src/theme/theme';
-import { Icon, type LucideIcon } from './Icon';
+import { Icon, type GlyphIcon } from './Icon';
 import { Text, type TextProps } from './Text';
 
 /** A line of text led by a small icon (location, date…). The icon is decorative; the text says it all. */
@@ -9,7 +9,7 @@ export function IconText({
   children,
   tone = 'default',
   ...rest
-}: { icon: LucideIcon } & TextProps) {
+}: { icon: GlyphIcon } & TextProps) {
   const theme = useTheme();
   const color = {
     default: theme.colors.primary,

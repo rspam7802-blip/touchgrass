@@ -5,7 +5,7 @@ import { useFreeNow, useSetFree } from '../../src/features/engagement/api';
 import { formatTime } from '../../src/features/events/format';
 import { useTheme } from '../../src/theme/theme';
 import { Avatar } from '../Avatar';
-import { Plus, Zap } from 'lucide-react-native';
+import { Plus, Zap } from '../icons';
 import { Button, Icon, Text } from '../ui';
 import { useFlag } from '../../src/features/app-config/use-flag';
 

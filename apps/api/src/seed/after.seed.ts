@@ -190,7 +190,7 @@ export async function seedAfter(
           eventId: ev.id,
           mediaId: id,
           uploaderId: u.user_id,
-          caption: j === 0 ? `${ev.title} 🌿` : '',
+          caption: j === 0 ? ev.title : '',
         });
       }
       // The worker draws the album's collage cover, exactly as after a real upload.

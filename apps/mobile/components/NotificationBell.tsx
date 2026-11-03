@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useUnreadCount } from '../src/features/notifications/api';
 import { StyleSheet, View } from 'react-native';
 import { useTheme } from '../src/theme/theme';
-import { Bell } from 'lucide-react-native';
+import { Bell } from './icons';
 import { Icon, IconButton, Text } from './ui';
 
 /** Opens the inbox; the label reads the unread count so screen readers hear it too (F-NOT-01). */

@@ -2,13 +2,13 @@ import { useRouter } from 'expo-router';
 import type { BottomTabBarProps } from 'expo-router/tabs';
 import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, View } from 'react-native';
-import { CalendarDays, Compass, MessageCircle, Plus, Users } from 'lucide-react-native';
+import { CalendarDays, Compass, MessageCircle, Plus, Users } from './icons';
 import { useTheme } from '../src/theme/theme';
-import { Icon, type LucideIcon, Text } from './ui';
+import { Icon, type GlyphIcon, Text } from './ui';
 
 /** Tabs shown in the dock, in order; the Plot button sits in the middle. Profile and settings open from headers. */
 export const DOCK_TABS = ['discover', 'plans', 'chats', 'squad'] as const;
-const ICONS: Record<(typeof DOCK_TABS)[number], LucideIcon> = {
+const ICONS: Record<(typeof DOCK_TABS)[number], GlyphIcon> = {
   discover: Compass,
   plans: CalendarDays,
   chats: MessageCircle,

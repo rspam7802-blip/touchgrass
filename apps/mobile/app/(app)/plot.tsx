@@ -1,4 +1,4 @@
-import { MapPin } from 'lucide-react-native';
+import { MapPin } from '../../components/icons';
 import {
   CreateEventBody,
   type EventDetail,

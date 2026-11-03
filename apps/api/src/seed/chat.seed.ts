@@ -181,13 +181,13 @@ export const ICEBREAKERS: { category: Category; prompt: LocalizedJson }[] = [
 
 const SAMPLE_LINES = [
   'Hey! Who else is coming solo?',
-  'Me! First time at one of these 😅',
+  'Me. First time at one of these.',
   'Same, see you there',
   'I can bring a frisbee if anyone wants',
   'Running 10 mins late, save me a spot',
   'This was so much fun, same time next week?',
   'Absolutely, count me in',
-  'Thanks for hosting 🙌',
+  'Thanks for hosting.',
 ];
 
 /** The starter icebreaker deck (reference data, also loaded in production by the bootstrap). Keyed by English prompt. */

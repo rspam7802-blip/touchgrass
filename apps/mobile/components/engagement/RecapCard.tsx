@@ -1,4 +1,4 @@
-import { MapPin } from 'lucide-react-native';
+import { MapPin } from '../icons';
 import type { Recap } from '@touchgrass/shared';
 import type { TFunction } from 'i18next';
 import { type ComponentRef, forwardRef } from 'react';

@@ -82,12 +82,13 @@ jest.mock('react-native-svg', () => {
   const { View } = jest.requireActual<typeof import('react-native')>('react-native');
   const Stub = (props: object) =>
     jest.requireActual<typeof import('react')>('react').createElement(View, props);
-  // Every SVG element (Path, Circle, Line, Polyline… used by the QR code and Lucide icons) renders as a View.
+  // Every SVG element (the QR code's shapes, SvgXml for the icon set) renders as a View.
   const shapes = ['Path', 'Rect', 'Circle', 'Ellipse', 'Line', 'Polyline', 'Polygon', 'G', 'Defs'];
   return {
     __esModule: true,
     default: Stub,
     Svg: Stub,
+    SvgXml: Stub,
     ...Object.fromEntries(shapes.map((name) => [name, Stub])),
   };
 });

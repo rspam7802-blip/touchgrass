@@ -1,4 +1,4 @@
-import { Check } from 'lucide-react-native';
+import { Check } from '../icons';
 import type { Message, PollView } from '@touchgrass/shared';
 import { Image } from 'expo-image';
 import { Pressable, StyleSheet, View } from 'react-native';

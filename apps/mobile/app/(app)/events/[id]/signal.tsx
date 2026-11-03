@@ -1,8 +1,9 @@
+import { signalIcon } from '../../../../src/features/at-event/signal-icons';
 import { useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Animated, StyleSheet, View } from 'react-native';
-import { ErrorState, LoadingState, Screen, Text } from '../../../../components/ui';
+import { ErrorState, Icon, LoadingState, Screen, Text } from '../../../../components/ui';
 import { useSignal } from '../../../../src/features/chat/api';
 import { formatTime } from '../../../../src/features/events/format';
 import { ApiError } from '../../../../src/lib/api-client';
@@ -82,15 +83,9 @@ export default function SignalScreen() {
   return (
     <View style={[styles.full, { backgroundColor: s.color }]} testID="signal-screen">
       <Animated.View style={[styles.center, { opacity: pulse }]}>
-        <Text
-          style={styles.icon}
-          accessibilityLabel={label}
-          accessibilityRole="image"
-          maxFontSizeMultiplier={1}
-          testID="signal-icon"
-        >
-          {s.icon}
-        </Text>
+        <View accessible accessibilityLabel={label} accessibilityRole="image" testID="signal-icon">
+          <Icon icon={signalIcon(s.iconName)} size={180} color={fg} strokeWidth={1.6} />
+        </View>
       </Animated.View>
       <Text variant="title" style={{ color: fg, textAlign: 'center' }} accessibilityRole="header">
         {label}
@@ -103,5 +98,4 @@ export default function SignalScreen() {
 const styles = StyleSheet.create({
   full: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24, gap: 16 },
   center: { alignItems: 'center', justifyContent: 'center' },
-  icon: { fontSize: 160, lineHeight: 190 },
 });

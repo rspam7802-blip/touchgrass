@@ -1,6 +1,6 @@
 import { StyleSheet, View } from 'react-native';
 import { useTheme } from '../../src/theme/theme';
-import { Icon, type LucideIcon } from './Icon';
+import { Icon, type GlyphIcon } from './Icon';
 import { Text } from './Text';
 
 export type PillTone = 'primary' | 'accent' | 'glass' | 'dark';
@@ -16,7 +16,7 @@ export function Pill({
 }: {
   label: string;
   tone?: PillTone;
-  icon?: LucideIcon;
+  icon?: GlyphIcon;
 }) {
   const theme = useTheme();
   const look = {

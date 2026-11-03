@@ -2,14 +2,14 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { Hand, Map, Shield, Users } from 'lucide-react-native';
+import { MapFold, Shield, Ticket, Users } from '../../components/icons';
 import { Button, Icon, Screen, Text } from '../../components/ui';
 import { useTutorial } from '../../src/features/me/api';
 import { useTheme } from '../../src/theme/theme';
 
 export const TUTORIAL_CARDS = [
-  { key: 'pullUp', icon: Hand },
-  { key: 'plot', icon: Map },
+  { key: 'pullUp', icon: Ticket },
+  { key: 'plot', icon: MapFold },
   { key: 'squad', icon: Users },
   { key: 'safety', icon: Shield },
 ] as const;

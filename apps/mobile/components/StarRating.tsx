@@ -1,4 +1,4 @@
-import { Star } from 'lucide-react-native';
+import { Star } from './icons';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../src/theme/theme';

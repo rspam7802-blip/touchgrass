@@ -1,4 +1,4 @@
-import { BellOff } from 'lucide-react-native';
+import { BellOff } from '../../../components/icons';
 import type { ConversationSummary } from '@touchgrass/shared';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';

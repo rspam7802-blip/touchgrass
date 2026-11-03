@@ -1,4 +1,4 @@
-import { Check, Flame, Snowflake } from 'lucide-react-native';
+import { Check, Flame, Snowflake } from '../icons';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 import { useStreak } from '../../src/features/engagement/api';

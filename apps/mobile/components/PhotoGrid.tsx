@@ -1,4 +1,4 @@
-import { X } from 'lucide-react-native';
+import { X } from './icons';
 import type { ProfilePhoto } from '@touchgrass/shared';
 import { Image } from 'expo-image';
 import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';

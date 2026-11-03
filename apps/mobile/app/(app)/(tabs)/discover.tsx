@@ -5,7 +5,7 @@ import { FreeNowStrip } from '../../../components/engagement/FreeNowStrip';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
-import { Search } from 'lucide-react-native';
+import { Search } from '../../../components/icons';
 import { BRAND } from '@touchgrass/shared';
 import { Avatar } from '../../../components/Avatar';
 import { ChipGroup } from '../../../components/ChipGroup';

@@ -1,4 +1,4 @@
-import { BadgeCheck } from 'lucide-react-native';
+import { BadgeCheck } from './icons';
 import type { PersonCard } from '@touchgrass/shared';
 import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';

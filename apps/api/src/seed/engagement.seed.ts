@@ -176,7 +176,7 @@ export async function seedEngagement(
       .values({
         userId: m(n),
         until: new Date(now.getTime() + 3 * H),
-        note: n === 4 ? 'Down for chai near Madhapur ☕' : '',
+        note: n === 4 ? 'Chai near Madhapur, anyone?' : '',
       })
       .onConflictDoUpdate({
         target: availabilityStatus.userId,

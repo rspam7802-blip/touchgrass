@@ -1,4 +1,4 @@
-import { MapPin } from 'lucide-react-native';
+import { MapPin } from '../icons';
 import type { EventWhere } from '@touchgrass/shared';
 import * as Crypto from 'expo-crypto';
 import { useMemo, useState } from 'react';

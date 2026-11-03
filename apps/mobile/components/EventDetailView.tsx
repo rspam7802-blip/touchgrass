@@ -1,4 +1,4 @@
-import { MapPin } from 'lucide-react-native';
+import { MapPin } from './icons';
 import { type EventDetail, LIMITS } from '@touchgrass/shared';
 import { Image } from 'expo-image';
 import * as Location from 'expo-location';
