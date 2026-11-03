@@ -23,7 +23,7 @@ export function Card({
           borderColor: theme.colors.border,
           borderRadius: theme.radii.lg,
           padding: CARD_PADDING,
-          gap: theme.spacing.md + 2,
+          gap: theme.spacing.md,
         },
         style,
       ]}
@@ -33,7 +33,7 @@ export function Card({
   );
 }
 
-const CARD_PADDING = 20;
+const CARD_PADDING = 16;
 // A hairline edge instead of a full stroke: the card floats rather than boxes in (D-151).
 const styles = StyleSheet.create({
   card: { borderWidth: StyleSheet.hairlineWidth, overflow: 'hidden' },

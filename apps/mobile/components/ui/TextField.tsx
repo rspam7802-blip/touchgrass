@@ -57,10 +57,10 @@ export function TextField({ label, hint, error, style, ...rest }: TextFieldProps
   );
 }
 
-const FIELD_HEIGHT = 52;
+const FIELD_HEIGHT = 46;
 
 const styles = StyleSheet.create({
   wrap: { gap: 8 },
-  input: { borderWidth: 1.5, paddingHorizontal: 16, paddingVertical: 14 },
+  input: { borderWidth: 1.5, paddingHorizontal: 14, paddingVertical: 11 },
   upper: { textTransform: 'uppercase' },
 });

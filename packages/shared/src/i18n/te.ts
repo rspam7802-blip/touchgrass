@@ -47,6 +47,9 @@ export const te: Translation = {
     haveInvite: 'నా దగ్గర ఇన్వైట్ కోడ్ ఉంది',
   },
   settings: {
+    appearance: 'రూపం',
+    appearanceHint: 'లైట్ లేదా డార్క్. సాధారణంగా యాప్ నీ ఫోన్ సెట్టింగ్‌నే అనుసరిస్తుంది.',
+    appearanceOptions: { system: 'ఫోన్ లాగే', light: 'లైట్', dark: 'డార్క్' },
     language: 'భాష',
     languageNames: { en: 'English', te: 'తెలుగు', hi: 'हिन्दी' },
     title: 'సెట్టింగ్స్',

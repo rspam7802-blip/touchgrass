@@ -101,17 +101,7 @@ export default function DiscoverScreen() {
   const weather = firstPage?.weather;
 
   let body;
-  if (view === 'map' && mapEnabled) {
-    body = (
-      <DiscoverMap
-        center={location ?? firstPage?.center ?? { lat: 17.385, lng: 78.4867 }}
-        filters={filters}
-        onOpen={(pin) => {
-          openEvent(pin.id, null);
-        }}
-      />
-    );
-  } else if (feed.isPending) body = <LoadingState />;
+  if (feed.isPending) body = <LoadingState />;
   else if (feed.isError)
     body = offline ? (
       <OfflineState onRetry={() => void feed.refetch()} />
@@ -161,12 +151,67 @@ export default function DiscoverScreen() {
     );
 
   const myName = me.data?.displayName ?? t('nav.profile');
+  const searchRow = (
+    <View style={styles.row}>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={t('discover.search')}
+        onPress={() => {
+          router.push('/search');
+        }}
+        testID="open-search"
+        style={[
+          styles.search,
+          {
+            minHeight: 44,
+            backgroundColor: theme.colors.surfaceAlt,
+            borderColor: theme.colors.border,
+            borderRadius: theme.radii.pill,
+          },
+        ]}
+      >
+        <Icon icon={Search} size={16} color={theme.colors.textMuted} />
+        <Text tone="muted" numberOfLines={1}>
+          {t('discover.search')}
+        </Text>
+      </Pressable>
+      {mapEnabled ? (
+        <SegmentedTabs
+          tabs={[
+            { key: 'list', label: t('discover.list') },
+            { key: 'map', label: t('discover.map') },
+          ]}
+          value={view}
+          onChange={setView}
+        />
+      ) : null}
+    </View>
+  );
+
+  // Map view (D-153): the map fills the whole screen, with search and the list/map switch floating on top.
+  if (view === 'map' && mapEnabled)
+    return (
+      <View
+        style={[styles.full, { backgroundColor: theme.colors.background }]}
+        testID="discover-screen"
+      >
+        <DiscoverMap
+          center={location ?? firstPage?.center ?? { lat: 17.385, lng: 78.4867 }}
+          filters={filters}
+          onOpen={(pin) => {
+            openEvent(pin.id, null);
+          }}
+          overlay={searchRow}
+        />
+      </View>
+    );
+
   return (
     <Screen testID="discover-screen">
       <View style={styles.header}>
         <View style={styles.grow}>
           <View style={styles.brandRow}>
-            <BrandLogo size={36} decorative />
+            <BrandLogo size={30} decorative />
             <Text variant="title" accessibilityRole="header" style={styles.brand}>
               {BRAND.name}
               <Text variant="title" style={{ color: theme.colors.primary }}>
@@ -180,7 +225,7 @@ export default function DiscoverScreen() {
         </View>
         <NotificationBell />
         <IconButton
-          icon={<Avatar photo={me.data?.photos[0]?.urls ?? null} name={myName} size={40} />}
+          icon={<Avatar photo={me.data?.photos[0]?.urls ?? null} name={myName} size={34} />}
           label={t('nav.profile')}
           onPress={() => {
             router.push('/profile');
@@ -188,40 +233,7 @@ export default function DiscoverScreen() {
           testID="open-profile"
         />
       </View>
-      <View style={styles.row}>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={t('discover.search')}
-          onPress={() => {
-            router.push('/search');
-          }}
-          testID="open-search"
-          style={[
-            styles.search,
-            {
-              minHeight: 52,
-              backgroundColor: theme.colors.surfaceAlt,
-              borderColor: theme.colors.border,
-              borderRadius: theme.radii.pill,
-            },
-          ]}
-        >
-          <Icon icon={Search} size={18} color={theme.colors.textMuted} />
-          <Text tone="muted" numberOfLines={1}>
-            {t('discover.search')}
-          </Text>
-        </Pressable>
-        {mapEnabled ? (
-          <SegmentedTabs
-            tabs={[
-              { key: 'list', label: t('discover.list') },
-              { key: 'map', label: t('discover.map') },
-            ]}
-            value={view}
-            onChange={setView}
-          />
-        ) : null}
-      </View>
+      {searchRow}
       <StoryTray />
       <FreeNowStrip />
       {weather ? (
@@ -371,9 +383,9 @@ export default function DiscoverScreen() {
 }
 
 const styles = StyleSheet.create({
-  header: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingTop: 8 },
+  header: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingTop: 4 },
   brandRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  brand: { fontSize: 28, lineHeight: 34, letterSpacing: -0.8 },
+  brand: { fontSize: 22, lineHeight: 28, letterSpacing: -0.5 },
   search: {
     flexGrow: 1,
     flexShrink: 1,
@@ -387,5 +399,6 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 12 },
   grow: { flexGrow: 1, flexShrink: 1 },
   panel: { gap: 16 },
-  cards: { gap: 28 },
+  cards: { gap: 18 },
+  full: { flex: 1 },
 });

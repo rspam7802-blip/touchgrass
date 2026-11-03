@@ -7,7 +7,8 @@ import {
   typography,
 } from '@touchgrass/shared';
 import { createContext, type ReactNode, useContext, useEffect, useMemo, useState } from 'react';
-import { AccessibilityInfo } from 'react-native';
+import { AccessibilityInfo, useColorScheme } from 'react-native';
+import { useSettingsStore } from '../stores/settings-store';
 
 export interface Theme {
   scheme: 'light' | 'dark';
@@ -54,8 +55,12 @@ export function ThemeProvider({
     };
   }, []);
 
-  // The app is dark-only (the matcha look, D-144); the web follows the system instead.
-  const scheme = forcedScheme ?? 'dark';
+  // Light or dark follows the phone unless the person picked one in Settings → Appearance (D-153).
+  const system = useColorScheme();
+  const appearance = useSettingsStore((s) => s.appearance);
+  const scheme =
+    forcedScheme ??
+    (appearance === 'system' ? (system === 'light' ? 'light' : 'dark') : appearance);
   const theme = useMemo(() => buildTheme(scheme, reduceMotion), [scheme, reduceMotion]);
   return <ThemeContext.Provider value={theme}>{children}</ThemeContext.Provider>;
 }

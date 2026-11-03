@@ -21,7 +21,7 @@ export function IconText({
   return (
     <View style={styles.row}>
       <View style={styles.icon}>
-        <Icon icon={icon} size={16} color={color} />
+        <Icon icon={icon} size={14} color={color} />
       </View>
       <Text tone={tone} style={styles.text} {...rest}>
         {children}

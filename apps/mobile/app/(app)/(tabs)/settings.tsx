@@ -4,12 +4,14 @@ import { ListRow, Screen, Text } from '../../../components/ui';
 import { readAppEnvironment } from '../../../src/config';
 import { useLogout } from '../../../src/features/auth/api';
 import { useTutorial } from '../../../src/features/me/api';
+import { useSettingsStore } from '../../../src/stores/settings-store';
 
 export default function SettingsScreen() {
   const { t, i18n } = useTranslation();
   const router = useRouter();
   const logout = useLogout();
   const tutorial = useTutorial();
+  const appearance = useSettingsStore((s) => s.appearance);
   return (
     <Screen testID="settings-screen">
       <Text variant="title">{t('settings.title')}</Text>
@@ -41,6 +43,14 @@ export default function SettingsScreen() {
           router.push('/settings/language');
         }}
         testID="row-language"
+      />
+      <ListRow
+        label={t('settings.appearance')}
+        detail={t(`settings.appearanceOptions.${appearance}`)}
+        onPress={() => {
+          router.push('/settings/appearance');
+        }}
+        testID="row-appearance"
       />
       <ListRow
         label={t('payments.receipts')}

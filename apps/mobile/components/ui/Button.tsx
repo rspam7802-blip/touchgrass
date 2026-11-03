@@ -81,14 +81,14 @@ export function Button({
 }
 
 /** Filled buttons are a little taller than the 44 pt minimum: calmer, easier to hit (D-151). */
-const PROMINENT_HEIGHT = 52;
+const PROMINENT_HEIGHT = 46;
 
 const styles = StyleSheet.create({
   base: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 24,
-    paddingVertical: 14,
+    paddingHorizontal: 20,
+    paddingVertical: 11,
     borderWidth: StyleSheet.hairlineWidth,
   },
   pressed: { transform: [{ scale: 0.98 }], opacity: 0.88 },

@@ -20,7 +20,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   orientation: 'portrait',
   // The company logo (D-152); generated from assets/brand/logo-source.png.
   icon: './assets/icon.png',
-  userInterfaceStyle: 'dark',
+  // Follows the phone's light/dark setting (D-153); Settings → Appearance can override it in the app.
+  userInterfaceStyle: 'automatic',
   ios: {
     bundleIdentifier: `app.touchgrass${SUFFIX}`,
     supportsTablet: false,

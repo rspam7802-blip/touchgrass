@@ -11,7 +11,7 @@ export interface ScreenProps {
 }
 
 /** Room between blocks on a screen: generous, so each section reads on its own (D-151). */
-const SECTION_GAP = 28;
+const SECTION_GAP = 22;
 
 /** Base screen: safe area, themed background, offline banner, scroll so 200% text never clips. */
 export function Screen({ children, scroll = true, testID }: ScreenProps) {
@@ -21,8 +21,8 @@ export function Screen({ children, scroll = true, testID }: ScreenProps) {
       style={[
         styles.content,
         {
-          paddingHorizontal: theme.spacing.xl,
-          paddingTop: theme.spacing.lg,
+          paddingHorizontal: theme.spacing.xl - 4,
+          paddingTop: theme.spacing.md,
           paddingBottom: theme.spacing.xxxl,
           gap: SECTION_GAP,
         },

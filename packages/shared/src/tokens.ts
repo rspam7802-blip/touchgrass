@@ -104,17 +104,17 @@ export const spacing = {
   xxl: 32,
   xxxl: 48,
 } as const;
-export const radii = { sm: 10, md: 16, lg: 28, pill: 999 } as const;
+export const radii = { sm: 8, md: 14, lg: 22, pill: 999 } as const;
 export const typography = {
-  // Spacious, editorial scale (D-151): larger titles with tight tracking, airy body, wide-tracked labels.
-  display: { fontSize: 34, lineHeight: 42, fontWeight: '600', letterSpacing: -1 },
-  title: { fontSize: 26, lineHeight: 32, fontWeight: '600', letterSpacing: -0.6 },
-  heading: { fontSize: 18, lineHeight: 25, fontWeight: '600', letterSpacing: -0.2 },
-  body: { fontSize: 16, lineHeight: 25, fontWeight: '400', letterSpacing: 0 },
-  label: { fontSize: 15, lineHeight: 20, fontWeight: '600', letterSpacing: 0.1 },
-  caption: { fontSize: 13, lineHeight: 18, fontWeight: '500', letterSpacing: 0.1 },
+  // Compact, refined scale (D-153): modest sizes, tight tracking on titles, airy line height, tracked labels.
+  display: { fontSize: 28, lineHeight: 34, fontWeight: '600', letterSpacing: -0.8 },
+  title: { fontSize: 21, lineHeight: 27, fontWeight: '600', letterSpacing: -0.4 },
+  heading: { fontSize: 16, lineHeight: 22, fontWeight: '600', letterSpacing: -0.1 },
+  body: { fontSize: 15, lineHeight: 22, fontWeight: '400', letterSpacing: 0 },
+  label: { fontSize: 14, lineHeight: 19, fontWeight: '600', letterSpacing: 0.1 },
+  caption: { fontSize: 12, lineHeight: 16, fontWeight: '500', letterSpacing: 0.1 },
   /** Small uppercase section labels ("FREE NOW"). */
-  overline: { fontSize: 11, lineHeight: 15, fontWeight: '600', letterSpacing: 1.6 },
+  overline: { fontSize: 10.5, lineHeight: 14, fontWeight: '600', letterSpacing: 1.4 },
 } as const;
 export const motion = { fast: 150, normal: 250, slow: 400, signalPulse: 2400 } as const;
 /** Minimum touch target (pt) for F-A11Y-01. */

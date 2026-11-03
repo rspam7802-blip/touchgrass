@@ -50,6 +50,9 @@ export const en = {
     haveInvite: 'I have an invite code',
   },
   settings: {
+    appearance: 'Appearance',
+    appearanceHint: 'Light or dark. By default the app follows your phone.',
+    appearanceOptions: { system: 'Same as phone', light: 'Light', dark: 'Dark' },
     language: 'Language',
     languageNames: { en: 'English', te: 'తెలుగు', hi: 'हिन्दी' },
     title: 'Settings',

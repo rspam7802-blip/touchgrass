@@ -15,7 +15,7 @@ export function NotificationBell() {
   return (
     <View>
       <IconButton
-        icon={<Icon icon={Bell} size={20} />}
+        icon={<Icon icon={Bell} size={18} />}
         label={t('notifications.open', { count: unread })}
         onPress={() => {
           router.push('/notifications');

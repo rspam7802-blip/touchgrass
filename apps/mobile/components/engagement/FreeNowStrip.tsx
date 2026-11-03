@@ -12,7 +12,7 @@ import { Button, Icon, Text } from '../ui';
 import { FreeNowSheet } from './FreeNowSheet';
 import { useFlag } from '../../src/features/app-config/use-flag';
 
-const SIZE = 52;
+const SIZE = 46;
 
 /**
  * "I'm free now" (F-ENG-01) as the mock's radar: a dashed "+" to say you're free, then squad members free right

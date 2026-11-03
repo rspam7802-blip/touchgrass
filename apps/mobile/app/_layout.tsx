@@ -11,6 +11,7 @@ import { AppProviders } from '../src/providers/app-providers';
 import { type AppArea, appArea, useAuthStore } from '../src/stores/auth-store';
 import { useSettingsStore } from '../src/stores/settings-store';
 import { FONT_FILES } from '../src/theme/fonts';
+import { useTheme } from '../src/theme/theme';
 
 void SplashScreen.preventAutoHideAsync();
 
@@ -94,8 +95,14 @@ export default function RootLayout() {
 
   return (
     <AppProviders queryClient={queryClient} apiClient={apiClient} appVersion={env.appVersion}>
-      <StatusBar style="light" />
+      <ThemedStatusBar />
       {fontsReady ? <RootNavigator /> : null}
     </AppProviders>
   );
+}
+
+/** Status bar text contrasts with the current theme (light text on dark, dark text on light). */
+function ThemedStatusBar() {
+  const theme = useTheme();
+  return <StatusBar style={theme.scheme === 'dark' ? 'light' : 'dark'} />;
 }

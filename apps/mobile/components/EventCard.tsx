@@ -12,7 +12,7 @@ import { Icon, Pill, Text } from './ui';
 
 type FeedExtras = Pick<FeedItem, 'preview' | 'via' | 'reasons' | 'distanceMeters' | 'weather'>;
 
-const HERO_HEIGHT = 220;
+const HERO_HEIGHT = 168;
 
 /**
  * A plan in a list (the mock's photo-led card): cover photo with title and place over it, tags and distance on
@@ -154,7 +154,7 @@ export function EventCard({
             colors={[theme.colors.surfaceAlt, theme.colors.surface]}
             style={[StyleSheet.absoluteFill, styles.placeholder]}
           >
-            <Icon icon={Compass} size={52} color={theme.colors.textMuted} strokeWidth={1.4} />
+            <Icon icon={Compass} size={40} color={theme.colors.textMuted} strokeWidth={1.4} />
           </LinearGradient>
         )}
         <View style={styles.topRow}>
@@ -268,7 +268,7 @@ function feedDetails(
 const styles = StyleSheet.create({
   card: { borderWidth: StyleSheet.hairlineWidth, overflow: 'hidden' },
   pressed: { opacity: 0.9, transform: [{ scale: 0.99 }] },
-  hero: { height: HERO_HEIGHT, justifyContent: 'space-between', padding: 16 },
+  hero: { height: HERO_HEIGHT, justifyContent: 'space-between', padding: 12 },
   placeholder: { alignItems: 'center', justifyContent: 'center' },
 
   topRow: { flexDirection: 'row', justifyContent: 'space-between', gap: 8 },
@@ -276,7 +276,7 @@ const styles = StyleSheet.create({
   heroText: { gap: 4 },
   onPhoto: { color: '#FFFFFF', textShadowColor: 'rgba(0,0,0,0.6)', textShadowRadius: 8 },
   onPhotoMuted: { color: '#E5E7EB', textShadowColor: 'rgba(0,0,0,0.6)', textShadowRadius: 6 },
-  body: { paddingHorizontal: 20, paddingVertical: 18, gap: 14 },
+  body: { paddingHorizontal: 16, paddingVertical: 14, gap: 10 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   grow: { flexGrow: 1, flexShrink: 1 },
   count: {
@@ -286,7 +286,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 4,
   },
-  footer: { borderTopWidth: StyleSheet.hairlineWidth, paddingTop: 14 },
+  footer: { borderTopWidth: StyleSheet.hairlineWidth, paddingTop: 10 },
   faces: { flexDirection: 'row' },
   overlap: { marginLeft: -9 },
   cta: {

@@ -54,7 +54,7 @@ export function DockTabBar({
       >
         <Icon
           icon={ICONS[route.name as (typeof DOCK_TABS)[number]]}
-          size={22}
+          size={20}
           color={color}
           strokeWidth={focused ? 2.4 : 1.8}
         />
@@ -96,13 +96,13 @@ export function DockTabBar({
           {
             backgroundColor: theme.colors.primary,
             borderColor: theme.colors.background,
-            width: 60,
-            height: 60,
+            width: 54,
+            height: 54,
           },
           pressed && !theme.reduceMotion ? styles.pressed : null,
         ]}
       >
-        <Icon icon={Plus} size={28} color={theme.colors.onPrimary} strokeWidth={2.6} />
+        <Icon icon={Plus} size={24} color={theme.colors.onPrimary} strokeWidth={2.6} />
       </Pressable>
       {visible.slice(half).map(tab)}
     </View>
@@ -121,7 +121,7 @@ const styles = StyleSheet.create({
   tab: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 2 },
   plot: {
     marginTop: -28,
-    borderRadius: 30,
+    borderRadius: 27,
     borderWidth: 4,
     alignItems: 'center',
     justifyContent: 'center',

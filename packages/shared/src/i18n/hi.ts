@@ -47,6 +47,9 @@ export const hi: Translation = {
     haveInvite: 'मेरे पास इनवाइट कोड है',
   },
   settings: {
+    appearance: 'रूप',
+    appearanceHint: 'लाइट या डार्क। आम तौर पर ऐप तुम्हारे फ़ोन की सेटिंग मानता है।',
+    appearanceOptions: { system: 'फ़ोन जैसा', light: 'लाइट', dark: 'डार्क' },
     language: 'भाषा',
     languageNames: { en: 'English', te: 'తెలుగు', hi: 'हिन्दी' },
     title: 'सेटिंग्स',

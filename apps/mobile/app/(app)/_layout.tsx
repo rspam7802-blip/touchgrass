@@ -39,6 +39,7 @@ export default function AppLayout() {
         <Stack.Screen name="settings/privacy" options={{ title: t('settings.privacy') }} />
         <Stack.Screen name="settings/sessions" options={{ title: t('settings.sessions') }} />
         <Stack.Screen name="settings/language" options={{ title: t('settings.languageTitle') }} />
+        <Stack.Screen name="settings/appearance" options={{ title: t('settings.appearance') }} />
         <Stack.Screen name="settings/account" options={{ title: t('settings.account') }} />
         <Stack.Screen name="settings/blocked" options={{ title: t('settings.blockedUsers') }} />
         <Stack.Screen name="contacts" options={{ title: t('squad.findContacts') }} />

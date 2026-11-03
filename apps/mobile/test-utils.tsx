@@ -61,5 +61,5 @@ export function resetStores(): void {
   void AsyncStorage.clear();
   useAuthStore.setState({ status: 'signedOut', session: null });
   useAuthFlowStore.getState().reset();
-  useSettingsStore.setState({ language: null, hydrated: true });
+  useSettingsStore.setState({ language: null, appearance: 'system', hydrated: true });
 }

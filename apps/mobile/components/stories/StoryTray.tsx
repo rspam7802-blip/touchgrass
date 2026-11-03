@@ -9,7 +9,7 @@ import { Avatar } from '../Avatar';
 import { Plus } from '../icons';
 import { Icon, Text } from '../ui';
 
-const SIZE = 60;
+const SIZE = 52;
 
 /**
  * Squad stories (Phase 13) as the mock's reel: "Your story" first (add one, or open yours), then people with
@@ -125,7 +125,7 @@ export function StoryTray() {
 
 const styles = StyleSheet.create({
   row: { gap: 18, alignItems: 'flex-start', paddingVertical: 2 },
-  person: { alignItems: 'center', gap: 4, width: 68, minHeight: 44 },
+  person: { alignItems: 'center', gap: 4, width: 62, minHeight: 44 },
   ringWrap: { minWidth: 44, minHeight: 44 },
   add: {
     width: SIZE,
@@ -147,6 +147,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  name: { textAlign: 'center', width: 68 },
+  name: { textAlign: 'center', width: 62 },
   bold: { fontWeight: '700' },
 });
