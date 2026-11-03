@@ -50,11 +50,11 @@ export function Button({
       style={({ pressed }) => [
         styles.base,
         {
-          minHeight: theme.minTouchTarget,
+          minHeight: variant === 'ghost' ? theme.minTouchTarget : PROMINENT_HEIGHT,
           minWidth: theme.minTouchTarget,
           backgroundColor: palette.bg,
           borderColor: palette.border,
-          borderRadius: theme.radii.md,
+          borderRadius: theme.radii.pill,
         },
         pressed && !theme.reduceMotion ? styles.pressed : null,
         isDisabled ? styles.disabled : null,
@@ -69,7 +69,10 @@ export function Button({
           importantForAccessibility="no-hide-descendants"
         />
       ) : (
-        <Text variant="label" style={{ color: palette.fg, textAlign: 'center', fontWeight: '700' }}>
+        <Text
+          variant="label"
+          style={{ color: palette.fg, textAlign: 'center', fontWeight: '600', letterSpacing: 0.2 }}
+        >
           {label}
         </Text>
       )}
@@ -77,14 +80,17 @@ export function Button({
   );
 }
 
+/** Filled buttons are a little taller than the 44 pt minimum: calmer, easier to hit (D-151). */
+const PROMINENT_HEIGHT = 52;
+
 const styles = StyleSheet.create({
   base: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 18,
-    paddingVertical: 12,
-    borderWidth: 1,
+    paddingHorizontal: 24,
+    paddingVertical: 14,
+    borderWidth: StyleSheet.hairlineWidth,
   },
-  pressed: { transform: [{ scale: 0.96 }], opacity: 0.9 },
+  pressed: { transform: [{ scale: 0.98 }], opacity: 0.88 },
   disabled: { opacity: 0.5 },
 });

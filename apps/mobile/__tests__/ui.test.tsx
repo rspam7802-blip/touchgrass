@@ -1,3 +1,4 @@
+import { StyleSheet } from 'react-native';
 import NetInfo from '@react-native-community/netinfo';
 import { fireEvent, screen } from '@testing-library/react-native';
 import {
@@ -18,7 +19,10 @@ describe('Button', () => {
     const button = screen.getByRole('button', { name: 'Pull up' });
     await fireEvent.press(button);
     expect(onPress).toHaveBeenCalledTimes(1);
-    expect(button).toHaveStyle({ minHeight: 44, minWidth: 44 });
+    // Filled buttons are taller than the minimum (D-151); every button meets the 44 pt target.
+    const style = StyleSheet.flatten(button.props.style) as { minHeight: number; minWidth: number };
+    expect(style.minHeight).toBeGreaterThanOrEqual(44);
+    expect(style.minWidth).toBeGreaterThanOrEqual(44);
     expect(button).not.toBeDisabled();
   });
   it('is disabled and busy while loading', async () => {

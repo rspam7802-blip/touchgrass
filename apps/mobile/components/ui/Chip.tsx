@@ -58,5 +58,5 @@ export function Chip({
 }
 
 const styles = StyleSheet.create({
-  chip: { borderWidth: 1, paddingHorizontal: 14, paddingVertical: 10, justifyContent: 'center' },
+  chip: { borderWidth: 1, paddingHorizontal: 18, paddingVertical: 10, justifyContent: 'center' },
 });

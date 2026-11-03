@@ -603,3 +603,7 @@ Stories are photos that last 24 hours. The author picks the audience per story: 
 ## D-150 Story playback and accessibility
 
 Stories move on after 6 seconds, except while paused, while the viewers sheet is open or while a screen reader is on (WCAG 2.2.2). The sides of the photo are labelled Previous/Next buttons, the progress reads "Story 1 of 3", and the like, reply, report, viewers and delete controls are 44 pt buttons with labels. A story is marked seen once per visit as it comes on screen. Reply opens the existing direct chat with the author, so message requests and blocks apply as for any DM.
+
+## D-151 A more spacious, premium layout
+
+The founder found the app crowded, so the design system was loosened rather than individual screens patched: screens get 28 pt between sections and more room at the top and bottom; cards have 20 pt padding, a larger 28 pt radius and a hairline edge; filled buttons are 52 pt pill shapes (ghost buttons stay at the 44 pt minimum); text fields are 52 pt; titles are larger, semi-bold and tightly tracked, body text has more line height, and section labels are widely tracked. On Explore the brand is larger, plan cards have taller photos (220 pt) and 28 pt between them, and the story and Free now rows breathe more. Touch targets, contrast and the 200% text reflow are unchanged.

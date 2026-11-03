@@ -137,11 +137,11 @@ export function FreeNowStrip() {
 }
 
 const styles = StyleSheet.create({
-  wrap: { gap: 8 },
+  wrap: { gap: 12 },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
   upper: { textTransform: 'uppercase' },
   title: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  row: { gap: 14, alignItems: 'flex-start', paddingVertical: 2 },
+  row: { gap: 18, alignItems: 'flex-start', paddingVertical: 2 },
   person: { alignItems: 'center', gap: 4, width: 64, minHeight: 44 },
   add: {
     width: SIZE,

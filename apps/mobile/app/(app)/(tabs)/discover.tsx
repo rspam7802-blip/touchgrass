@@ -202,7 +202,7 @@ export default function DiscoverScreen() {
           style={[
             styles.search,
             {
-              minHeight: theme.minTouchTarget,
+              minHeight: 52,
               backgroundColor: theme.colors.surfaceAlt,
               borderColor: theme.colors.border,
               borderRadius: theme.radii.pill,
@@ -374,22 +374,22 @@ export default function DiscoverScreen() {
 }
 
 const styles = StyleSheet.create({
-  header: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  brandRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  brand: { fontSize: 22, lineHeight: 28 },
+  header: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingTop: 8 },
+  brandRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  brand: { fontSize: 28, lineHeight: 34, letterSpacing: -0.8 },
   dot: { width: 10, height: 10, borderRadius: 5 },
   search: {
     flexGrow: 1,
     flexShrink: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    paddingHorizontal: 16,
-    borderWidth: 1,
+    gap: 10,
+    paddingHorizontal: 20,
+    borderWidth: StyleSheet.hairlineWidth,
   },
-  chips: { gap: 8, alignItems: 'center', paddingVertical: 2 },
-  row: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8 },
+  chips: { gap: 10, alignItems: 'center', paddingVertical: 2 },
+  row: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 12 },
   grow: { flexGrow: 1, flexShrink: 1 },
-  panel: { gap: 12 },
-  cards: { gap: 16 },
+  panel: { gap: 16 },
+  cards: { gap: 28 },
 });

@@ -27,7 +27,7 @@ export function TextField({ label, hint, error, style, ...rest }: TextFieldProps
           theme.typography.body,
           styles.input,
           {
-            minHeight: theme.minTouchTarget,
+            minHeight: FIELD_HEIGHT,
             color: theme.colors.text,
             backgroundColor: theme.colors.surfaceAlt,
             fontFamily: fontFamilyFor(theme.typography.body.fontWeight),
@@ -57,8 +57,10 @@ export function TextField({ label, hint, error, style, ...rest }: TextFieldProps
   );
 }
 
+const FIELD_HEIGHT = 52;
+
 const styles = StyleSheet.create({
-  wrap: { gap: 6 },
-  input: { borderWidth: 1.5, paddingHorizontal: 14, paddingVertical: 10 },
+  wrap: { gap: 8 },
+  input: { borderWidth: 1.5, paddingHorizontal: 16, paddingVertical: 14 },
   upper: { textTransform: 'uppercase' },
 });

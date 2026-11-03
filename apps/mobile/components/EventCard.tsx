@@ -12,7 +12,7 @@ import { Icon, Pill, Text } from './ui';
 
 type FeedExtras = Pick<FeedItem, 'preview' | 'via' | 'reasons' | 'distanceMeters' | 'weather'>;
 
-const HERO_HEIGHT = 176;
+const HERO_HEIGHT = 220;
 
 /**
  * A plan in a list (the mock's photo-led card): cover photo with title and place over it, tags and distance on
@@ -266,17 +266,17 @@ function feedDetails(
 }
 
 const styles = StyleSheet.create({
-  card: { borderWidth: 1, overflow: 'hidden' },
+  card: { borderWidth: StyleSheet.hairlineWidth, overflow: 'hidden' },
   pressed: { opacity: 0.9, transform: [{ scale: 0.99 }] },
-  hero: { height: HERO_HEIGHT, justifyContent: 'space-between', padding: 12 },
+  hero: { height: HERO_HEIGHT, justifyContent: 'space-between', padding: 16 },
   placeholder: { alignItems: 'center', justifyContent: 'center' },
 
   topRow: { flexDirection: 'row', justifyContent: 'space-between', gap: 8 },
   pills: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, flexShrink: 1 },
-  heroText: { gap: 2 },
+  heroText: { gap: 4 },
   onPhoto: { color: '#FFFFFF', textShadowColor: 'rgba(0,0,0,0.6)', textShadowRadius: 8 },
   onPhotoMuted: { color: '#E5E7EB', textShadowColor: 'rgba(0,0,0,0.6)', textShadowRadius: 6 },
-  body: { padding: 16, gap: 10 },
+  body: { paddingHorizontal: 20, paddingVertical: 18, gap: 14 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   grow: { flexGrow: 1, flexShrink: 1 },
   count: {
@@ -286,7 +286,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 4,
   },
-  footer: { borderTopWidth: StyleSheet.hairlineWidth, paddingTop: 10 },
+  footer: { borderTopWidth: StyleSheet.hairlineWidth, paddingTop: 14 },
   faces: { flexDirection: 'row' },
   overlap: { marginLeft: -9 },
   cta: {

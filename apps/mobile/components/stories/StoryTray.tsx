@@ -124,7 +124,7 @@ export function StoryTray() {
 }
 
 const styles = StyleSheet.create({
-  row: { gap: 14, alignItems: 'flex-start', paddingVertical: 2 },
+  row: { gap: 18, alignItems: 'flex-start', paddingVertical: 2 },
   person: { alignItems: 'center', gap: 4, width: 68, minHeight: 44 },
   ringWrap: { minWidth: 44, minHeight: 44 },
   add: {
