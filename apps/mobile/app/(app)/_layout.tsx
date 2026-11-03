@@ -52,6 +52,14 @@ export default function AppLayout() {
         <Stack.Screen name="events/[id]/attendees" options={{ title: t('events.whoIsGoing') }} />
         <Stack.Screen name="events/[id]/plus-one" options={{ title: t('events.plusOneLabel') }} />
         <Stack.Screen name="report" options={{ title: t('report.title'), presentation: 'modal' }} />
+        <Stack.Screen
+          name="stories/[userId]"
+          options={{ headerShown: false, presentation: 'fullScreenModal' }}
+        />
+        <Stack.Screen
+          name="stories/new"
+          options={{ title: t('stories.composerTitle'), presentation: 'modal' }}
+        />
         <Stack.Screen name="chats/[id]/index" options={{ title: '' }} />
         <Stack.Screen
           name="chats/[id]/poll"

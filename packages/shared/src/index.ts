@@ -35,3 +35,4 @@ export * from './text-filter';
 export * from './notifications';
 export * from './ics';
 export * from './schemas/notifications';
+export * from './schemas/stories';

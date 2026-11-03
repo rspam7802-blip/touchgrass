@@ -20,6 +20,7 @@ import { type EngagementSeedSummary, seedEngagement } from './engagement.seed.js
 import { type SafetySeedSummary, seedSafety } from './safety.seed.js';
 import { type NotificationsSeedSummary, seedNotifications } from './notifications.seed.js';
 import { type AdminConsoleSeedSummary, seedAdminConsole } from './admin-console.seed.js';
+import { type StoriesSeedSummary, seedStories } from './stories.seed.js';
 import type { ObjectStorage } from '../adapters/storage/storage.port.js';
 import { seedReference } from './reference.js';
 import { seedPersona } from './taxonomy.js';
@@ -46,6 +47,7 @@ export interface SeedSummary {
   safety: SafetySeedSummary;
   notifications: NotificationsSeedSummary;
   adminConsole: AdminConsoleSeedSummary;
+  stories: StoriesSeedSummary;
 }
 
 /**
@@ -206,6 +208,7 @@ export async function seed(
     const safetySummary = await seedSafety(tx, { memberIds, adminId, storage: opts.storage });
     const notificationsSummary = await seedNotifications(tx, { memberIds });
     const adminConsoleSummary = await seedAdminConsole(tx, { cityId: city.id, memberIds, adminId });
+    const storiesSummary = await seedStories(tx, { memberIds, storage: opts.storage });
 
     const count = async (table: string): Promise<number> => {
       const res = await tx.execute<{ n: number }>(
@@ -229,6 +232,7 @@ export async function seed(
       safety: safetySummary,
       notifications: notificationsSummary,
       adminConsole: adminConsoleSummary,
+      stories: storiesSummary,
     };
   });
 }

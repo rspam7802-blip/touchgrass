@@ -36,6 +36,7 @@ describe('process wiring', () => {
         'account.purge-due',
         'otp.purge-expired',
         'media.purge-stale-uploads',
+        'stories.purge-expired',
         'events.waitlist-sweep',
         'events.complete-ended',
         'weather.refresh',

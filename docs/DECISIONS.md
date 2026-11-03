@@ -587,3 +587,19 @@ No emoji in the app's interface or copy. Controls and labels use Lucide line ico
 ## D-146 A custom icon set
 
 The app draws its own icons instead of a library set: about 40 original line icons on a 24pt grid with 1.75pt round strokes, and the lime dot from the logo on the icons people use most (explore, plans, chats, squad, bell, pin, date, lock, flame, ticket, medal). Each icon is one SVG string in `apps/mobile/components/icons/glyphs.ts`, rendered with `SvgXml`, and the design preview is generated from the same strings, so the preview is exactly what ships. The dot takes the icon's own colour on lime backgrounds so it never disappears. The find-your-group signal is drawn from its icon name instead of the server's emoji glyph, and the sample data no longer has emoji in chat messages, notes or captions. This replaces the Lucide set from D-145.
+
+## D-147 Free now ping and the plan screen order
+
+Tapping someone in Free now opens a card (their note and until when) with three actions: Ping, Message and Plan together, instead of jumping straight to Plot. A ping is a push to a squad member who is free right now; it needs the squad relation, no block either way and an active free status, and one ping per pair per 30 minutes (Redis `SET NX EX`), plus a per-user rate limit. The worker re-checks the audience before notifying. The plan screen now reads top to bottom as the plan card, the Pull up block, this plan's chat (the latest three messages and Open chat), then the details.
+
+## D-148 Squad social-proof notifications
+
+"N of your squad are pulling up" goes to a viewer who can see the plan (`canViewEvent`), when 3+ of their squad who share their activity are going and the plan starts within 24 hours: once per viewer per plan and at most once an hour across plans (`reminder_log`). "Your squad is outside. Are you?" goes once a day when 2+ squad members who share their activity checked in to any plan in the last 3 hours and the reader has not; it names no plan and no place, so it reveals nothing a mystery or invite-only plan would hide.
+
+## D-149 Squad stories
+
+Stories are photos that last 24 hours. The author picks the audience per story: their squad, or their squad and their squads (friends of friends); there is no follower graph, so stories reuse the relations that already drive plan visibility. `canViewStory` (pure, unit-tested) decides every read: removed and expired stories are seen by nobody; the author sees their own; everyone else needs an active author, no block either way, no hold, and to be in the audience. Not found is returned whenever a story is not visible, so outsiders can't tell it exists. Photos use the normal media pipeline (EXIF/GPS stripped, image moderation, only `ready` photos post). A caption that trips the text filter holds the whole story (only the author sees it) until a moderator releases it. Likes are visible only to the author, together with who viewed; people can't like their own. Authors delete at once (rows and files); moderators take stories down from the queue; expired stories stay hidden for 72 hours so reports filed just before expiry can still be reviewed, then the hourly purge deletes rows and files. The `stories` flag switches posting off and empties the tray. Linking a story to a plan is left out for now: it would need the plan's own visibility check on every read.
+
+## D-150 Story playback and accessibility
+
+Stories move on after 6 seconds, except while paused, while the viewers sheet is open or while a screen reader is on (WCAG 2.2.2). The sides of the photo are labelled Previous/Next buttons, the progress reads "Story 1 of 3", and the like, reply, report, viewers and delete controls are 44 pt buttons with labels. A story is marked seen once per visit as it comes on screen. Reply opens the existing direct chat with the author, so message requests and blocks apply as for any DM.

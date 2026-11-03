@@ -359,6 +359,17 @@ export class SocialGraphService {
     return new Map(res.rows.map((r) => [r.id, r.n]));
   }
 
+  /** Which of `ids` share at least one squad member with `userId` (friend-of-friend audiences, stories). */
+  async friendsOfFriendsAmong(userId: string, ids: string[]): Promise<Set<string>> {
+    const others = [...new Set(ids)].filter((id) => id !== userId);
+    if (others.length === 0) return new Set();
+    const res = await this.replica.execute<{ id: string }>(sql`
+      SELECT DISTINCT y.user_id AS id
+      FROM squad_edges x JOIN squad_edges y ON y.friend_id = x.friend_id
+      WHERE x.user_id = ${userId} AND y.user_id = ANY(${uuidArrayLiteral(others)}::uuid[])`);
+    return new Set(res.rows.map((r) => r.id));
+  }
+
   /** Friends of my friends who are not already my squad, with how many mutuals each has (suggestions). */
   async friendsOfFriends(
     userId: string,

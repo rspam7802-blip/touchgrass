@@ -31,6 +31,7 @@ import { AtEventModule } from '../modules/at-event/at-event.module.js';
 import { AfterModule } from '../modules/after/after.module.js';
 import { FeedbackModule } from '../modules/feedback/feedback.module.js';
 import { LoreModule } from '../modules/lore/lore.module.js';
+import { StoriesModule } from '../modules/stories/stories.module.js';
 import { ReliabilityModule } from '../modules/reliability/reliability.module.js';
 import { AvailabilityModule } from '../modules/availability/availability.module.js';
 import { CrewsModule } from '../modules/crews/crews.module.js';
@@ -116,6 +117,7 @@ export class WorkerModule implements OnApplicationBootstrap, OnApplicationShutdo
         PerksModule,
         FeedbackModule,
         LoreModule,
+        StoriesModule,
         AfterModule,
         ReliabilityModule,
         AvailabilityModule,

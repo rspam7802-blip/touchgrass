@@ -194,6 +194,7 @@ export const mediaAssets = pgTable('media_assets', {
       'chat',
       'verification_selfie',
       'report_screenshot',
+      'story',
     ],
   }).notNull(),
   originalKey: text('original_key').notNull().unique(),

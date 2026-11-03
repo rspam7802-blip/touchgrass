@@ -10,6 +10,8 @@ export const FEATURE_FLAG_DEFAULTS = {
   challenges: true,
   referrals: true,
   map_view: true,
+  /** Squad stories (Phase 13). */
+  stories: true,
 } as const satisfies Record<string, boolean>;
 
 export type FeatureFlagKey = keyof typeof FEATURE_FLAG_DEFAULTS;

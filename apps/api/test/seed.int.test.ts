@@ -78,6 +78,8 @@ describe('seed', () => {
     expect(summary.adminConsole.waitlisted).toBeGreaterThanOrEqual(6);
     expect(summary.adminConsole.featured).toBeGreaterThanOrEqual(1);
     expect(summary.adminConsole.analyticsDays).toBe(30);
+    // Phase 13: squad stories for member #2 (three from the squad, one friend of a friend).
+    expect(summary.stories.live).toBeGreaterThanOrEqual(4);
     const { rows: tiers } = await pool.query<{ tier: string }>(
       'SELECT DISTINCT tier FROM reliability_scores',
     );

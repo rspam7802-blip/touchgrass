@@ -24,7 +24,7 @@ export const Gender = z.enum(['woman', 'man', 'non_binary', 'prefer_not_to_say']
 export const ProfileVisibility = z.enum(['everyone', 'friends_of_friends', 'squad_only']);
 export const FriendshipStatus = z.enum(['pending', 'accepted', 'declined', 'cancelled']);
 export const ConversationType = z.enum(['dm', 'event', 'crew']);
-export const ReportTargetType = z.enum(['user', 'event', 'message', 'lore_media']);
+export const ReportTargetType = z.enum(['user', 'event', 'message', 'lore_media', 'story']);
 export const ReportCategory = z.enum([
   'harassment',
   'hate_speech',
@@ -75,6 +75,7 @@ export const MediaPurpose = z.enum([
   'chat',
   'verification_selfie',
   'report_screenshot',
+  'story',
 ]);
 export const UserStatus = z.enum([
   'onboarding',

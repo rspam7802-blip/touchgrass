@@ -9,6 +9,7 @@ import { EventsService } from '../modules/events/events.service.js';
 import { PartitionService } from '../infra/database/partitions.js';
 import { WaitlistService } from '../modules/events/waitlist.service.js';
 import { MediaService } from '../modules/media/media.service.js';
+import { StoriesService } from '../modules/stories/stories.service.js';
 import { ReliabilityService } from '../modules/reliability/reliability.service.js';
 import { AvailabilityService } from '../modules/availability/availability.service.js';
 import { CrewsService } from '../modules/crews/crews.service.js';
@@ -65,6 +66,7 @@ export class ScheduledJobs {
     private readonly notifications: NotificationsService,
     private readonly reminders: RemindersService,
     private readonly analyticsCounters: AnalyticsCountersService,
+    private readonly stories: StoriesService,
   ) {}
 
   definitions(): ScheduledJob[] {
@@ -75,6 +77,11 @@ export class ScheduledJobs {
         id: 'media.purge-stale-uploads',
         pattern: '37 * * * *',
         run: () => this.media.purgeStaleUploads(),
+      },
+      {
+        id: 'stories.purge-expired',
+        pattern: '41 * * * *',
+        run: () => this.stories.purgeExpired(),
       },
       { id: 'events.waitlist-sweep', pattern: '* * * * *', run: () => this.waitlist.sweep() },
       {

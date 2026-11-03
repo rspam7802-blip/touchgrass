@@ -4,7 +4,7 @@ import type { Tx } from '../../infra/database/database.module.js';
 
 /** Things the moderation queue can point at (`moderation_items.target_type`). */
 export type ModerationTargetType =
-  'media_asset' | 'user' | 'event' | 'message' | 'lore_media' | 'crew' | 'proposal';
+  'media_asset' | 'user' | 'event' | 'message' | 'lore_media' | 'crew' | 'proposal' | 'story';
 
 /** Work to run once the resolving transaction has committed (cache invalidation, realtime fan-out). */
 export type AfterCommit = (() => Promise<void>) | undefined;

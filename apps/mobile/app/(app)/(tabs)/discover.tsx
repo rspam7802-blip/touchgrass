@@ -2,6 +2,7 @@ import { type FeedWhen, type GeoPoint } from '@touchgrass/shared';
 import * as Location from 'expo-location';
 import { useRouter } from 'expo-router';
 import { FreeNowStrip } from '../../../components/engagement/FreeNowStrip';
+import { StoryTray } from '../../../components/stories/StoryTray';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
@@ -224,6 +225,7 @@ export default function DiscoverScreen() {
           />
         ) : null}
       </View>
+      <StoryTray />
       <FreeNowStrip />
       {weather ? (
         <Text variant="caption" tone="muted" testID="weather-chip">

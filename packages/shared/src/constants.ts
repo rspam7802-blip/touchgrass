@@ -137,6 +137,17 @@ export const LIMITS = {
     lorePerPersonPerEvent: 30,
     loreDownloadTtlSeconds: 24 * 3600,
   },
+  stories: {
+    /** A story is visible for this long after posting. */
+    lifetimeHours: 24,
+    /** Most live stories one person can have at a time. */
+    maxLivePerAuthor: 20,
+    captionMaxLength: 200,
+    /** Expired stories stay hidden this long (for reports in flight), then the rows and files are deleted. */
+    purgeGraceHours: 72,
+    /** Most people the story tray lists. */
+    trayMaxAuthors: 100,
+  },
   availability: { minHours: 1, maxHours: 6, noteMaxLength: 120 },
   crews: {
     nameMinLength: 3,

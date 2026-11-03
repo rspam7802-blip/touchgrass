@@ -58,7 +58,9 @@ export const suggestionDismissals = pgTable(
 export const reports = pgTable('reports', {
   id: uuid('id').primaryKey(),
   reporterId: uuid('reporter_id'),
-  targetType: text('target_type', { enum: ['user', 'event', 'message', 'lore_media'] }).notNull(),
+  targetType: text('target_type', {
+    enum: ['user', 'event', 'message', 'lore_media', 'story'],
+  }).notNull(),
   targetId: uuid('target_id').notNull(),
   category: text('category').notNull(),
   details: text('details').notNull().default(''),
