@@ -44,10 +44,7 @@ export default function EventStoryScreen() {
       <StoryCard
         ref={card}
         title={e.title}
-        lines={[
-          formatWhen(e.startsAt, i18n.language, e.timezone),
-          `📍 ${locationLabel(t, e.location)}`,
-        ]}
+        lines={[formatWhen(e.startsAt, i18n.language, e.timezone), locationLabel(t, e.location)]}
         footer={e.shareUrl.replace(/^https?:\/\//, '')}
         testID="event-story-card"
       />

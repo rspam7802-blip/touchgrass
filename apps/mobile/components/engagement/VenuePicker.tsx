@@ -1,3 +1,4 @@
+import { MapPin } from 'lucide-react-native';
 import type { EventWhere } from '@touchgrass/shared';
 import * as Crypto from 'expo-crypto';
 import { useMemo, useState } from 'react';
@@ -5,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 import { useSavedVenues, useVenueFromPlace, useVenueSearch } from '../../src/features/events/api';
 import { errorMessage } from '../../src/lib/errors';
-import { Chip, ListRow, Text, TextField } from '../ui';
+import { Chip, IconText, ListRow, TextField } from '../ui';
 
 export interface PickedPlace {
   where: EventWhere;
@@ -39,9 +40,9 @@ export function VenuePicker({
   return (
     <View style={styles.wrap} testID={testID}>
       {picked ? (
-        <Text accessibilityLiveRegion="polite" testID={`${testID}-picked`}>
-          📍 {picked.label}
-        </Text>
+        <IconText icon={MapPin} accessibilityLiveRegion="polite" testID={`${testID}-picked`}>
+          {picked.label}
+        </IconText>
       ) : null}
       <TextField
         label={t('events.searchPlace')}

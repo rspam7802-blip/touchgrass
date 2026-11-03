@@ -52,7 +52,7 @@ export default function NewCrewScreen() {
         mode="single"
         options={(interests.data?.items ?? []).map((i) => ({
           id: i.id,
-          label: `${i.emoji} ${localized(i.name, i18n.language)}`,
+          label: localized(i.name, i18n.language),
         }))}
         selected={interestId ? [interestId] : []}
         onChange={(next) => {

@@ -1,3 +1,4 @@
+import { MapPin } from 'lucide-react-native';
 import { type EventDetail, LIMITS } from '@touchgrass/shared';
 import { Image } from 'expo-image';
 import * as Location from 'expo-location';
@@ -22,7 +23,7 @@ import { useTheme } from '../src/theme/theme';
 import { CalendarButton } from './CalendarButton';
 import { PersonRow } from './PersonRow';
 import { useTrack } from '../src/features/analytics/analytics';
-import { Button, Text, TextField } from './ui';
+import { Button, IconText, Text, TextField } from './ui';
 import { useFlag } from '../src/features/app-config/use-flag';
 
 /**
@@ -192,7 +193,9 @@ export function EventDetailView({ event }: { event: EventDetail }) {
         />
       ) : null}
 
-      <Text testID="event-location">📍 {locationLabel(t, loc)}</Text>
+      <IconText icon={MapPin} testID="event-location">
+        {locationLabel(t, loc)}
+      </IconText>
       {loc.kind === 'approximate' ? (
         <Text variant="caption" tone="muted">
           {t('events.mysteryRevealsAt', { time: formatWhen(loc.revealsAt, i18n.language) })}

@@ -201,7 +201,7 @@ describe('badges and streaks (F-GAM-01, F-GAM-02)', () => {
     };
     expect(
       feed.items.find((i) => i.verb === 'badge_earned' && i.actor.id === a.id)?.object?.title,
-    ).toBe('🌱 Grass Toucher');
+    ).toBe('Grass Toucher');
 
     // The host's plan counts as hosted once someone checked in.
     await h.app.get(EventsService).completeEnded();

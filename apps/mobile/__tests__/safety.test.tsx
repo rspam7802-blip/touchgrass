@@ -164,7 +164,7 @@ describe('safety centre (F-SAF-07)', () => {
       .on('GET', '/v1/safety/live', { status: 200, body: { share: share() } });
     await renderWithProviders(<SafetyScreen />, { fetchFn: api.fetch });
     expect(await screen.findByTestId('safety-sharing')).toBeOnTheScreen();
-    expect(screen.getByText('Your status: Verified ✓')).toBeOnTheScreen();
+    expect(screen.getByText('Your status: Verified')).toBeOnTheScreen();
     expect(screen.queryByTestId('safety-open-verification')).toBeNull();
   });
 });
@@ -474,7 +474,7 @@ describe('getting verified (F-SAF-01)', () => {
       '3 tries left today',
     );
     await fireEvent.press(screen.getByTestId('verification-start'));
-    expect(await screen.findByTestId('verification-pose')).toHaveTextContent('Peace sign ✌️');
+    expect(await screen.findByTestId('verification-pose')).toHaveTextContent('Peace sign');
     await fireEvent.press(screen.getByTestId('verification-selfie'));
     expect(await screen.findByTestId('verification-body')).toHaveTextContent(
       'Thanks! We will let you know once it is reviewed.',

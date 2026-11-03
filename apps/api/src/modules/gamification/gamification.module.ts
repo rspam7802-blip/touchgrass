@@ -59,7 +59,7 @@ export class GamificationModule implements OnModuleInit {
         this.users.languages([viewerId]),
       ]);
       const lang = langs.get(viewerId) ?? 'en';
-      return new Map([...found].map(([id, b]) => [id, `${b.emoji} ${b.name[lang]}`]));
+      return new Map([...found].map(([id, b]) => [id, b.name[lang]]));
     });
     this.badgesReader.register({
       earnedAt: (userId, eventId) => this.gamification.earnedAt(userId, eventId),

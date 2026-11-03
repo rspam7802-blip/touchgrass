@@ -54,7 +54,7 @@ export default function NewProposalScreen() {
         mode="single"
         options={(interests.data?.items ?? []).map((i) => ({
           id: i.id,
-          label: `${i.emoji} ${localized(i.name, i18n.language)}`,
+          label: localized(i.name, i18n.language),
         }))}
         selected={category ? [category] : []}
         onChange={(next) => {

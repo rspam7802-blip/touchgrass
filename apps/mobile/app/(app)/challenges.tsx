@@ -53,7 +53,7 @@ function ChallengeCard({ c }: { c: ChallengeView }) {
       testID={`challenge-${c.id}`}
     >
       <Text variant="heading" accessibilityRole="header">
-        {c.emoji} {title}
+        {title}
       </Text>
       <Text>{localized(c.description, i18n.language)}</Text>
       <Text variant="caption" tone="muted">
@@ -68,10 +68,7 @@ function ChallengeCard({ c }: { c: ChallengeView }) {
       </Text>
       {c.rewardBadge ? (
         <Text variant="caption">
-          {t('challenges.reward', {
-            emoji: c.rewardBadge.emoji,
-            name: localized(c.rewardBadge.name, i18n.language),
-          })}
+          {t('challenges.reward', { name: localized(c.rewardBadge.name, i18n.language) })}
         </Text>
       ) : null}
       {c.joined ? (

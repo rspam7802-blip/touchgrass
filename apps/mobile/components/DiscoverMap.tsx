@@ -71,7 +71,7 @@ export function DiscoverMap({
           <Marker
             key={`m-${p.id}`}
             coordinate={{ latitude: p.center.lat, longitude: p.center.lng }}
-            title={`${p.emoji ?? '📍'} ${p.title}`}
+            title={p.title}
             description={formatWhen(p.startsAt, i18n.language)}
             onCalloutPress={() => {
               onOpen(p);
@@ -109,7 +109,7 @@ export function DiscoverMap({
       {q.data?.pins.map((p) => (
         <ListRow
           key={`l-${p.id}`}
-          label={`${p.emoji ?? '📍'} ${p.title}`}
+          label={p.title}
           detail={formatWhen(p.startsAt, i18n.language)}
           testID={`pin-${p.slug}`}
           onPress={() => {

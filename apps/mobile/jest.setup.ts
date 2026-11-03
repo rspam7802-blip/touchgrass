@@ -82,7 +82,14 @@ jest.mock('react-native-svg', () => {
   const { View } = jest.requireActual<typeof import('react-native')>('react-native');
   const Stub = (props: object) =>
     jest.requireActual<typeof import('react')>('react').createElement(View, props);
-  return { __esModule: true, default: Stub, Path: Stub, Rect: Stub };
+  // Every SVG element (Path, Circle, Line, Polyline… used by the QR code and Lucide icons) renders as a View.
+  const shapes = ['Path', 'Rect', 'Circle', 'Ellipse', 'Line', 'Polyline', 'Polygon', 'G', 'Defs'];
+  return {
+    __esModule: true,
+    default: Stub,
+    Svg: Stub,
+    ...Object.fromEntries(shapes.map((name) => [name, Stub])),
+  };
 });
 jest.mock('expo-camera', () => {
   const { View } = jest.requireActual<typeof import('react-native')>('react-native');

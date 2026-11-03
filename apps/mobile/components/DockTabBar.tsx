@@ -2,16 +2,17 @@ import { useRouter } from 'expo-router';
 import type { BottomTabBarProps } from 'expo-router/tabs';
 import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, View } from 'react-native';
+import { CalendarDays, Compass, MessageCircle, Plus, Users } from 'lucide-react-native';
 import { useTheme } from '../src/theme/theme';
-import { Text } from './ui';
+import { Icon, type LucideIcon, Text } from './ui';
 
 /** Tabs shown in the dock, in order; the Plot button sits in the middle. Profile and settings open from headers. */
 export const DOCK_TABS = ['discover', 'plans', 'chats', 'squad'] as const;
-const ICONS: Record<(typeof DOCK_TABS)[number], string> = {
-  discover: '🌱',
-  plans: '📍',
-  chats: '💬',
-  squad: '👯',
+const ICONS: Record<(typeof DOCK_TABS)[number], LucideIcon> = {
+  discover: Compass,
+  plans: CalendarDays,
+  chats: MessageCircle,
+  squad: Users,
 };
 
 /** The mock's bottom dock: frosted bar, lime active tab, big lime "+" in the centre to plot a plan. */
@@ -51,13 +52,16 @@ export function DockTabBar({
         }}
         style={[styles.tab, { minHeight: theme.minTouchTarget }]}
       >
-        <Text importantForAccessibility="no" style={styles.icon}>
-          {ICONS[route.name as (typeof DOCK_TABS)[number]]}
-        </Text>
+        <Icon
+          icon={ICONS[route.name as (typeof DOCK_TABS)[number]]}
+          size={22}
+          color={color}
+          strokeWidth={focused ? 2.4 : 1.8}
+        />
         <Text
           variant="caption"
           numberOfLines={1}
-          style={{ color, fontWeight: focused ? '800' : '700', fontSize: 11 }}
+          style={{ color, fontWeight: focused ? '700' : '500', fontSize: 11 }}
         >
           {label}
         </Text>
@@ -98,12 +102,7 @@ export function DockTabBar({
           pressed && !theme.reduceMotion ? styles.pressed : null,
         ]}
       >
-        <Text
-          importantForAccessibility="no"
-          style={{ color: theme.colors.onPrimary, fontSize: 30, lineHeight: 34, fontWeight: '800' }}
-        >
-          +
-        </Text>
+        <Icon icon={Plus} size={28} color={theme.colors.onPrimary} strokeWidth={2.6} />
       </Pressable>
       {visible.slice(half).map(tab)}
     </View>
@@ -120,7 +119,6 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
   },
   tab: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 2 },
-  icon: { fontSize: 20 },
   plot: {
     marginTop: -28,
     borderRadius: 30,

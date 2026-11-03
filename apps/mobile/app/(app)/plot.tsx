@@ -1,3 +1,4 @@
+import { MapPin } from 'lucide-react-native';
 import {
   CreateEventBody,
   type EventDetail,
@@ -22,6 +23,7 @@ import {
   Button,
   Chip,
   ErrorState,
+  IconText,
   ListRow,
   LoadingState,
   Screen,
@@ -348,7 +350,7 @@ function PlotForm({
 
   const categoryOptions = (interests.data?.items ?? []).map((i) => ({
     id: i.id,
-    label: `${i.emoji} ${localized(i.name, i18n.language)}`,
+    label: localized(i.name, i18n.language),
   }));
 
   return (
@@ -387,9 +389,9 @@ function PlotForm({
         {t('events.where')}
       </Text>
       {picked ? (
-        <Text testID="plot-picked" accessibilityLiveRegion="polite">
-          📍 {picked.label}
-        </Text>
+        <IconText icon={MapPin} testID="plot-picked" accessibilityLiveRegion="polite">
+          {picked.label}
+        </IconText>
       ) : null}
       <TextField
         label={t('events.searchPlace')}
@@ -669,7 +671,7 @@ function PlotForm({
             label={t('profile.vibes')}
             options={(vibes.data?.items ?? []).map((v) => ({
               id: v.id,
-              label: `${v.emoji} ${localized(v.name, i18n.language)}`,
+              label: localized(v.name, i18n.language),
             }))}
             selected={form.vibeTagIds}
             onChange={(ids) => {

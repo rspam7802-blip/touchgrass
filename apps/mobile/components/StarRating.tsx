@@ -1,7 +1,8 @@
+import { Star } from 'lucide-react-native';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../src/theme/theme';
-import { Text } from './ui';
+import { Icon, Text } from './ui';
 
 export interface StarRatingProps {
   /** Group label read before the stars, e.g. "Rate the plan". */
@@ -44,16 +45,13 @@ export function StarRating({ label, value, onChange, testID }: StarRatingProps) 
               ]}
               testID={testID ? `${testID}-${n}` : undefined}
             >
-              <Text
-                style={[
-                  styles.glyph,
-                  { color: filled ? theme.colors.primary : theme.colors.border },
-                ]}
-                maxFontSizeMultiplier={1.5}
-                importantForAccessibility="no"
-              >
-                {filled ? '★' : '☆'}
-              </Text>
+              <Icon
+                icon={Star}
+                size={30}
+                filled={filled}
+                color={filled ? theme.colors.primary : theme.colors.inputBorder}
+                strokeWidth={1.8}
+              />
             </Pressable>
           );
         })}
@@ -66,5 +64,4 @@ const styles = StyleSheet.create({
   wrap: { gap: 4 },
   row: { flexDirection: 'row', gap: 4 },
   star: { alignItems: 'center', justifyContent: 'center' },
-  glyph: { fontSize: 32, lineHeight: 38 },
 });

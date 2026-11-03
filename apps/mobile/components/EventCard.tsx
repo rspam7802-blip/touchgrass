@@ -1,13 +1,23 @@
 import type { EventSummary, FeedItem } from '@touchgrass/shared';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
+import {
+  ArrowRight,
+  Calendar,
+  Check,
+  Compass,
+  EyeOff,
+  Heart,
+  Lock,
+  Users,
+} from 'lucide-react-native';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { localized } from '../src/features/catalog/api';
 import { capacityLabel, formatWhen, locationLabel, rsvpLabel } from '../src/features/events/format';
 import { useTheme } from '../src/theme/theme';
 import { Avatar } from './Avatar';
-import { Pill, Text } from './ui';
+import { Icon, Pill, Text } from './ui';
 
 type FeedExtras = Pick<FeedItem, 'preview' | 'via' | 'reasons' | 'distanceMeters' | 'weather'>;
 
@@ -74,7 +84,7 @@ export function EventCard({
     .filter(Boolean)
     .join(', ');
   const isGoing = event.viewer.rsvp === 'going';
-  const cta = isGoing ? `${t('events.youreGoing')} ✓` : `${t('events.pullUp')} 🚀`;
+  const cta = isGoing ? t('events.youreGoing') : t('events.pullUp');
   const ctaBg = isGoing
     ? theme.colors.surfaceAlt
     : womenOnly
@@ -86,15 +96,16 @@ export function EventCard({
       ? theme.colors.onAccent
       : theme.colors.onPrimary;
   const lead = womenOnly
-    ? { label: `💖 ${t('events.visibility.women_only')}`, tone: 'accent' as const }
+    ? { label: t('events.visibility.women_only'), tone: 'accent' as const, icon: Heart }
     : event.type === 'curated'
-      ? { label: t('share.curated'), tone: 'primary' as const }
-      : {
-          label: event.category
-            ? `${event.category.emoji} ${localized(event.category.name, i18n.language)}`
-            : '⚡',
-          tone: 'primary' as const,
-        };
+      ? { label: t('share.curated'), tone: 'primary' as const, icon: undefined }
+      : event.category
+        ? {
+            label: localized(event.category.name, i18n.language),
+            tone: 'primary' as const,
+            icon: undefined,
+          }
+        : null;
   const second = event.soloFriendly
     ? t('events.soloFriendly')
     : event.smallGroup
@@ -152,16 +163,16 @@ export function EventCard({
             colors={[theme.colors.surfaceAlt, theme.colors.surface]}
             style={[StyleSheet.absoluteFill, styles.placeholder]}
           >
-            <Text style={styles.placeholderEmoji}>{event.category?.emoji ?? '🌱'}</Text>
+            <Icon icon={Compass} size={52} color={theme.colors.textMuted} strokeWidth={1.4} />
           </LinearGradient>
         )}
         <View style={styles.topRow}>
           <View style={styles.pills}>
             {event.mystery ? (
-              <Pill label={`🕵️ ${t('events.mystery')}`} tone="dark" />
-            ) : (
-              <Pill label={lead.label} tone={lead.tone} />
-            )}
+              <Pill label={t('events.mystery')} tone="dark" icon={EyeOff} />
+            ) : lead ? (
+              <Pill label={lead.label} tone={lead.tone} icon={lead.icon} />
+            ) : null}
             {second ? <Pill label={second} tone="dark" /> : null}
           </View>
           {distance ? <Pill label={distance} tone="dark" /> : null}
@@ -182,17 +193,21 @@ export function EventCard({
         accessibilityElementsHidden
       >
         <View style={styles.row}>
-          <Text variant="label" style={styles.grow}>
-            {event.mystery ? '🔒' : '📅'} {when}
-          </Text>
+          <View style={[styles.row, styles.grow]}>
+            <Icon icon={event.mystery ? Lock : Calendar} size={15} color={theme.colors.primary} />
+            <Text variant="label" style={styles.grow}>
+              {when}
+            </Text>
+          </View>
           <View
             style={[
               styles.count,
               { backgroundColor: theme.colors.surfaceAlt, borderRadius: theme.radii.sm },
             ]}
           >
+            <Icon icon={Users} size={13} color={theme.colors.primary} />
             <Text variant="caption" style={{ color: theme.colors.primary, fontWeight: '700' }}>
-              👥 {going}
+              {going}
             </Text>
           </View>
         </View>
@@ -222,9 +237,10 @@ export function EventCard({
             </Text>
           </View>
           <View style={[styles.cta, { backgroundColor: ctaBg, borderRadius: theme.radii.md }]}>
-            <Text variant="label" style={{ color: ctaFg, fontWeight: '800' }}>
+            <Text variant="label" style={{ color: ctaFg, fontWeight: '700' }}>
               {cta}
             </Text>
+            <Icon icon={isGoing ? Check : ArrowRight} size={15} color={ctaFg} strokeWidth={2.5} />
           </View>
         </View>
       </View>
@@ -263,7 +279,7 @@ const styles = StyleSheet.create({
   pressed: { opacity: 0.9, transform: [{ scale: 0.99 }] },
   hero: { height: HERO_HEIGHT, justifyContent: 'space-between', padding: 12 },
   placeholder: { alignItems: 'center', justifyContent: 'center' },
-  placeholderEmoji: { fontSize: 56, lineHeight: 64, opacity: 0.6 },
+
   topRow: { flexDirection: 'row', justifyContent: 'space-between', gap: 8 },
   pills: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, flexShrink: 1 },
   heroText: { gap: 2 },
@@ -272,9 +288,21 @@ const styles = StyleSheet.create({
   body: { padding: 16, gap: 10 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   grow: { flexGrow: 1, flexShrink: 1 },
-  count: { paddingHorizontal: 8, paddingVertical: 3 },
+  count: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
   footer: { borderTopWidth: StyleSheet.hairlineWidth, paddingTop: 10 },
   faces: { flexDirection: 'row' },
   overlap: { marginLeft: -9 },
-  cta: { paddingHorizontal: 14, paddingVertical: 9 },
+  cta: {
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
 });

@@ -26,7 +26,7 @@ export function StatGrid({
       t('hosting.rating'),
       a.averageRating === null
         ? t('hosting.noRatings')
-        : `${String(a.averageRating)} ★ (${String(a.ratingsCount)})`,
+        : `${String(a.averageRating)}/5 (${String(a.ratingsCount)})`,
     ],
     [t('hosting.revenue'), money(a.revenuePaise, language)],
   ];

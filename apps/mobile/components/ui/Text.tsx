@@ -26,7 +26,7 @@ export function Text({
     danger: theme.colors.danger,
     onPrimary: theme.colors.onPrimary,
   }[tone];
-  // A weight set by the caller (e.g. fontWeight: '800') picks the matching Plus Jakarta Sans family.
+  // A weight set by the caller (e.g. fontWeight: '700') picks the matching brand-font family.
   const weight = StyleSheet.flatten(style)?.fontWeight ?? typography[variant].fontWeight;
   const role =
     variant === 'display' || variant === 'title' || variant === 'heading' ? 'header' : undefined;

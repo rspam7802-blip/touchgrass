@@ -5,7 +5,8 @@ import { useFreeNow, useSetFree } from '../../src/features/engagement/api';
 import { formatTime } from '../../src/features/events/format';
 import { useTheme } from '../../src/theme/theme';
 import { Avatar } from '../Avatar';
-import { Button, Text } from '../ui';
+import { Plus, Zap } from 'lucide-react-native';
+import { Button, Icon, Text } from '../ui';
 import { useFlag } from '../../src/features/app-config/use-flag';
 
 const SIZE = 52;
@@ -26,9 +27,12 @@ export function FreeNowStrip() {
   return (
     <View style={styles.wrap} testID="free-now">
       <View style={styles.header}>
-        <Text variant="overline" tone="muted" accessibilityRole="header" style={styles.upper}>
-          ⚡ {t('free.title')}
-        </Text>
+        <View style={styles.title}>
+          <Icon icon={Zap} size={13} color={theme.colors.primary} strokeWidth={2.4} />
+          <Text variant="overline" tone="muted" accessibilityRole="header" style={styles.upper}>
+            {t('free.title')}
+          </Text>
+        </View>
         {me.until ? (
           <Button
             label={t('free.clear')}
@@ -66,9 +70,7 @@ export function FreeNowStrip() {
                 { borderColor: theme.colors.primary, backgroundColor: theme.colors.surfaceAlt },
               ]}
             >
-              <Text style={{ color: theme.colors.primary, fontSize: 22, fontWeight: '800' }}>
-                +
-              </Text>
+              <Icon icon={Plus} size={22} color={theme.colors.primary} strokeWidth={2.4} />
             </View>
             <Text variant="caption" tone="muted" numberOfLines={1} style={styles.name}>
               {t('free.setTitle')}
@@ -127,6 +129,7 @@ const styles = StyleSheet.create({
   wrap: { gap: 8 },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
   upper: { textTransform: 'uppercase' },
+  title: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   row: { gap: 14, alignItems: 'flex-start', paddingVertical: 2 },
   person: { alignItems: 'center', gap: 4, width: 64, minHeight: 44 },
   add: {

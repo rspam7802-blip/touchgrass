@@ -269,7 +269,7 @@ describe('crews (F-ENG-02)', () => {
     const save = screen.getByTestId('crew-save');
     await fireEvent.changeText(screen.getByTestId('crew-name'), 'Sunday Run Club');
     expect(save).toBeDisabled();
-    await fireEvent.press(await screen.findByRole('radio', { name: '🌱 Interest 0' }));
+    await fireEvent.press(await screen.findByRole('radio', { name: 'Interest 0' }));
     await fireEvent.press(screen.getByRole('radio', { name: 'Invite only' }));
     await fireEvent.press(save);
     await waitFor(() =>
@@ -331,7 +331,7 @@ describe('crews (F-ENG-02)', () => {
       });
     await renderWithProviders(<CrewScreen />, { fetchFn: api.fetch });
     expect(await screen.findByTestId('crew-schedule')).toHaveTextContent(
-      'Every week on Sun · 📍 KBR Park',
+      'Every week on Sun · KBR Park',
     );
     expect(await screen.findByTestId('crew-attended')).toHaveTextContent('You made 1 of these');
     await fireEvent.press(screen.getByTestId(`approve-${P2}`));
@@ -530,7 +530,7 @@ describe('collaborative plans (F-ENG-03)', () => {
 
     await renderWithProviders(<NewProposalScreen />, { fetchFn: api.fetch });
     await fireEvent.changeText(screen.getByTestId('proposal-title'), 'Board games?');
-    await fireEvent.press(await screen.findByRole('radio', { name: '🌱 Interest 0' }));
+    await fireEvent.press(await screen.findByRole('radio', { name: 'Interest 0' }));
     await fireEvent.press(await screen.findByRole('checkbox', { name: 'Kiran' }));
     await fireEvent.press(screen.getByRole('radio', { name: '6 hours' }));
     await fireEvent.press(screen.getByTestId('proposal-save'));
@@ -602,7 +602,7 @@ describe('collaborative plans (F-ENG-03)', () => {
     await fireEvent.press(screen.getByTestId(`pick-${OPT(2)}`));
     await fireEvent.press(screen.getByTestId(`pick-${OPT(3)}`));
     await fireEvent.press(screen.getByTestId('proposal-lock'));
-    expect(await screen.findByText("Locked in. It's a plan!")).toBeOnTheScreen();
+    expect(await screen.findByText('Confirmed. The plan is on.')).toBeOnTheScreen();
     expect(api.callsTo('POST', `/v1/proposals/${PROP}/lock`)[0]?.body).toEqual({
       timeOptionId: OPT(1),
       placeOptionId: OPT(2),
@@ -676,7 +676,7 @@ describe('badges, streaks, challenges and recaps (F-GAM-01..04)', () => {
     };
     api.on('GET', '/v1/me/streak', { status: 200, body: s });
     await renderWithProviders(<StreakCard />, { fetchFn: api.fetch });
-    expect(await screen.findByTestId('streak-current')).toHaveTextContent('🔥 3 weeks');
+    expect(await screen.findByTestId('streak-current')).toHaveTextContent('3 weeks');
     expect(screen.getByTestId('streak-at-risk')).toBeOnTheScreen();
     expect(screen.getByText('Best: 5')).toBeOnTheScreen();
     expect(screen.getByLabelText('Out, Missed')).toBeOnTheScreen();
@@ -729,12 +729,12 @@ describe('badges, streaks, challenges and recaps (F-GAM-01..04)', () => {
         },
       });
     await renderWithProviders(<ChallengesScreen />, { fetchFn: api.fetch });
-    expect(await screen.findByText('Reward: 🧭 Explorer')).toBeOnTheScreen();
+    expect(await screen.findByText('Reward: Explorer badge')).toBeOnTheScreen();
     await fireEvent.press(screen.getByTestId(`join-${OPT(1)}`));
     expect(await screen.findByTestId(`challenge-progress-${OPT(1)}`)).toHaveTextContent('1 / 3');
     await fireEvent.press(await screen.findByRole('button', { name: 'Join with Sunday Run Club' }));
     expect(await screen.findByTestId(`challenge-progress-${OPT(2)}`)).toHaveTextContent(
-      'Completed! 🎉',
+      'Completed',
     );
     expect(api.callsTo('POST', `/v1/challenges/${OPT(2)}/join`)[0]?.body).toEqual({ crewId: CREW });
   });
@@ -774,7 +774,7 @@ describe('badges, streaks, challenges and recaps (F-GAM-01..04)', () => {
 
     await renderWithProviders(<RecapScreen />, { fetchFn: api.fetch });
     expect(await screen.findByTestId('recap-card')).toHaveTextContent(/23people met/);
-    expect(screen.getByText('Top vibe: Chill')).toBeOnTheScreen();
+    expect(screen.getByText('Top mood: Chill')).toBeOnTheScreen();
     await fireEvent.press(screen.getByTestId('recap-share'));
     await waitFor(() =>
       expect(Sharing.shareAsync).toHaveBeenCalledWith('file:///cache/recap.png', {

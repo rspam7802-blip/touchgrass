@@ -1,8 +1,9 @@
+import { Check, Flame, Snowflake } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 import { useStreak } from '../../src/features/engagement/api';
 import { useTheme } from '../../src/theme/theme';
-import { Text } from '../ui';
+import { Icon, Text } from '../ui';
 
 /** Weekly outside streak (F-GAM-02): current and best, this week's state, the last eight weeks as text too. */
 export function StreakCard() {
@@ -26,9 +27,12 @@ export function StreakCard() {
         <Text tone="muted">{t('streak.none')}</Text>
       ) : (
         <>
-          <Text variant="title" testID="streak-current">
-            🔥 {t('streak.weeks', { count: s.current })}
-          </Text>
+          <View style={styles.current}>
+            <Icon icon={Flame} size={24} color={theme.colors.primary} />
+            <Text variant="title" testID="streak-current">
+              {t('streak.weeks', { count: s.current })}
+            </Text>
+          </View>
           <Text tone="muted">{t('streak.longest', { count: s.longest })}</Text>
         </>
       )}
@@ -62,12 +66,13 @@ export function StreakCard() {
               },
             ]}
           >
-            <Text
-              variant="caption"
-              style={{ color: w.state === 'none' ? theme.colors.text : theme.colors.onPrimary }}
-            >
-              {w.state === 'out' ? '✓' : w.state === 'freeze' ? '❄' : '·'}
-            </Text>
+            {w.state === 'out' ? (
+              <Icon icon={Check} size={14} color={theme.colors.onPrimary} strokeWidth={2.6} />
+            ) : w.state === 'freeze' ? (
+              <Icon icon={Snowflake} size={14} color={theme.colors.onPrimary} />
+            ) : (
+              <Text variant="caption">·</Text>
+            )}
           </View>
         ))}
       </View>
@@ -76,6 +81,7 @@ export function StreakCard() {
 }
 
 const styles = StyleSheet.create({
+  current: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   card: { padding: 16, gap: 6 },
   weeks: { flexDirection: 'row', gap: 6, flexWrap: 'wrap' },
   dot: { width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },

@@ -2,15 +2,16 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { Button, Screen, Text } from '../../components/ui';
+import { Hand, Map, Shield, Users } from 'lucide-react-native';
+import { Button, Icon, Screen, Text } from '../../components/ui';
 import { useTutorial } from '../../src/features/me/api';
 import { useTheme } from '../../src/theme/theme';
 
 export const TUTORIAL_CARDS = [
-  { key: 'pullUp', emoji: '🙋' },
-  { key: 'plot', emoji: '🗺️' },
-  { key: 'squad', emoji: '👯' },
-  { key: 'safety', emoji: '🛡️' },
+  { key: 'pullUp', icon: Hand },
+  { key: 'plot', icon: Map },
+  { key: 'squad', icon: Users },
+  { key: 'safety', icon: Shield },
 ] as const;
 
 /** Skippable, replayable (Settings → Replay tutorial) intro to pulling up, plotting, squads and safety (F-ACC-04). */
@@ -56,9 +57,7 @@ export default function TutorialScreen() {
         ]}
         testID={`tutorial-card-${card.key}`}
       >
-        <Text style={styles.emoji} importantForAccessibility="no">
-          {card.emoji}
-        </Text>
+        <Icon icon={card.icon} size={48} color={theme.colors.primary} strokeWidth={1.6} />
         <Text variant="title">{t(`tutorial.${card.key}Title`)}</Text>
         <Text>{t(`tutorial.${card.key}Body`)}</Text>
       </View>
@@ -91,5 +90,4 @@ export default function TutorialScreen() {
 
 const styles = StyleSheet.create({
   card: { gap: 12, minHeight: 240, justifyContent: 'center' },
-  emoji: { fontSize: 56, lineHeight: 64 },
 });

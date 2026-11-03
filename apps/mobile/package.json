@@ -15,7 +15,7 @@
     "doctor": "expo-doctor"
   },
   "dependencies": {
-    "@expo-google-fonts/plus-jakarta-sans": "0.4.2",
+    "@expo-google-fonts/inter": "0.4.2",
     "@expo/log-box": "~58.0.13",
     "@expo/metro-runtime": "~58.0.15",
     "@hookform/resolvers": "6.0.2",
@@ -51,6 +51,7 @@
     "expo-status-bar": "~58.0.4",
     "expo-system-ui": "~58.0.7",
     "i18next": "26.5.12",
+    "lucide-react-native": "1.67.0",
     "qrcode": "1.5.4",
     "react": "19.3.0",
     "react-hook-form": "7.91.0",

@@ -174,7 +174,7 @@ function CrewView({ crew }: { crew: CrewDetail }) {
       </Text>
       {crew.recurrence ? (
         <Text testID="crew-schedule">
-          {describeRule(t, crew.recurrence.rrule)} · 📍 {crew.recurrence.placeLabel}
+          {describeRule(t, crew.recurrence.rrule)} · {crew.recurrence.placeLabel}
           {crew.recurrence.active ? '' : ` · ${t('crews.paused')}`}
         </Text>
       ) : (
@@ -306,8 +306,13 @@ function CrewView({ crew }: { crew: CrewDetail }) {
           {history.data.items.map((s) => (
             <ListRow
               key={s.eventId}
-              label={`${s.attended ? '✓ ' : ''}${formatWhen(s.startsAt, i18n.language)}`}
-              detail={t('crews.checkedIn', { count: s.checkedInCount })}
+              label={formatWhen(s.startsAt, i18n.language)}
+              detail={[
+                s.attended ? t('crews.youWent') : null,
+                t('crews.checkedIn', { count: s.checkedInCount }),
+              ]
+                .filter(Boolean)
+                .join(' · ')}
               onPress={() => {
                 router.push({ pathname: '/events/[id]', params: { id: s.eventId } });
               }}

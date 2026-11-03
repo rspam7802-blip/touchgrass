@@ -48,7 +48,7 @@ export function Chip({
         variant="label"
         style={{
           color: selected ? theme.colors.onPrimary : theme.colors.text,
-          fontWeight: selected ? '800' : '600',
+          fontWeight: selected ? '700' : '500',
         }}
       >
         {label}

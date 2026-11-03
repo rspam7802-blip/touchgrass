@@ -69,7 +69,7 @@ export function Button({
           importantForAccessibility="no-hide-descendants"
         />
       ) : (
-        <Text variant="label" style={{ color: palette.fg, textAlign: 'center', fontWeight: '800' }}>
+        <Text variant="label" style={{ color: palette.fg, textAlign: 'center', fontWeight: '700' }}>
           {label}
         </Text>
       )}

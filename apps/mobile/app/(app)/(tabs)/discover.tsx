@@ -5,6 +5,7 @@ import { FreeNowStrip } from '../../../components/engagement/FreeNowStrip';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Search } from 'lucide-react-native';
 import { BRAND } from '@touchgrass/shared';
 import { Avatar } from '../../../components/Avatar';
 import { ChipGroup } from '../../../components/ChipGroup';
@@ -17,6 +18,7 @@ import {
   Chip,
   EmptyState,
   ErrorState,
+  Icon,
   IconButton,
   LoadingState,
   OfflineState,
@@ -206,8 +208,9 @@ export default function DiscoverScreen() {
             },
           ]}
         >
+          <Icon icon={Search} size={18} color={theme.colors.textMuted} />
           <Text tone="muted" numberOfLines={1}>
-            🔍 {t('discover.search')}
+            {t('discover.search')}
           </Text>
         </Pressable>
         {mapEnabled ? (
@@ -234,7 +237,7 @@ export default function DiscoverScreen() {
         <Card>
           <Text tone="muted">{t('discover.locationPrompt')}</Text>
           <Button
-            label={`📍 ${t('discover.useLocation')}`}
+            label={t('discover.useLocation')}
             onPress={() => void askLocation()}
             testID="use-location"
           />
@@ -328,7 +331,7 @@ export default function DiscoverScreen() {
             label={t('discover.category')}
             options={(interests.data?.items ?? []).map((i) => ({
               id: i.id,
-              label: `${i.emoji} ${localized(i.name, i18n.language)}`,
+              label: localized(i.name, i18n.language),
             }))}
             selected={filters.categoryId ? [filters.categoryId] : []}
             onChange={(ids) => {
@@ -341,7 +344,7 @@ export default function DiscoverScreen() {
             label={t('discover.vibes')}
             options={(vibes.data?.items ?? []).map((v) => ({
               id: v.id,
-              label: `${v.emoji} ${localized(v.name, i18n.language)}`,
+              label: localized(v.name, i18n.language),
             }))}
             selected={filters.vibeTagIds}
             onChange={(ids) => {
@@ -376,7 +379,9 @@ const styles = StyleSheet.create({
   search: {
     flexGrow: 1,
     flexShrink: 1,
-    justifyContent: 'center',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
     paddingHorizontal: 16,
     borderWidth: 1,
   },

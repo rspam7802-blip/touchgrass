@@ -1,3 +1,4 @@
+import { BadgeCheck } from 'lucide-react-native';
 import type {
   HostRatingSummary,
   Interest,
@@ -10,7 +11,7 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { localized } from '../src/features/catalog/api';
 import { useTheme } from '../src/theme/theme';
-import { Text } from './ui';
+import { IconText, Text } from './ui';
 
 export interface ProfileCardProps {
   displayName: string;
@@ -56,9 +57,14 @@ export function ProfileCard(p: ProfileCardProps) {
       <View style={styles.titleRow}>
         <Text variant="title">{p.displayName}</Text>
         {p.verified ? (
-          <Text variant="label" tone="primary" accessibilityLabel={t('profile.verified')}>
-            ✓ {t('profile.verified')}
-          </Text>
+          <IconText
+            icon={BadgeCheck}
+            variant="label"
+            tone="primary"
+            accessibilityLabel={t('profile.verified')}
+          >
+            {t('profile.verified')}
+          </IconText>
         ) : null}
       </View>
       {p.subtitle ? <Text tone="muted">{p.subtitle}</Text> : null}
@@ -107,7 +113,7 @@ export function ProfileCard(p: ProfileCardProps) {
                   { borderColor: theme.colors.border, borderRadius: theme.radii.pill },
                 ]}
               >
-                {`${i.emoji} ${localized(i.name, i18n.language)}`}
+                {localized(i.name, i18n.language)}
               </Text>
             ))}
           </View>
@@ -126,7 +132,7 @@ export function ProfileCard(p: ProfileCardProps) {
                   { borderColor: theme.colors.border, borderRadius: theme.radii.pill },
                 ]}
               >
-                {`${v.emoji} ${localized(v.name, i18n.language)}`}
+                {localized(v.name, i18n.language)}
               </Text>
             ))}
           </View>

@@ -1,10 +1,11 @@
+import { BadgeCheck } from 'lucide-react-native';
 import type { PersonCard } from '@touchgrass/shared';
 import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../src/theme/theme';
 import { Avatar } from './Avatar';
-import { Text } from './ui';
+import { Icon, Text } from './ui';
 
 export interface PersonRowProps {
   person: PersonCard;
@@ -40,10 +41,14 @@ export function PersonRow({ person, detail, onOpen, actions }: PersonRowProps) {
       >
         <Avatar photo={person.photo} name={person.displayName} />
         <View style={styles.text}>
-          <Text variant="heading">
-            {person.displayName}
-            {person.verified ? ' ✓' : ''}
-          </Text>
+          <View style={styles.nameRow}>
+            <Text variant="heading" style={styles.name}>
+              {person.displayName}
+            </Text>
+            {person.verified ? (
+              <Icon icon={BadgeCheck} size={16} color={theme.colors.primary} />
+            ) : null}
+          </View>
           {subtitle ? (
             <Text variant="caption" tone="muted">
               {subtitle}
@@ -57,6 +62,8 @@ export function PersonRow({ person, detail, onOpen, actions }: PersonRowProps) {
 }
 
 const styles = StyleSheet.create({
+  nameRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  name: { flexShrink: 1 },
   row: {
     flexDirection: 'row',
     flexWrap: 'wrap',

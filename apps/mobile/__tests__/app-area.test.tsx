@@ -73,7 +73,7 @@ describe('My profile (F-ACC-05)', () => {
     await renderWithProviders(<MyProfileScreen />, { fetchFn: api.fetch });
     expect(await screen.findByRole('header', { name: 'Priya R.' })).toBeOnTheScreen();
     expect(screen.getByLabelText('Reliability: New here')).toBeOnTheScreen();
-    expect(screen.getByText('🌱 Interest 0')).toBeOnTheScreen();
+    expect(screen.getByText('Interest 0')).toBeOnTheScreen();
     await fireEvent.press(screen.getByRole('button', { name: 'Edit profile' }));
     expect(mockRouter.push).toHaveBeenCalledWith('/profile-edit');
     await fireEvent.press(screen.getByRole('button', { name: 'Invite friends' }));
@@ -101,7 +101,7 @@ describe('Edit profile', () => {
     await renderWithProviders(<ProfileEditScreen />, { fetchFn: api.fetch });
     await fireEvent.changeText(await screen.findByTestId('edit-bio'), 'Biryani over everything');
     await fireEvent.changeText(screen.getByTestId('edit-languages'), 'English, Telugu, Hindi,');
-    await fireEvent.press(screen.getByRole('checkbox', { name: '🌱 Interest 3' }));
+    await fireEvent.press(screen.getByRole('checkbox', { name: 'Interest 3' }));
     await fireEvent.press(screen.getByRole('button', { name: 'Save' }));
     await waitFor(() => expect(screen.getByText('Done')).toBeOnTheScreen());
     expect(api.callsTo('PATCH', '/v1/me/profile')[0]?.body).toEqual({

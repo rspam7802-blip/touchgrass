@@ -1,6 +1,7 @@
+import { badgeIcon } from '../../src/features/gamification/badge-icons';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
-import { EmptyState, ErrorState, LoadingState, Screen, Text } from '../../components/ui';
+import { EmptyState, ErrorState, Icon, LoadingState, Screen, Text } from '../../components/ui';
 import { localized } from '../../src/features/catalog/api';
 import { useBadges } from '../../src/features/engagement/api';
 import { errorMessage } from '../../src/lib/errors';
@@ -47,9 +48,12 @@ export default function BadgesScreen() {
               ]}
               testID={`badge-${b.key}`}
             >
-              <Text style={styles.emoji} maxFontSizeMultiplier={1.5}>
-                {b.emoji}
-              </Text>
+              <Icon
+                icon={badgeIcon(b.key)}
+                size={32}
+                color={b.earnedAt ? theme.colors.primary : theme.colors.textMuted}
+                strokeWidth={1.8}
+              />
               <Text variant="label">{name}</Text>
               <Text variant="caption" tone="muted">
                 {localized(b.description, i18n.language)}
@@ -68,5 +72,4 @@ export default function BadgesScreen() {
 const styles = StyleSheet.create({
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
   badge: { width: '47%', padding: 12, gap: 4, borderWidth: 1 },
-  emoji: { fontSize: 32 },
 });

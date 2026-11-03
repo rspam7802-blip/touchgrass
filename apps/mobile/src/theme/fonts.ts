@@ -1,18 +1,21 @@
 import {
-  PlusJakartaSans_400Regular,
-  PlusJakartaSans_500Medium,
-  PlusJakartaSans_600SemiBold,
-  PlusJakartaSans_700Bold,
-  PlusJakartaSans_800ExtraBold,
-} from '@expo-google-fonts/plus-jakarta-sans';
+  Inter_400Regular,
+  Inter_500Medium,
+  Inter_600SemiBold,
+  Inter_700Bold,
+  Inter_800ExtraBold,
+} from '@expo-google-fonts/inter';
 
-/** Plus Jakarta Sans, the brand typeface. Loaded at launch (root layout) before the splash screen hides. */
+/**
+ * The brand typeface (D-145: Inter). To try another family, swap these imports for another
+ * `@expo-google-fonts/*` package and update the five names below; nothing else changes.
+ */
 export const FONT_FILES = {
-  PlusJakartaSans_400Regular,
-  PlusJakartaSans_500Medium,
-  PlusJakartaSans_600SemiBold,
-  PlusJakartaSans_700Bold,
-  PlusJakartaSans_800ExtraBold,
+  Inter_400Regular,
+  Inter_500Medium,
+  Inter_600SemiBold,
+  Inter_700Bold,
+  Inter_800ExtraBold,
 };
 
 /**
@@ -21,9 +24,9 @@ export const FONT_FILES = {
  */
 export function fontFamilyFor(weight: string | number | undefined): keyof typeof FONT_FILES {
   const w = Number(weight ?? 400);
-  if (w >= 800) return 'PlusJakartaSans_800ExtraBold';
-  if (w >= 700) return 'PlusJakartaSans_700Bold';
-  if (w >= 600) return 'PlusJakartaSans_600SemiBold';
-  if (w >= 500) return 'PlusJakartaSans_500Medium';
-  return 'PlusJakartaSans_400Regular';
+  if (w >= 800) return 'Inter_800ExtraBold';
+  if (w >= 700) return 'Inter_700Bold';
+  if (w >= 600) return 'Inter_600SemiBold';
+  if (w >= 500) return 'Inter_500Medium';
+  return 'Inter_400Regular';
 }

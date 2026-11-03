@@ -1,3 +1,4 @@
+import { badgeIcon } from '../../../src/features/gamification/badge-icons';
 import {
   GREAT_TAGS,
   type GreatTag,
@@ -18,6 +19,7 @@ import {
   Button,
   EmptyState,
   ErrorState,
+  IconText,
   LoadingState,
   Screen,
   Text,
@@ -223,9 +225,9 @@ function AfterEventView({ card }: { card: PostEventCard }) {
           </Text>
           <View style={styles.badges}>
             {card.badges.map((b) => (
-              <Text key={b.key} accessibilityLabel={b.name}>
-                {b.emoji} {b.name}
-              </Text>
+              <IconText key={b.key} icon={badgeIcon(b.key)}>
+                {b.name}
+              </IconText>
             ))}
           </View>
         </View>

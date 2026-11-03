@@ -34,7 +34,7 @@ export default function InterestsStep() {
         max={LIMITS.profile.maxInterests}
         options={interests.data.items.map((i) => ({
           id: i.id,
-          label: `${i.emoji} ${localized(i.name, i18n.language)}`,
+          label: localized(i.name, i18n.language),
         }))}
         selected={selected}
         onChange={setSelected}

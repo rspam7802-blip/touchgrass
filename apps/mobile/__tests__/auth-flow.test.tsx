@@ -58,7 +58,7 @@ describe('Invite screen (F-ACC-01)', () => {
       inviteCode: 'GRASS-2026',
       inviterName: 'Ananya',
     });
-    expect(screen.getByText('Invite from Ananya ✓')).toBeOnTheScreen();
+    expect(screen.getByText('Invite from Ananya')).toBeOnTheScreen();
   });
 
   it('returns to the OTP screen when it was asked for mid-verification', async () => {
@@ -71,7 +71,7 @@ describe('Invite screen (F-ACC-01)', () => {
     await fireEvent.changeText(screen.getByTestId('invite-input'), 'GRASS-2026');
     await fireEvent.press(screen.getByRole('button', { name: 'Check code' }));
     await waitFor(() => expect(mockRouter.back).toHaveBeenCalled());
-    expect(screen.getByText('Invite code accepted ✓')).toBeOnTheScreen();
+    expect(screen.getByText('Invite code accepted')).toBeOnTheScreen();
   });
 });
 

@@ -34,7 +34,7 @@ export default function VibesStep() {
         max={LIMITS.profile.maxVibeTags}
         options={vibes.data.items.map((v) => ({
           id: v.id,
-          label: `${v.emoji} ${localized(v.name, i18n.language)}`,
+          label: localized(v.name, i18n.language),
         }))}
         selected={selected}
         onChange={setSelected}

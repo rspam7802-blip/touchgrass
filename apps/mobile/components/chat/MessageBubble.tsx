@@ -1,3 +1,4 @@
+import { Check } from 'lucide-react-native';
 import type { Message, PollView } from '@touchgrass/shared';
 import { Image } from 'expo-image';
 import { Pressable, StyleSheet, View } from 'react-native';
@@ -6,7 +7,7 @@ import { localized } from '../../src/features/catalog/api';
 import { formatTime } from '../../src/features/events/format';
 import type { PendingMessage } from '../../src/features/chat/outbox';
 import { useTheme } from '../../src/theme/theme';
-import { Button, Text } from '../ui';
+import { Button, Icon, Text } from '../ui';
 
 /** System lines (chat opened, icebreakers, request accepted) in the reader's language. */
 export function systemText(
@@ -87,10 +88,12 @@ export function PollCard({
                 },
               ]}
             />
-            <Text>
-              {selected ? '✓ ' : ''}
-              {o.text}
-            </Text>
+            <View style={styles.optionRow}>
+              {selected ? (
+                <Icon icon={Check} size={15} color={theme.colors.primary} strokeWidth={2.6} />
+              ) : null}
+              <Text style={styles.optionText}>{o.text}</Text>
+            </View>
             <Text variant="caption" tone="muted">
               {o.votes}
               {!poll.anonymous && o.voters.length > 0
@@ -272,6 +275,8 @@ export function MessageBubble({
 }
 
 const styles = StyleSheet.create({
+  optionRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  optionText: { flexShrink: 1 },
   row: { alignItems: 'flex-start', gap: 2, marginVertical: 4 },
   mineRow: { alignItems: 'flex-end' },
   bubble: { maxWidth: '85%', paddingHorizontal: 12, paddingVertical: 8, gap: 4, borderWidth: 1 },

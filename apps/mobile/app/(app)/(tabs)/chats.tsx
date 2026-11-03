@@ -1,3 +1,4 @@
+import { BellOff } from 'lucide-react-native';
 import type { ConversationSummary } from '@touchgrass/shared';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
@@ -9,6 +10,7 @@ import {
   Button,
   EmptyState,
   ErrorState,
+  Icon,
   LoadingState,
   OfflineState,
   Screen,
@@ -92,10 +94,14 @@ export default function ChatsScreen() {
               >
                 <Avatar photo={c.avatar} name={c.title} />
                 <View style={styles.text}>
-                  <Text variant="heading" numberOfLines={1}>
-                    {c.title}
-                    {c.muted ? ' 🔕' : ''}
-                  </Text>
+                  <View style={styles.titleRow}>
+                    <Text variant="heading" numberOfLines={1} style={styles.title}>
+                      {c.title}
+                    </Text>
+                    {c.muted ? (
+                      <Icon icon={BellOff} size={14} color={theme.colors.textMuted} />
+                    ) : null}
+                  </View>
                   <Text variant="caption" tone="muted" numberOfLines={1}>
                     {line}
                   </Text>
@@ -148,6 +154,8 @@ export default function ChatsScreen() {
 }
 
 const styles = StyleSheet.create({
+  titleRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  title: { flexShrink: 1 },
   row: {
     flexDirection: 'row',
     alignItems: 'center',

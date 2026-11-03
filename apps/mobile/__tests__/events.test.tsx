@@ -184,9 +184,7 @@ describe('Event detail', () => {
       return { status: 200, body: { status: 'going', plusOneClaimUrl: null, event: going } };
     });
     await renderWithProviders(<EventScreen />, { fetchFn: api.fetch });
-    expect(
-      await screen.findByText('📍 Lake View Park · 42 Lake Road, Gachibowli'),
-    ).toBeOnTheScreen();
+    expect(await screen.findByText('Lake View Park · 42 Lake Road, Gachibowli')).toBeOnTheScreen();
     await fireEvent.press(screen.getByTestId('pull-up'));
     await waitFor(() => expect(api.callsTo('PUT', `/v1/events/${EVENT_ID}/rsvp`)).toHaveLength(1));
     const call = api.callsTo('PUT', `/v1/events/${EVENT_ID}/rsvp`)[0];
@@ -213,7 +211,7 @@ describe('Event detail', () => {
       ),
     });
     await renderWithProviders(<EventScreen />, { fetchFn: api.fetch });
-    expect(await screen.findByText('📍 Mystery spot near Gachibowli')).toBeOnTheScreen();
+    expect(await screen.findByText('Mystery spot near Gachibowli')).toBeOnTheScreen();
     expect(screen.getByText(/Exact spot revealed/)).toBeOnTheScreen();
     expect(screen.queryByText(/Lake Road/)).toBeNull();
   });
@@ -241,7 +239,7 @@ describe('Event detail', () => {
         },
       });
     await renderWithProviders(<EventScreen />, { fetchFn: api.fetch });
-    expect(await screen.findByText('A spot opened up!')).toBeOnTheScreen();
+    expect(await screen.findByText('A spot is now available.')).toBeOnTheScreen();
     await fireEvent.press(screen.getByTestId('claim-spot'));
     await waitFor(() =>
       expect(api.callsTo('POST', `/v1/events/${EVENT_ID}/waitlist/claim`)).toHaveLength(1),
@@ -374,7 +372,7 @@ describe('Plot flow (F-EVT-01/02)', () => {
 
     await fireEvent.changeText(screen.getByTestId('plot-place-search'), 'lake');
     await fireEvent.press(await screen.findByTestId('place-fx_lake'));
-    expect(await screen.findByTestId('plot-picked')).toHaveTextContent('📍 Lake View Park');
+    expect(await screen.findByTestId('plot-picked')).toHaveTextContent('Lake View Park');
     await fireEvent.press(screen.getByTestId('plot-submit'));
     await waitFor(() => expect(api.callsTo('POST', '/v1/events')).toHaveLength(1));
     const call = api.callsTo('POST', '/v1/events')[0];
@@ -434,7 +432,7 @@ describe('Plot flow: pin, advanced options and edits', () => {
     });
     await fireEvent.changeText(screen.getByTestId('plot-pin-address'), 'Near the big banyan tree');
     await fireEvent.press(screen.getByRole('button', { name: 'Use this spot' }));
-    expect(screen.getByTestId('plot-picked')).toHaveTextContent('📍 Near the big banyan tree');
+    expect(screen.getByTestId('plot-picked')).toHaveTextContent('Near the big banyan tree');
     await fireEvent.press(screen.getByRole('radio', { name: 'Tomorrow' }));
     await fireEvent.press(screen.getByTestId(`plot-visibility-balanced`));
     await fireEvent.press(screen.getByRole('radio', { name: 'Max share of any one gender: 70%' }));
@@ -550,7 +548,7 @@ describe('Tickets, scanning, invites, +1s', () => {
         userIds: [ids.other],
       }),
     );
-    expect(await screen.findByText('1 invited 🎉')).toBeOnTheScreen();
+    expect(await screen.findByText('1 invited')).toBeOnTheScreen();
   });
 
   it('brings a guest +1 and shares the claim link', async () => {

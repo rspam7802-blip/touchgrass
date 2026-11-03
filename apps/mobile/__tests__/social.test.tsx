@@ -279,7 +279,7 @@ describe('Profiles: squad actions, block and report (F-SOC-05)', () => {
       body: { ...profile('none'), hostRating: { average: 4.6, count: 7 } },
     });
     await renderWithProviders(<UserProfileScreen />, { fetchFn: api.fetch });
-    expect(await screen.findByTestId('host-rating')).toHaveTextContent('4.6 ★ as host (7)');
+    expect(await screen.findByTestId('host-rating')).toHaveTextContent('4.6/5 as host (7)');
   });
 
   it('hides the host rating while it is null', async () => {

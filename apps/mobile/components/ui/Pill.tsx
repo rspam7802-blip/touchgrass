@@ -1,5 +1,6 @@
 import { StyleSheet, View } from 'react-native';
 import { useTheme } from '../../src/theme/theme';
+import { Icon, type LucideIcon } from './Icon';
 import { Text } from './Text';
 
 export type PillTone = 'primary' | 'accent' | 'glass' | 'dark';
@@ -8,7 +9,15 @@ export type PillTone = 'primary' | 'accent' | 'glass' | 'dark';
  * Small non-interactive label ("PLAN", "Women only", "100 m away"). Decorative inside cards whose own label
  * already says the same thing, so callers hide it from screen readers there.
  */
-export function Pill({ label, tone = 'glass' }: { label: string; tone?: PillTone }) {
+export function Pill({
+  label,
+  tone = 'glass',
+  icon,
+}: {
+  label: string;
+  tone?: PillTone;
+  icon?: LucideIcon;
+}) {
   const theme = useTheme();
   const look = {
     primary: { bg: theme.colors.primary, fg: theme.colors.onPrimary, border: theme.colors.primary },
@@ -24,7 +33,8 @@ export function Pill({ label, tone = 'glass' }: { label: string; tone?: PillTone
         { backgroundColor: look.bg, borderColor: look.border, borderRadius: theme.radii.pill },
       ]}
     >
-      <Text variant="caption" style={{ color: look.fg, fontWeight: '800' }}>
+      {icon ? <Icon icon={icon} size={12} color={look.fg} strokeWidth={2.5} /> : null}
+      <Text variant="caption" style={{ color: look.fg, fontWeight: '700' }}>
         {label}
       </Text>
     </View>
@@ -32,5 +42,13 @@ export function Pill({ label, tone = 'glass' }: { label: string; tone?: PillTone
 }
 
 const styles = StyleSheet.create({
-  pill: { borderWidth: 1, paddingHorizontal: 10, paddingVertical: 3, alignSelf: 'flex-start' },
+  pill: {
+    borderWidth: 1,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    alignSelf: 'flex-start',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
 });

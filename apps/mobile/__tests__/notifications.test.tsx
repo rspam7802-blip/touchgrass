@@ -204,7 +204,7 @@ describe('notification inbox (F-NOT-01)', () => {
     await renderWithProviders(<NotificationsScreen />, { fetchFn: api.fetch });
     await fireEvent.press(await screen.findByTestId('notifications-read-all'));
     expect(api.callsTo('POST', '/v1/notifications/read')[0]?.body).toEqual({ all: true });
-    expect(await screen.findByText('Nothing new. Go touch some grass 🌱')).toBeOnTheScreen();
+    expect(await screen.findByText("You're all caught up.")).toBeOnTheScreen();
   });
 
   it('the bell reads the unread count and opens the inbox', async () => {
@@ -384,7 +384,7 @@ describe('sharing, deep links, updates, offline and analytics', () => {
     await renderWithProviders(<ProfileTab />, { fetchFn: api.fetch });
     await fireEvent.press(await screen.findByTestId('share-my-profile'));
     expect(share).toHaveBeenCalledWith({
-      message: `Find me on TouchGrass 🌱 http://web.test/u/${ids.me}`,
+      message: `Find me on TouchGrass: http://web.test/u/${ids.me}`,
     });
     await waitFor(() => {
       expect(screen.queryByTestId('open-referrals')).toBeNull();

@@ -368,10 +368,10 @@ describe('steps', () => {
     });
     await renderWithProviders(<InterestsStep />, { fetchFn: api.fetch, language: 'te' });
     for (const i of [0, 1])
-      await fireEvent.press(await screen.findByRole('checkbox', { name: `🌱 Interest ${i}-te` }));
+      await fireEvent.press(await screen.findByRole('checkbox', { name: `Interest ${i}-te` }));
     expect(screen.getByTestId('onboarding-primary')).toBeDisabled();
-    await fireEvent.press(screen.getByRole('checkbox', { name: '🌱 Interest 2-te' }));
-    expect(screen.getByRole('checkbox', { name: '🌱 Interest 2-te' })).toBeChecked();
+    await fireEvent.press(screen.getByRole('checkbox', { name: 'Interest 2-te' }));
+    expect(screen.getByRole('checkbox', { name: 'Interest 2-te' })).toBeChecked();
     await fireEvent.press(screen.getByTestId('onboarding-primary'));
     await waitFor(() =>
       expect(api.callsTo('PUT', '/v1/me/interests')[0]?.body).toEqual({
@@ -383,7 +383,7 @@ describe('steps', () => {
   it('vibes: optional multi-select', async () => {
     api.on('PUT', '/v1/me/vibe-tags', { status: 200, body: { items: [] } });
     await renderWithProviders(<VibesStep />, { fetchFn: api.fetch });
-    await fireEvent.press(await screen.findByRole('checkbox', { name: '✨ Vibe 1' }));
+    await fireEvent.press(await screen.findByRole('checkbox', { name: 'Vibe 1' }));
     await fireEvent.press(screen.getByTestId('onboarding-primary'));
     await waitFor(() =>
       expect(api.callsTo('PUT', '/v1/me/vibe-tags')[0]?.body).toEqual({

@@ -168,7 +168,7 @@ export default function ProfileEditScreen() {
         max={P.maxInterests}
         options={interests.data.items.map((i) => ({
           id: i.id,
-          label: `${i.emoji} ${localized(i.name, i18n.language)}`,
+          label: localized(i.name, i18n.language),
         }))}
         selected={currentInterests}
         onChange={setInterestIds}
@@ -181,7 +181,7 @@ export default function ProfileEditScreen() {
         max={P.maxVibeTags}
         options={vibes.data.items.map((v) => ({
           id: v.id,
-          label: `${v.emoji} ${localized(v.name, i18n.language)}`,
+          label: localized(v.name, i18n.language),
         }))}
         selected={currentVibes}
         onChange={setVibeIds}

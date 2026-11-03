@@ -106,14 +106,14 @@ export const spacing = {
 } as const;
 export const radii = { sm: 8, md: 14, lg: 24, pill: 999 } as const;
 export const typography = {
-  display: { fontSize: 34, lineHeight: 40, fontWeight: '800', letterSpacing: -0.8 },
-  title: { fontSize: 24, lineHeight: 30, fontWeight: '800', letterSpacing: -0.4 },
-  heading: { fontSize: 18, lineHeight: 24, fontWeight: '800', letterSpacing: -0.2 },
-  body: { fontSize: 16, lineHeight: 22, fontWeight: '400', letterSpacing: 0 },
-  label: { fontSize: 14, lineHeight: 18, fontWeight: '700', letterSpacing: 0 },
+  display: { fontSize: 32, lineHeight: 38, fontWeight: '700', letterSpacing: -0.6 },
+  title: { fontSize: 22, lineHeight: 28, fontWeight: '700', letterSpacing: -0.3 },
+  heading: { fontSize: 17, lineHeight: 23, fontWeight: '600', letterSpacing: -0.2 },
+  body: { fontSize: 16, lineHeight: 23, fontWeight: '400', letterSpacing: 0 },
+  label: { fontSize: 14, lineHeight: 19, fontWeight: '600', letterSpacing: 0 },
   caption: { fontSize: 12, lineHeight: 16, fontWeight: '500', letterSpacing: 0 },
-  /** Small uppercase section labels ("FREE NOW RADAR"). */
-  overline: { fontSize: 11, lineHeight: 14, fontWeight: '700', letterSpacing: 1 },
+  /** Small uppercase section labels ("FREE NOW"). */
+  overline: { fontSize: 11, lineHeight: 14, fontWeight: '600', letterSpacing: 0.8 },
 } as const;
 export const motion = { fast: 150, normal: 250, slow: 400, signalPulse: 2400 } as const;
 /** Minimum touch target (pt) for F-A11Y-01. */

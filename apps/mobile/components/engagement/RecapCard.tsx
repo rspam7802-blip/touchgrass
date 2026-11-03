@@ -1,3 +1,4 @@
+import { MapPin } from 'lucide-react-native';
 import type { Recap } from '@touchgrass/shared';
 import type { TFunction } from 'i18next';
 import { type ComponentRef, forwardRef } from 'react';
@@ -5,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 import { localized } from '../../src/features/catalog/api';
 import { useTheme } from '../../src/theme/theme';
-import { Text } from '../ui';
+import { IconText, Text } from '../ui';
 
 export function recapTitle(t: TFunction, r: Recap, language: string): string {
   if (r.period === 'year') return t('recap.yearTitle', { year: r.key });
@@ -51,7 +52,9 @@ export const RecapCard = forwardRef<RecapCardRef, { recap: Recap }>(function Rec
       {stat(s.peopleMet, t('recap.peopleMet'))}
       {stat(s.neighbourhoods.length, t('recap.neighbourhoods'))}
       {s.neighbourhoods.length > 0 ? (
-        <Text tone="onPrimary">📍 {s.neighbourhoods.join(' · ')}</Text>
+        <IconText icon={MapPin} tone="onPrimary">
+          {s.neighbourhoods.join(' · ')}
+        </IconText>
       ) : null}
       {s.topVibe ? (
         <Text tone="onPrimary">
@@ -64,7 +67,7 @@ export const RecapCard = forwardRef<RecapCardRef, { recap: Recap }>(function Rec
           tone="onPrimary"
           accessibilityLabel={`${String(s.badges.length)} ${t('recap.badges')}: ${s.badges.map((b) => localized(b.name, i18n.language)).join(', ')}`}
         >
-          {s.badges.map((b) => b.emoji).join(' ')} {t('recap.badges')}
+          {`${String(s.badges.length)} ${t('recap.badges')}`}
         </Text>
       ) : null}
       {s.topPeople.length > 0 ? (

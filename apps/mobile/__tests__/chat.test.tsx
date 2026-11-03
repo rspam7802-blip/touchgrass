@@ -675,7 +675,7 @@ describe('at the plan (F-ATE-01..03)', () => {
       });
     await renderWithProviders(<NewcomersScreen />, { fetchFn: api.fetch });
     await fireEvent.press(await screen.findByTestId(`welcome-${newbie.id}`));
-    expect(await screen.findByText('Welcomed ✓ · Priya R.')).toBeOnTheScreen();
+    expect(await screen.findByText('Welcomed · Priya R.')).toBeOnTheScreen();
     expect(api.callsTo('PUT', `/v1/events/${EVENT_ID}/newcomers/${newbie.id}`)[0]?.body).toEqual({
       welcomed: true,
     });

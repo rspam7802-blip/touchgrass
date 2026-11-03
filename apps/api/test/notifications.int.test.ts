@@ -319,7 +319,7 @@ describe('reminders and activity notifications (F-NOT-02, F-EVT-16)', () => {
     expect(await r.remindPlans()).toBe(0);
     const day = (await inbox(b)).items.find((i) => i.kind === 'reminder_day');
     expect(day?.title).toBe('Sunset frisbee is coming up');
-    expect(day?.body).toMatch(/^Starts .+\. The group chat is open, say hi 👋$/);
+    expect(day?.body).toMatch(/^Starts .+\. The group chat is now open\.$/);
 
     await shiftEvent(h, event.id, 90 * MIN);
     await r.remindPlans();

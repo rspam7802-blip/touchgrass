@@ -1,9 +1,10 @@
+import { X } from 'lucide-react-native';
 import type { ProfilePhoto } from '@touchgrass/shared';
 import { Image } from 'expo-image';
 import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../src/theme/theme';
-import { Text } from './ui';
+import { Icon, Text } from './ui';
 
 export interface PhotoGridProps {
   photos: ProfilePhoto[];
@@ -71,7 +72,7 @@ export function PhotoGrid({ photos, max, canAdd, adding, onAdd, onRemove }: Phot
             ]}
             testID={`remove-photo-${i + 1}`}
           >
-            <Text style={{ color: theme.colors.onPrimary }}>✕</Text>
+            <Icon icon={X} size={16} color={theme.colors.onPrimary} strokeWidth={2.6} />
           </Pressable>
         </View>
       ))}

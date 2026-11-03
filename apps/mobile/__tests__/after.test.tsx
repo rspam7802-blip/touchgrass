@@ -288,7 +288,7 @@ describe('People you met (F-AFT-03)', () => {
     expect(screen.getByTestId(`pull-state-${PERSON_D}`)).toHaveTextContent('Squad');
     expect(screen.getByTestId(`pull-state-${ids.me}`)).toHaveTextContent('Request sent');
     await fireEvent.press(screen.getByTestId(`pull-${PERSON_B}`));
-    expect(await screen.findByTestId(`pull-state-${PERSON_B}`)).toHaveTextContent('Pulled ✓');
+    expect(await screen.findByTestId(`pull-state-${PERSON_B}`)).toHaveTextContent('Pulled');
   });
 
   it('nobody else checked in', async () => {
@@ -614,8 +614,8 @@ describe('Host feedback summary (F-HST-02)', () => {
     api.on('GET', `/v1/events/${EVENT_ID}/feedback/summary`, { status: 200, body: summary() });
     await renderWithProviders(<FeedbackSummaryScreen />, { fetchFn: api.fetch });
     expect(await screen.findByTestId('feedback-count')).toHaveTextContent('4 responses');
-    expect(screen.getByTestId('feedback-average')).toHaveTextContent('Average 4.3 ★');
-    expect(screen.getByTestId('feedback-host-average')).toHaveTextContent('As host 4.5 ★');
+    expect(screen.getByTestId('feedback-average')).toHaveTextContent('Average 4.3/5');
+    expect(screen.getByTestId('feedback-host-average')).toHaveTextContent('As host 4.5/5');
     expect(screen.getByTestId('great-tags')).toHaveTextContent(/Great people · 3/);
     expect(screen.getByTestId('improve-tags')).toHaveTextContent(/Too loud · 1/);
     expect(screen.getByTestId('feedback-comments')).toHaveTextContent(/More water please/);

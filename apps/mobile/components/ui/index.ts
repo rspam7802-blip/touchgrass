@@ -1,7 +1,9 @@
 export { Button, type ButtonProps } from './Button';
 export { Card } from './Card';
 export { Chip, type ChipProps } from './Chip';
+export { Icon, type LucideIcon } from './Icon';
 export { IconButton } from './IconButton';
+export { IconText } from './IconText';
 export { ListRow, type ListRowProps, SwitchRow, type SwitchRowProps } from './ListRow';
 export { OfflineBanner } from './OfflineBanner';
 export { Pill, type PillTone } from './Pill';
