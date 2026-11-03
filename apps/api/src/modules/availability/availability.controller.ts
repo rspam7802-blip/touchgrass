@@ -1,4 +1,14 @@
-import { Body, Controller, Delete, Get, HttpCode, Put } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  Param,
+  ParseUUIDPipe,
+  Post,
+  Put,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import type * as Dto from '@touchgrass/shared';
 import { FreeNowList, MyAvailability, SetAvailabilityBody } from '@touchgrass/shared';
@@ -37,5 +47,23 @@ export class AvailabilityController {
   @HttpCode(204)
   async clear(@CurrentUser() user: AuthPrincipal): Promise<void> {
     await this.availability.clear(user.userId);
+  }
+}
+
+/** Pinging a squad member who is free now (F-ENG-01, Phase 13). */
+@ApiTags('availability')
+@ApiBearerAuth()
+@Controller({ path: 'availability', version: '1' })
+export class AvailabilityPingController {
+  constructor(private readonly availability: AvailabilityService) {}
+
+  @Post(':userId/ping')
+  @HttpCode(204)
+  @RateLimit({ name: 'availability-ping', limit: 30, windowSeconds: 3600, by: 'user' })
+  async ping(
+    @CurrentUser() user: AuthPrincipal,
+    @Param('userId', new ParseUUIDPipe()) userId: string,
+  ): Promise<void> {
+    await this.availability.ping(user.userId, userId);
   }
 }

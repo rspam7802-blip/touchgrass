@@ -1,13 +1,18 @@
 import { Inject, Injectable } from '@nestjs/common';
+import type { Redis } from 'ioredis';
 import type { FreeNowList, MyAvailability, SetAvailabilityBody } from '@touchgrass/shared';
 import { and, eq, gt, inArray, lte } from 'drizzle-orm';
+import { AppError } from '../../common/errors/app-error.js';
 import { DB, type Database, type Tx } from '../../infra/database/database.module.js';
+import { REDIS } from '../../infra/redis/redis.module.js';
 import { availabilityStatus } from '../../infra/database/schema/index.js';
 import { OutboxService } from '../../infra/outbox/outbox.service.js';
 import { PeopleService } from '../profiles/people.service.js';
 import { SocialGraphService } from '../social/graph/social-graph.service.js';
+import { PING_PAIR_WINDOW_SECONDS, pingRefusal, pingThrottleKey } from './availability.policy.js';
 
 export const AVAILABILITY_SET_EVENT = 'availability.set';
+export const AVAILABILITY_PINGED_EVENT = 'availability.pinged';
 const HOUR_MS = 3_600_000;
 
 /** "I'm free now" (F-ENG-01): availability for the next 1–6 hours, seen by the squad, expiring on its own. */
@@ -18,6 +23,7 @@ export class AvailabilityService {
     private readonly outbox: OutboxService,
     private readonly graph: SocialGraphService,
     private readonly people: PeopleService,
+    @Inject(REDIS) private readonly redis: Redis,
   ) {}
 
   async mine(userId: string, now: Date = new Date()): Promise<MyAvailability> {
@@ -88,6 +94,54 @@ export class AvailabilityService {
         return person ? [{ person, until: r.until.toISOString(), note: r.note }] : [];
       });
     return { me: await this.mine(userId, now), items };
+  }
+
+  /**
+   * Ping a squad member who is free now ("want to meet up?"). The notification goes out through the outbox, so
+   * quiet hours and notification settings apply. One ping per pair per 30 minutes.
+   */
+  async ping(fromId: string, toId: string, now: Date = new Date()): Promise<void> {
+    const [relationship, blockedEitherWay, row] = await Promise.all([
+      this.graph.relationshipStatus(fromId, toId),
+      this.graph.isBlockedEitherWay(fromId, toId),
+      this.db
+        .select({ until: availabilityStatus.until })
+        .from(availabilityStatus)
+        .where(eq(availabilityStatus.userId, toId))
+        .then((r) => r[0]),
+    ]);
+    const refusal = pingRefusal({
+      fromId,
+      toId,
+      inSquad: relationship === 'squad',
+      blockedEitherWay,
+      targetFreeUntil: row?.until ?? null,
+      now,
+    });
+    if (refusal === 'self') throw new AppError('VALIDATION_FAILED', 'You cannot ping yourself');
+    if (refusal === 'not_found') throw AppError.notFound('User');
+    if (refusal === 'not_free') throw new AppError('NOT_FREE_NOW', 'They are not free any more');
+    const claimed = await this.redis.set(
+      pingThrottleKey(fromId, toId),
+      '1',
+      'EX',
+      PING_PAIR_WINDOW_SECONDS,
+      'NX',
+    );
+    if (claimed === null) {
+      const ttl = await this.redis.ttl(pingThrottleKey(fromId, toId));
+      throw new AppError('RATE_LIMITED', 'You pinged them recently', {
+        retryAfterSeconds: Math.max(ttl, 1),
+      });
+    }
+    await this.db.transaction(async (tx) => {
+      await this.outbox.add(tx, {
+        aggregateType: 'user',
+        aggregateId: toId,
+        type: AVAILABILITY_PINGED_EVENT,
+        payload: { fromId, toId },
+      });
+    });
   }
 
   /** Who should hear that `userId` is free: their squad, minus anyone blocked either way. */

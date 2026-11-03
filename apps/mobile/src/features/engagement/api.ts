@@ -72,6 +72,15 @@ export function useSetFree() {
   });
 }
 
+/** Ping a squad member who is free now (Phase 13). One per pair per 30 minutes; the API says when to retry. */
+export function usePing() {
+  const { client } = useApi();
+  return useMutation({
+    mutationFn: (userId: string) =>
+      client.request(`/v1/availability/${userId}/ping`, Empty, { method: 'POST' }),
+  });
+}
+
 // ---------- crews (F-ENG-02) ----------
 
 export function useCrews(scope: CrewListQuery['scope']) {

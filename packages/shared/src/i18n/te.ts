@@ -4,7 +4,7 @@ export const te: Translation = {
   brand: {
     name: 'TouchGrass',
     tagline: 'ఫోన్ పక్కన పెట్టు. బయటకు రా.',
-    subtitle: 'నీ దగ్గర ప్లాన్‌లు, మనుషులు',
+    subtitle: 'ప్లాన్లు, మనుషులు, నిజ జీవితం',
   },
   vocab: {
     pullUp: 'వస్తున్నా',
@@ -138,6 +138,7 @@ export const te: Translation = {
     PERK_UNAVAILABLE: 'ఈ పెర్క్ ఇప్పుడు వాడలేం.',
     PAYMENT_PROVIDER_ERROR:
       'పేమెంట్స్‌లో సమస్య ఉంది. డబ్బు కట్ కాలేదు. ఒక నిమిషంలో మళ్లీ ప్రయత్నించు.',
+    NOT_FREE_NOW: 'వాళ్లు ఇప్పుడు ఖాళీగా లేరు.',
   },
   auth: {
     phoneTitle: 'నీ నంబర్ ఏంటి?',
@@ -1054,6 +1055,9 @@ export const te: Translation = {
     deleteForMe: 'నాకు మాత్రమే డిలీట్',
     deleteForEveryone: 'అందరికీ డిలీట్',
     deleted: 'మెసేజ్ డిలీట్ అయింది',
+    you: 'నువ్వు',
+    noMessagesYet: 'ఇంకా మెసేజ్\u200cలు లేవు. గ్రూప్\u200cకు హలో చెప్పు.',
+    openChat: 'చాట్ తెరువు',
     report: 'మెసేజ్ రిపోర్ట్ చేయి',
     mute: 'మ్యూట్',
     unmute: 'అన్‌మ్యూట్',
@@ -1347,6 +1351,11 @@ export const te: Translation = {
     pushTitle: '{{name}} ఇప్పుడు ఫ్రీ',
     pushBody: 'కొన్ని గంటలు ఫ్రీ. ప్లాన్ చేద్దామా?',
     howLong: 'ఎంత సేపు?',
+    ping: 'పింగ్',
+    pingSent: 'పింగ్ పంపాం. {{name}} కి నోటిఫికేషన్ వెళ్తుంది.',
+    message: 'మెసేజ్',
+    planTogether: 'కలిసి ప్లాన్ చెయ్యి',
+    pingHint: 'ఇప్పుడు కలవాలని ఉందని {{name}} కి తెలియజేస్తుంది.',
   },
   crews: {
     title: 'క్రూలు',
@@ -1752,6 +1761,10 @@ export const te: Translation = {
         body: 'కలిసి ఏదైనా ప్లాట్ చేద్దామా?',
       },
       freeNowNote: { body: '“{{note}}”' },
+      freeNowPing: {
+        title: '{{name}} కలవాలనుకుంటున్నారు',
+        body: 'నువ్వు ఖాళీగా ఉన్నావని {{name}} చూశారు. ప్లాన్ చేయడానికి రిప్లై ఇవ్వు.',
+      },
       crew: { body: '{{crew}}' },
       eventInvited: { title: '{{name}} నిన్ను {{title}}కి పిలిచారు', body: '{{when}}' },
       eventUpdated: { title: '{{title}} మారింది', body: 'ఇప్పుడు {{when}}. వివరాలు చూడు.' },

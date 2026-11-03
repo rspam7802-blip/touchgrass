@@ -1,4 +1,6 @@
+import type { FreeNowItem } from '@touchgrass/shared';
 import { useRouter } from 'expo-router';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useFreeNow, useSetFree } from '../../src/features/engagement/api';
@@ -7,6 +9,7 @@ import { useTheme } from '../../src/theme/theme';
 import { Avatar } from '../Avatar';
 import { Plus, Zap } from '../icons';
 import { Button, Icon, Text } from '../ui';
+import { FreeNowSheet } from './FreeNowSheet';
 import { useFlag } from '../../src/features/app-config/use-flag';
 
 const SIZE = 52;
@@ -22,6 +25,7 @@ export function FreeNowStrip() {
   const q = useFreeNow();
   const set = useSetFree();
   const enabled = useFlag('free_now');
+  const [selected, setSelected] = useState<FreeNowItem | null>(null);
   if (!q.data || !enabled) return null;
   const { me, items } = q.data;
   return (
@@ -81,7 +85,8 @@ export function FreeNowStrip() {
           <View key={f.person.id} testID={`free-${f.person.id}`}>
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel={t('free.planWith', { name: f.person.displayName })}
+              accessibilityLabel={f.person.displayName}
+              accessibilityHint={t('a11y.opensScreen', { screen: f.person.displayName })}
               // Read after the name: until when they're free, and their note.
               accessibilityValue={{
                 text: [t('free.until', { time: formatTime(f.until, i18n.language) }), f.note]
@@ -89,9 +94,9 @@ export function FreeNowStrip() {
                   .join(', '),
               }}
               onPress={() => {
-                router.push({ pathname: '/plot', params: { inviteUserId: f.person.id } });
+                setSelected(f);
               }}
-              testID={`plan-with-${f.person.id}`}
+              testID={`free-person-${f.person.id}`}
               style={styles.person}
             >
               <Avatar
@@ -121,6 +126,12 @@ export function FreeNowStrip() {
           </Text>
         ) : null}
       </ScrollView>
+      <FreeNowSheet
+        item={selected}
+        onClose={() => {
+          setSelected(null);
+        }}
+      />
     </View>
   );
 }

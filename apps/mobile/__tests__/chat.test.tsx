@@ -556,7 +556,7 @@ describe('at the plan (F-ATE-01..03)', () => {
       </>,
       { fetchFn: api.fetch },
     );
-    await fireEvent.press(await screen.findByText(/Group chat · 3 unread/));
+    await fireEvent.press(await screen.findByText(/Open chat · 3 unread/));
     expect(mockRouter.push).toHaveBeenCalledWith({
       pathname: '/chats/[id]',
       params: { id: EVENT_CONV },
@@ -574,6 +574,61 @@ describe('at the plan (F-ATE-01..03)', () => {
     expect(await screen.findByText('Best biryani in town?')).toBeOnTheScreen();
     await fireEvent.press(screen.getByTestId('dismiss-icebreaker'));
     expect(useRealtime.getState().icebreaker).toBeNull();
+  });
+
+  const threadPage = (items: Message[]) => ({
+    status: 200,
+    body: { items, nextCursor: null, readBy: [] },
+  });
+  const photo = {
+    sm: 'https://media.test/p/sm.webp',
+    md: 'https://media.test/p/md.webp',
+    lg: 'https://media.test/p/lg.webp',
+  };
+
+  it('previews the latest plan messages right under Pull up, oldest first', async () => {
+    api
+      .on('GET', `/v1/events/${EVENT_ID}/chat`, {
+        status: 200,
+        body: conversation({ id: EVENT_CONV, kind: 'event', peer: null, unreadCount: 0 }),
+      })
+      .on(
+        'GET',
+        `/v1/chats/${EVENT_CONV}/messages`,
+        threadPage([
+          message({ conversationId: EVENT_CONV, mine: true, sender: null, body: 'On my way' }),
+          message({ conversationId: EVENT_CONV, body: null, image: photo }),
+          message({ conversationId: EVENT_CONV, body: 'Table by the window' }),
+          message({ conversationId: EVENT_CONV, body: 'Too old for the preview' }),
+        ]),
+      );
+    await renderWithProviders(<EventTogetherTools event={eventFixture()} />, {
+      fetchFn: api.fetch,
+    });
+    const preview = await screen.findByTestId('event-chat-preview');
+    await waitFor(() => expect(preview).toHaveTextContent(/On my way/));
+    const lines = screen.getAllByTestId(/^event-chat-line-/);
+    expect(lines[0]).toHaveTextContent(/Table by the window/);
+    expect(lines[2]).toHaveTextContent(/On my way/);
+    expect(preview).toHaveTextContent(/You\s+On my way/);
+    expect(preview).toHaveTextContent(/Photo from Rohan K\./);
+    expect(preview).not.toHaveTextContent(/Too old for the preview/);
+    expect(screen.getByRole('button', { name: 'Open chat' })).toBeOnTheScreen();
+  });
+
+  it('invites the group to say hello when the plan chat is empty', async () => {
+    api
+      .on('GET', `/v1/events/${EVENT_ID}/chat`, {
+        status: 200,
+        body: conversation({ id: EVENT_CONV, kind: 'event', peer: null, unreadCount: 0 }),
+      })
+      .on('GET', `/v1/chats/${EVENT_CONV}/messages`, threadPage([]));
+    await renderWithProviders(<EventTogetherTools event={eventFixture()} />, {
+      fetchFn: api.fetch,
+    });
+    expect(await screen.findByTestId('event-chat-empty')).toHaveTextContent(
+      'No messages yet. Say hello to the group.',
+    );
   });
 
   it('hides everything from people without a seat', async () => {

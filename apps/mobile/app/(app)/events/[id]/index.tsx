@@ -26,10 +26,7 @@ export default function EventScreen() {
           />
         )
       ) : (
-        <>
-          <EventDetailView event={q.data} />
-          <EventTogetherTools event={q.data} />
-        </>
+        <EventDetailView event={q.data} afterRsvp={<EventTogetherTools event={q.data} />} />
       )}
     </Screen>
   );

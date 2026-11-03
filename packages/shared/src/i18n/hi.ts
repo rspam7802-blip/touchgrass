@@ -4,7 +4,7 @@ export const hi: Translation = {
   brand: {
     name: 'TouchGrass',
     tagline: 'फ़ोन छोड़ो. बाहर आओ.',
-    subtitle: 'तुम्हारे पास के प्लान और लोग',
+    subtitle: 'प्लान, लोग, असली ज़िंदगी',
   },
   vocab: {
     pullUp: 'आ रहा/रही हूँ',
@@ -137,6 +137,7 @@ export const hi: Translation = {
     HOLD_EXPIRED: 'तुम्हारे 10 मिनट खत्म हो गए और स्पॉट छोड़ दिया गया. फिर से कोशिश करो.',
     PERK_UNAVAILABLE: 'यह पर्क अभी इस्तेमाल नहीं हो सकता.',
     PAYMENT_PROVIDER_ERROR: 'पेमेंट में दिक्कत है. पैसे नहीं कटे. एक मिनट में फिर कोशिश करो.',
+    NOT_FREE_NOW: 'वे अब फ़्री नहीं हैं।',
   },
   auth: {
     phoneTitle: 'तुम्हारा नंबर क्या है?',
@@ -1047,6 +1048,9 @@ export const hi: Translation = {
     deleteForMe: 'सिर्फ मेरे लिए डिलीट',
     deleteForEveryone: 'सबके लिए डिलीट',
     deleted: 'मैसेज डिलीट हो गया',
+    you: 'तुम',
+    noMessagesYet: 'अभी कोई मैसेज नहीं। ग्रुप को हैलो बोलो।',
+    openChat: 'चैट खोलो',
     report: 'मैसेज रिपोर्ट करो',
     mute: 'म्यूट',
     unmute: 'अनम्यूट',
@@ -1340,6 +1344,11 @@ export const hi: Translation = {
     pushTitle: '{{name}} अभी फ़्री है',
     pushBody: 'अगले कुछ घंटे फ़्री. प्लान बनाएँ?',
     howLong: 'कितनी देर?',
+    ping: 'पिंग',
+    pingSent: 'पिंग भेज दिया। {{name}} को नोटिफ़िकेशन मिलेगा।',
+    message: 'मैसेज',
+    planTogether: 'साथ में प्लान करो',
+    pingHint: '{{name}} को बताता है कि तुम अभी मिलना चाहते हो।',
   },
   crews: {
     title: 'क्रू',
@@ -1746,6 +1755,10 @@ export const hi: Translation = {
         body: 'साथ में कुछ प्लॉट करें?',
       },
       freeNowNote: { body: '“{{note}}”' },
+      freeNowPing: {
+        title: '{{name}} मिलना चाहते हैं',
+        body: '{{name}} ने देखा कि तुम फ़्री हो। प्लान बनाने के लिए जवाब दो।',
+      },
       crew: { body: '{{crew}}' },
       eventInvited: { title: '{{name}} ने तुम्हें {{title}} में बुलाया', body: '{{when}}' },
       eventUpdated: { title: '{{title}} बदल गया', body: 'अब {{when}}. डिटेल्स देखो.' },

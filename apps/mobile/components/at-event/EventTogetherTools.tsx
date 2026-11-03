@@ -3,9 +3,11 @@ import { useRouter } from 'expo-router';
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
-import { useEventChat } from '../../src/features/chat/api';
+import type { Message } from '@touchgrass/shared';
+import { flatten } from '../../src/features/social/api';
+import { useEventChat, useMessages } from '../../src/features/chat/api';
 import { useRealtime } from '../../src/features/chat/realtime';
-import { Button, Text } from '../ui';
+import { Button, Card, Text } from '../ui';
 
 /**
  * Plan chat and at-the-plan tools (F-CHT-02, F-ATE-01..03) for people holding a seat and hosts. While the plan is
@@ -43,7 +45,12 @@ export function EventTogetherTools({ event }: { event: EventDetail }) {
       <Text variant="heading" accessibilityRole="header">
         {t('chat.eventChat')}
       </Text>
-      {chat.data ? <EventChatButton id={chat.data.id} unread={chat.data.unreadCount} /> : null}
+      {chat.data ? (
+        <Card testID="event-chat-preview">
+          <ChatPreview id={chat.data.id} />
+          <EventChatButton id={chat.data.id} unread={chat.data.unreadCount} />
+        </Card>
+      ) : null}
       {live ? (
         <View style={styles.row}>
           <Button
@@ -81,6 +88,45 @@ export function EventTogetherTools({ event }: { event: EventDetail }) {
   );
 }
 
+const PREVIEW_COUNT = 3;
+
+/** The plan chat's latest messages, oldest first, so the group's conversation reads at a glance. */
+function ChatPreview({ id }: { id: string }) {
+  const { t } = useTranslation();
+  const q = useMessages(id);
+  const items = flatten(q.data)
+    .filter((m) => m.kind !== 'system')
+    .slice(0, PREVIEW_COUNT)
+    .reverse();
+  if (q.isPending) return null;
+  if (items.length === 0)
+    return (
+      <Text tone="muted" testID="event-chat-empty">
+        {t('chat.noMessagesYet')}
+      </Text>
+    );
+  return (
+    <View style={styles.preview}>
+      {items.map((m) => (
+        <Text key={m.id} numberOfLines={2} testID={`event-chat-line-${m.id}`}>
+          <Text variant="label">
+            {m.mine ? t('chat.you') : (m.sender?.displayName ?? t('chat.someone'))}
+          </Text>
+          {`  ${previewText(t, m)}`}
+        </Text>
+      ))}
+    </View>
+  );
+}
+
+function previewText(t: (k: string, o?: Record<string, unknown>) => string, m: Message): string {
+  if (m.deleted) return t('chat.deleted');
+  if (m.poll) return m.poll.question;
+  if (m.image && !m.body)
+    return t('chat.photoFrom', { name: m.sender?.displayName ?? t('chat.someone') });
+  return m.body ?? '';
+}
+
 function EventChatButton({ id, unread }: { id: string; unread: number }) {
   const { t } = useTranslation();
   const router = useRouter();
@@ -88,8 +134,8 @@ function EventChatButton({ id, unread }: { id: string; unread: number }) {
     <Button
       label={
         unread > 0
-          ? `${t('chat.eventChat')} · ${t('chat.unread', { count: unread })}`
-          : t('chat.eventChat')
+          ? `${t('chat.openChat')} · ${t('chat.unread', { count: unread })}`
+          : t('chat.openChat')
       }
       onPress={() => {
         router.push({ pathname: '/chats/[id]', params: { id } });
@@ -100,7 +146,8 @@ function EventChatButton({ id, unread }: { id: string; unread: number }) {
 }
 
 const styles = StyleSheet.create({
-  wrap: { gap: 12, marginTop: 12 },
+  wrap: { gap: 12 },
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   grow: { flexGrow: 1 },
+  preview: { gap: 6 },
 });

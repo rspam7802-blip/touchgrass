@@ -41,6 +41,7 @@ export const ErrorCode = z.enum([
   'HOLD_EXPIRED',
   'PERK_UNAVAILABLE',
   'PAYMENT_PROVIDER_ERROR',
+  'NOT_FREE_NOW',
 ]);
 export type ErrorCode = z.infer<typeof ErrorCode>;
 
@@ -84,6 +85,7 @@ export const ERROR_HTTP_STATUS: Record<ErrorCode, number> = {
   HOLD_EXPIRED: 409,
   PERK_UNAVAILABLE: 409,
   PAYMENT_PROVIDER_ERROR: 502,
+  NOT_FREE_NOW: 409,
 };
 
 export const ErrorEnvelope = z.object({

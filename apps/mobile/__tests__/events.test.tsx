@@ -176,6 +176,23 @@ describe('Plans tab', () => {
 });
 
 describe('Event detail', () => {
+  it('shows the plan card, then Pull up, then the plan chat, then the details', async () => {
+    const going = eventFixture({}, { rsvp: 'going', canRsvp: false });
+    api
+      .on('GET', `/v1/events/${EVENT_ID}`, { status: 200, body: going })
+      .on('GET', `/v1/events/${EVENT_ID}/chat`, {
+        status: 404,
+        body: { error: { code: 'NOT_FOUND', message: 'none' } },
+      });
+    await renderWithProviders(<EventScreen />, { fetchFn: api.fetch });
+    await screen.findByTestId('event-hero');
+    const order = ['event-hero', 'event-rsvp', 'together-tools', 'event-details'];
+    const tree = JSON.stringify(screen.toJSON());
+    const positions = order.map((id) => tree.indexOf(`"testID":"${id}"`));
+    expect(positions.every((p) => p >= 0)).toBe(true);
+    expect([...positions].sort((a, b) => a - b)).toEqual(positions);
+  });
+
   it('pulls up with an idempotency key and shows the new state', async () => {
     const going = eventFixture({ goingCount: 5, spotsLeft: 5 }, { rsvp: 'going', canRsvp: false });
     api.on('PUT', `/v1/events/${EVENT_ID}/rsvp`, () => {

@@ -4,14 +4,14 @@ import { AccountModule } from '../account/account.module.js';
 import { NotificationsModule } from '../notifications/notifications.module.js';
 import { ProfilesModule } from '../profiles/profiles.module.js';
 import { SocialGraphModule } from '../social/graph/social-graph.module.js';
-import { AvailabilityController } from './availability.controller.js';
+import { AvailabilityController, AvailabilityPingController } from './availability.controller.js';
 import { AvailabilityHandlers } from './availability.handlers.js';
 import { AvailabilityService } from './availability.service.js';
 
 /** "I'm free now" (Phase 8, F-ENG-01). */
 @Module({
   imports: [AccountModule, NotificationsModule, ProfilesModule, SocialGraphModule],
-  controllers: [AvailabilityController],
+  controllers: [AvailabilityController, AvailabilityPingController],
   providers: [AvailabilityService, AvailabilityHandlers],
   exports: [AvailabilityService, AvailabilityHandlers],
 })

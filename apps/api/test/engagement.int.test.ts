@@ -112,6 +112,56 @@ describe("I'm free now (F-ENG-01)", () => {
   });
 });
 
+describe('pinging someone who is free now (F-ENG-01, Phase 13)', () => {
+  it('pings a free squad member once per half hour and tells them who', async () => {
+    const [a, b] = [await member(h), await member(h)];
+    await befriend(h, a, b);
+    await api(b).put('/v1/me/availability', { hours: 2 }).expect(200);
+
+    await api(a).post(`/v1/availability/${b.id}/ping`).expect(204);
+    expect(await outboxFor(h, b.id, 'availability.pinged')).toEqual([{ fromId: a.id, toId: b.id }]);
+    // A second ping inside 30 minutes is refused and says when to try again.
+    const again = await api(a).post(`/v1/availability/${b.id}/ping`).expect(429);
+    expect(again.body.error.details.retryAfterSeconds).toBeGreaterThan(0);
+    expect(await outboxFor(h, b.id, 'availability.pinged')).toHaveLength(1);
+
+    // The worker step delivers it to b's inbox, naming a.
+    expect(await h.app.get(AvailabilityHandlers).notifyPing(a.id, b.id)).toBeGreaterThanOrEqual(0);
+    const inbox = (await api(b).get('/v1/notifications').expect(200)).body as {
+      items: { kind: string; title: string }[];
+    };
+    const ping = inbox.items.find((i) => i.kind === 'free_now_ping');
+    expect(ping?.title).toMatch(/wants to meet up$/);
+  });
+
+  it('never reaches people outside the squad, blocked people, or people no longer free', async () => {
+    const [a, b, stranger, blocker] = [
+      await member(h),
+      await member(h),
+      await member(h),
+      await member(h),
+    ];
+    await befriend(h, a, b);
+    await befriend(h, a, blocker);
+    await api(stranger).put('/v1/me/availability', { hours: 2 }).expect(200);
+    await api(blocker).put('/v1/me/availability', { hours: 2 }).expect(200);
+
+    // b is in the squad but not free.
+    const notFree = await api(a).post(`/v1/availability/${b.id}/ping`).expect(409);
+    expect(notFree.body.error.code).toBe('NOT_FREE_NOW');
+    // Strangers and blocks look the same: not found.
+    await api(a).post(`/v1/availability/${stranger.id}/ping`).expect(404);
+    await api(blocker).post('/v1/social/blocks', { userId: a.id }).expect(204);
+    await api(a).post(`/v1/availability/${blocker.id}/ping`).expect(404);
+    await api(a).post(`/v1/availability/${a.id}/ping`).expect(400);
+    await api(a).post('/v1/availability/not-a-uuid/ping').expect(400);
+    expect(await outboxFor(h, stranger.id, 'availability.pinged')).toEqual([]);
+    expect(await outboxFor(h, blocker.id, 'availability.pinged')).toEqual([]);
+    // A block that lands after the ping still stops the notification.
+    expect(await h.app.get(AvailabilityHandlers).notifyPing(a.id, blocker.id)).toBe(0);
+  });
+});
+
 // ---------- F-ENG-02 ----------
 
 async function newCrew(admin: Member, body: Record<string, unknown> = {}): Promise<CrewDetail> {

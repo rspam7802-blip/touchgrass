@@ -7,7 +7,7 @@ export const en = {
   brand: {
     name: 'TouchGrass',
     tagline: 'Log off. Pull up.',
-    subtitle: 'Plans and people near you',
+    subtitle: 'Plans, people, IRL',
   },
   vocab: {
     pullUp: 'Pull up',
@@ -141,6 +141,7 @@ export const en = {
     PERK_UNAVAILABLE: "This perk can't be used right now.",
     PAYMENT_PROVIDER_ERROR:
       'Payments are having trouble. Nothing was charged. Try again in a minute.',
+    NOT_FREE_NOW: "They're not free any more.",
   },
   auth: {
     phoneTitle: "What's your number?",
@@ -1047,6 +1048,9 @@ export const en = {
     deleteForMe: 'Delete for me',
     deleteForEveryone: 'Delete for everyone',
     deleted: 'Message deleted',
+    you: 'You',
+    noMessagesYet: 'No messages yet. Say hello to the group.',
+    openChat: 'Open chat',
     report: 'Report message',
     mute: 'Mute',
     unmute: 'Unmute',
@@ -1340,6 +1344,11 @@ export const en = {
     pushTitle: '{{name}} is free now',
     pushBody: 'Free for the next few hours. Make a plan?',
     howLong: 'For how long?',
+    ping: 'Ping',
+    pingSent: 'Ping sent. {{name}} will get a notification.',
+    message: 'Message',
+    planTogether: 'Plan together',
+    pingHint: "Lets {{name}} know you'd like to meet up now.",
   },
   crews: {
     title: 'Crews',
@@ -1741,6 +1750,10 @@ export const en = {
       },
       friendAccepted: { title: '{{name}} is in your squad now', body: 'Plot something together?' },
       freeNowNote: { body: '“{{note}}”' },
+      freeNowPing: {
+        title: '{{name}} wants to meet up',
+        body: "{{name}} saw you're free. Reply to make a plan.",
+      },
       crew: { body: '{{crew}}' },
       eventInvited: { title: '{{name}} invited you to {{title}}', body: '{{when}}' },
       eventUpdated: { title: '{{title}} changed', body: 'Now {{when}}. Check the details.' },

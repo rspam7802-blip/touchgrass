@@ -77,6 +77,13 @@ export const NOTIFICATION_TEMPLATES = {
     link: 'free',
     batch: true,
   },
+  free_now_ping: {
+    category: 'free_now',
+    title: 'notifications.kinds.freeNowPing.title',
+    body: 'notifications.kinds.freeNowPing.body',
+    link: 'users/{{userId}}',
+    batch: false,
+  },
   crew_requested: {
     category: 'squad',
     title: 'crews.requestPush',

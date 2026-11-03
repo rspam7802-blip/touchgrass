@@ -119,13 +119,96 @@ describe("I'm free now (F-ENG-01)", () => {
       });
     await renderWithProviders(<FreeNowStrip />, { fetchFn: api.fetch });
     expect(await screen.findByText('chai near Madhapur?')).toBeOnTheScreen();
-    await fireEvent.press(screen.getByRole('button', { name: 'Plan with Kiran' }));
+    // Tapping a face opens their card; planning together is one of its actions.
+    await fireEvent.press(screen.getByRole('button', { name: 'Kiran' }));
+    expect(await screen.findByTestId('free-sheet')).toBeOnTheScreen();
+    expect(screen.getByTestId('free-sheet-note')).toHaveTextContent('chai near Madhapur?');
+    await fireEvent.press(screen.getByRole('button', { name: 'Plan together' }));
     expect(mockRouter.push).toHaveBeenCalledWith({
       pathname: '/plot',
       params: { inviteUserId: ids.other },
     });
+    expect(screen.queryByTestId('free-sheet')).toBeNull();
     await fireEvent.press(screen.getByRole('button', { name: "I'm free" }));
     expect(mockRouter.push).toHaveBeenCalledWith('/free');
+  });
+
+  it('pings a free squad member from their card, and says why when it cannot', async () => {
+    let pings = 0;
+    api
+      .on('GET', '/v1/me/availability', {
+        status: 200,
+        body: {
+          me: { until: null, note: '' },
+          items: [{ person: kiran, until: '2026-11-01T15:30:00.000Z', note: '' }],
+        },
+      })
+      .on('POST', `/v1/availability/${ids.other}/ping`, () => {
+        pings += 1;
+        return pings === 1
+          ? { status: 204 }
+          : {
+              status: 409,
+              body: { error: { code: 'NOT_FREE_NOW', message: 'They are not free any more' } },
+            };
+      });
+    await renderWithProviders(<FreeNowStrip />, { fetchFn: api.fetch });
+    await fireEvent.press(await screen.findByRole('button', { name: 'Kiran' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Ping' }));
+    expect(await screen.findByTestId('free-sheet-notice')).toHaveTextContent(
+      'Ping sent. Kiran will get a notification.',
+    );
+    // One ping per visit: the button turns off once sent.
+    expect(screen.getByRole('button', { name: 'Ping' })).toBeDisabled();
+    expect(api.callsTo('POST', `/v1/availability/${ids.other}/ping`)).toHaveLength(1);
+
+    // Close and reopen: a second ping the server refuses explains itself.
+    await fireEvent.press(screen.getByTestId('free-sheet-backdrop'));
+    await fireEvent.press(screen.getByRole('button', { name: 'Kiran' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Ping' }));
+    expect(await screen.findByTestId('free-sheet-error')).toHaveTextContent(
+      "They're not free any more.",
+    );
+  });
+
+  it('messages a free squad member from their card', async () => {
+    api
+      .on('GET', '/v1/me/availability', {
+        status: 200,
+        body: {
+          me: { until: null, note: '' },
+          items: [{ person: kiran, until: '2026-11-01T15:30:00.000Z', note: '' }],
+        },
+      })
+      .on('POST', '/v1/chats/direct', {
+        status: 200,
+        body: {
+          id: '0192f3a4-5b6c-7d8e-9f01-0000000c0001',
+          kind: 'direct',
+          state: 'active',
+          title: 'Kiran',
+          avatar: null,
+          peer: kiran,
+          eventId: null,
+          lastMessage: null,
+          unreadCount: 0,
+          muted: false,
+          readOnly: false,
+          canCreatePoll: false,
+          opensAt: null,
+          closesAt: null,
+        },
+      });
+    await renderWithProviders(<FreeNowStrip />, { fetchFn: api.fetch });
+    await fireEvent.press(await screen.findByRole('button', { name: 'Kiran' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Message' }));
+    await waitFor(() =>
+      expect(mockRouter.push).toHaveBeenCalledWith({
+        pathname: '/chats/[id]',
+        params: { id: '0192f3a4-5b6c-7d8e-9f01-0000000c0001' },
+      }),
+    );
+    expect(api.callsTo('POST', '/v1/chats/direct')[0]?.body).toEqual({ userId: ids.other });
   });
 
   it('choosing hours and a note', async () => {
