@@ -1,0 +1,17 @@
+# Launch, see the brand, switch language to Telugu and Hindi and back (gate 7: "switching language").
+appId: app.touchgrass
+name: Welcome and language switching
+---
+- launchApp:
+    clearState: true
+- assertVisible: 'Log off. Pull up.'
+- assertVisible: 'Less scrolling. More showing up.'
+- tapOn: 'తెలుగు'
+- assertVisible: 'ఫోన్ పక్కన పెట్టు. బయటకు రా.'
+- tapOn: 'हिन्दी'
+- assertVisible: 'फ़ोन छोड़ो. बाहर आओ.'
+- tapOn: 'English'
+- assertVisible: 'Log off. Pull up.'
+- stopApp
+- launchApp
+- assertVisible: 'Log off. Pull up.'

@@ -1,0 +1,9 @@
+title = "TouchGrass gitleaks config"
+
+[extend]
+useDefault = true
+
+# Development-only placeholder values that are documented as non-secrets.
+[allowlist]
+description = "Local development defaults"
+regexes = ['''dev-only-[a-z-]+-change-me-[0-9a-f]+''', '''touchgrass-secret''', '''test-[a-z-]+-secret-[a-z0-9-]+''', '''fake-razorpay-webhook-secret''']

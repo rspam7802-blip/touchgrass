@@ -1,0 +1,11 @@
+ALTER TABLE plan_proposals DROP COLUMN IF EXISTS held_at;
+ALTER TABLE crews DROP COLUMN IF EXISTS held_at;
+ALTER TABLE lore_items DROP COLUMN IF EXISTS caption_held_at;
+ALTER TABLE events DROP COLUMN IF EXISTS held_at;
+ALTER TABLE profiles DROP COLUMN IF EXISTS bio_held_at;
+ALTER TABLE messages DROP COLUMN IF EXISTS held_at;
+DROP TABLE IF EXISTS user_sanctions;
+DROP TABLE IF EXISTS live_location_points;
+DROP TABLE IF EXISTS live_location_shares;
+DROP TABLE IF EXISTS trusted_contacts;
+DROP TABLE IF EXISTS verifications;

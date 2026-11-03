@@ -1,0 +1,37 @@
+# Hosting (F-HST-01/02, F-PAY-03): seed member #3 (+91 90000 10003) is an approved host with an active payout
+# account and a completed paid plan. They open Profile → Hosting, see insights and the payout ledger, then check
+# Settings → Payments and receipts.
+appId: app.touchgrass
+name: Hosting insights, payouts and receipts
+---
+- launchApp:
+    clearState: true
+- tapOn: 'Get started'
+- tapOn:
+    id: phone-input
+- inputText: '9000010003'
+- tapOn: 'Send code'
+- tapOn:
+    id: otp-input
+- inputText: '000000'
+- tapOn: 'Verify'
+- runFlow: subflows/skip-after-prompt.yaml
+- tapOn: 'Profile'
+- tapOn:
+    id: open-hosting
+- assertVisible:
+    id: host-approved
+- assertVisible:
+    id: kyc-status
+- assertVisible: 'Insights'
+- tapOn:
+    id: open-payouts
+- assertVisible:
+    id: payout-totals
+- back
+- back
+- tapOn: 'Settings'
+- tapOn:
+    id: row-payments
+- assertVisible:
+    id: payments-settings

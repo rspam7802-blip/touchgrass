@@ -1,0 +1,12 @@
+**/node_modules
+**/dist
+**/.next
+**/.expo
+**/coverage
+**/test-results
+**/playwright-report
+apps/mobile
+.git
+.env
+**/.env
+*.log

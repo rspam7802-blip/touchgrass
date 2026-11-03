@@ -1,0 +1,16 @@
+# Seeded members who checked in to a recently finished plan get the "How was it?" prompt right after signing in
+# (F-AFT-01). Flows that test something else close it with "Later", which only defers it for this session.
+appId: app.touchgrass
+---
+- extendedWaitUntil:
+    visible:
+      id: after-screen
+    timeout: 4000
+    optional: true
+- runFlow:
+    when:
+      visible:
+        id: after-screen
+    commands:
+      - tapOn:
+          id: after-later

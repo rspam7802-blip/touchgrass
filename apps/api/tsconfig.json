@@ -1,0 +1,14 @@
+{
+  "extends": "@touchgrass/config/tsconfig/base.json",
+  "compilerOptions": {
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "isolatedModules": false,
+    "types": ["node"],
+    "outDir": "dist",
+    "rootDir": "."
+  },
+  "include": ["src", "test", "vitest.config.mts", "eslint.config.mjs", "scripts"]
+}

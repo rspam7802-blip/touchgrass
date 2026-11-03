@@ -1,0 +1,41 @@
+# Chat (F-CHT-01, F-CHT-04): seed member #1 (+91 90000 10001) has direct chats with squad members 2–20. They open
+# the Chats tab, open the newest conversation, send a message (shown immediately, then confirmed), react to it
+# and mute the chat for an hour.
+appId: app.touchgrass
+name: Chats inbox, send, react and mute
+---
+- launchApp:
+    clearState: true
+- tapOn: 'Get started'
+- tapOn:
+    id: phone-input
+- inputText: '9000010001'
+- tapOn: 'Send code'
+- tapOn:
+    id: otp-input
+- inputText: '000000'
+- tapOn: 'Verify'
+- runFlow: subflows/skip-after-prompt.yaml
+- tapOn: 'Chats'
+- assertVisible:
+    id: chats-screen
+- tapOn:
+    id: 'conv-.*'
+    index: 0
+- assertVisible:
+    id: thread-screen
+- tapOn:
+    id: composer
+- inputText: 'Pulling up in 10'
+- tapOn:
+    id: send
+- assertVisible: 'Pulling up in 10'
+- longPressOn: 'Pulling up in 10'
+- assertVisible:
+    id: message-actions
+- tapOn:
+    id: 'react-🙌'
+- tapOn:
+    id: mute
+- tapOn: 'For an hour'
+- tapOn: 'Requests'

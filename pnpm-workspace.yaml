@@ -1,0 +1,24 @@
+packages:
+  - apps/*
+  - packages/*
+onlyBuiltDependencies:
+  - esbuild
+  - sharp
+  - '@swc/core'
+  - cpu-features
+  - ssh2
+  - protobufjs
+auditConfig:
+  # GHSA-mrhx-c7xc-m3w5 (zod <4.6.6): only reachable via @expo/cli's bundled zod 3.x, a developer CLI that is
+  # not shipped in the app bundle or run on servers; no patched 3.x exists. Our own code uses zod 4.6.7.
+  # Re-evaluate on every Expo SDK upgrade. See docs/DECISIONS.md D-010.
+  ignoreGhsas:
+    - GHSA-mrhx-c7xc-m3w5
+    # deepmerge prototype poisoning (low): only in @expo/config, which runs at build time on trusted app
+    # config, never on user input; no patched version exists. Re-evaluate on every Expo SDK upgrade.
+    - GHSA-gcqx-w48m-w2h4
+overrides:
+  # GHSA-3g3m-2fjr-6pw4 (glob 9–14.0.1) and, through it, minimatch <11.0.1 (ReDoS): reached via OpenTelemetry's
+  # GCP resource detector (gaxios > rimraf) and Sentry's bundler plugins. glob 14.0.2 keeps the same API and
+  # brings minimatch 11. Phase 12 security review, docs/SECURITY.md.
+  'glob@>=9.0.0 <14.0.2': 14.0.2

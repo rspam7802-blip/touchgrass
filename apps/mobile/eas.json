@@ -1,0 +1,75 @@
+{
+  "cli": {
+    "version": ">= 16.0.0",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "base": {
+      "node": "22.21.1",
+      "pnpm": "10.28.0",
+      "env": {
+        "EXPO_PUBLIC_LINK_HOST": "touchgrass.app"
+      }
+    },
+    "development": {
+      "extends": "base",
+      "developmentClient": true,
+      "distribution": "internal",
+      "channel": "development",
+      "env": {
+        "APP_VARIANT": "development",
+        "EXPO_PUBLIC_API_URL": "https://api.staging.touchgrass.app",
+        "EXPO_PUBLIC_REALTIME_URL": "https://api.staging.touchgrass.app",
+        "EXPO_PUBLIC_WEB_URL": "https://staging.touchgrass.app"
+      },
+      "ios": {
+        "simulator": true
+      },
+      "android": {
+        "buildType": "apk"
+      }
+    },
+    "preview": {
+      "extends": "base",
+      "distribution": "internal",
+      "channel": "preview",
+      "env": {
+        "APP_VARIANT": "preview",
+        "EXPO_PUBLIC_API_URL": "https://api.staging.touchgrass.app",
+        "EXPO_PUBLIC_REALTIME_URL": "https://api.staging.touchgrass.app",
+        "EXPO_PUBLIC_WEB_URL": "https://staging.touchgrass.app"
+      },
+      "android": {
+        "buildType": "apk"
+      }
+    },
+    "production": {
+      "extends": "base",
+      "distribution": "store",
+      "channel": "production",
+      "autoIncrement": true,
+      "env": {
+        "APP_VARIANT": "production",
+        "EXPO_PUBLIC_API_URL": "https://api.touchgrass.app",
+        "EXPO_PUBLIC_REALTIME_URL": "https://api.touchgrass.app",
+        "EXPO_PUBLIC_WEB_URL": "https://touchgrass.app"
+      },
+      "android": {
+        "buildType": "app-bundle"
+      },
+      "ios": {
+        "resourceClass": "m-medium"
+      }
+    }
+  },
+  "submit": {
+    "production": {
+      "android": {
+        "serviceAccountKeyPath": "./play-service-account.json",
+        "track": "internal",
+        "releaseStatus": "draft"
+      },
+      "ios": {}
+    }
+  }
+}

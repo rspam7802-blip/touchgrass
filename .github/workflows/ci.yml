@@ -1,0 +1,178 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  CI: true
+  TURBO_TELEMETRY_DISABLED: 1
+
+jobs:
+  quality:
+    name: Typecheck · Lint · Format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with: { node-version-file: .nvmrc, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm format:check
+      - run: pnpm typecheck
+      - run: pnpm lint
+
+  test:
+    name: Unit + integration tests (coverage gate)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with: { node-version-file: .nvmrc, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      # API coverage runs unit + Testcontainers integration suites (real PostGIS, Redis, S3, Mailpit).
+      - run: pnpm test:coverage
+      - run: pnpm --filter @touchgrass/web test
+      - run: pnpm --filter @touchgrass/mobile test
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage
+          path: |
+            apps/api/coverage
+            packages/shared/coverage
+          if-no-files-found: ignore
+
+  web-e2e:
+    name: Web e2e (Playwright)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with: { node-version-file: .nvmrc, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @touchgrass/shared build
+      - name: Start backend infrastructure (Postgres/PostGIS, Redis, S3, Mailpit)
+        run: |
+          cp .env.example .env
+          docker compose -f infra/docker/docker-compose.yml up -d --wait
+      - run: pnpm --filter @touchgrass/web exec playwright install --with-deps chromium
+      # Playwright starts the real API (migrated + seeded, fake adapters) and the production Next build.
+      - run: pnpm test:e2e:web
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with: { name: playwright-report, path: apps/web/playwright-report }
+
+  load:
+    name: Load (k6 against the real API)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with: { node-version-file: .nvmrc, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - name: Start API on the compose stack (migrated + seeded, fake adapters)
+        run: |
+          cp .env.example .env
+          docker compose -f infra/docker/docker-compose.yml up -d --wait
+          pnpm turbo run build --filter=@touchgrass/api
+          cd apps/api
+          node --env-file=../../.env dist/infra/database/migrate.cli.js up
+          node --env-file=../../.env dist/seed/seed.cli.js
+          TRUST_PROXY_HOPS=1 nohup node --env-file=../../.env dist/main.js > /tmp/api.log 2>&1 &
+          for i in $(seq 1 60); do curl -sf localhost:4000/v1/health/live && break; sleep 1; done
+      - name: RSVP hot-plan load test (thresholds fail the job)
+        run: docker run --rm --network host -v "$PWD/infra/k6:/scripts" grafana/k6:1.4.2 run /scripts/rsvp.js
+      - name: Discovery feed / map / search load test
+        run: docker run --rm --network host -e FIRST_MEMBER=150 -v "$PWD/infra/k6:/scripts" grafana/k6:1.4.2 run /scripts/feed.js
+      - name: Chat send / history / read load test
+        run: docker run --rm --network host -e FIRST_MEMBER=41 -v "$PWD/infra/k6:/scripts" grafana/k6:1.4.2 run /scripts/chat.js
+      - if: failure()
+        run: tail -200 /tmp/api.log
+
+  mobile-e2e:
+    name: Mobile e2e (Maestro on Android emulator)
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with: { node-version-file: .nvmrc, cache: pnpm }
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: '17' }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @touchgrass/shared build
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules && sudo udevadm trigger --name-match=kvm
+      - name: Start backend stack (fake adapters)
+        run: |
+          cp .env.example .env
+          docker compose -f infra/docker/docker-compose.yml up -d --wait
+          pnpm turbo run build --filter=@touchgrass/api
+          cd apps/api
+          node --env-file=../../.env dist/infra/database/migrate.cli.js up
+          node --env-file=../../.env dist/seed/seed.cli.js
+          nohup node --env-file=../../.env dist/main.js > /tmp/api.log 2>&1 &
+          nohup node --env-file=../../.env dist/worker.js > /tmp/worker.log 2>&1 &
+      - name: Build release APK
+        working-directory: apps/mobile
+        env:
+          # adb reverse (below) maps the emulator's localhost to the runner, so API and presigned S3 URLs just work.
+          EXPO_PUBLIC_API_URL: http://localhost:4000
+        run: |
+          npx expo prebuild --platform android --no-install
+          cd android && ./gradlew assembleRelease -PreactNativeArchitectures=x86_64 --no-daemon
+      - run: curl -Ls "https://get.maestro.mobile.dev" | bash
+      - uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          arch: x86_64
+          profile: pixel_7
+          script: |
+            adb reverse tcp:4000 tcp:4000
+            adb reverse tcp:9000 tcp:9000
+            adb install apps/mobile/android/app/build/outputs/apk/release/app-release.apk
+            $HOME/.maestro/bin/maestro test apps/mobile/.maestro/00-welcome-language.yaml
+            $HOME/.maestro/bin/maestro test -e PHONE=7$(date +%H%M%S)123 apps/mobile/.maestro/01-signup-invite-onboarding.yaml
+            $HOME/.maestro/bin/maestro test apps/mobile/.maestro/02-settings-and-logout.yaml
+            $HOME/.maestro/bin/maestro test apps/mobile/.maestro/03-squad.yaml
+            $HOME/.maestro/bin/maestro test apps/mobile/.maestro/04-plot-and-pull-up.yaml
+            $HOME/.maestro/bin/maestro test apps/mobile/.maestro/05-discover.yaml
+            $HOME/.maestro/bin/maestro test apps/mobile/.maestro/06-chat.yaml
+            $HOME/.maestro/bin/maestro test apps/mobile/.maestro/07-hosting.yaml
+            $HOME/.maestro/bin/maestro test apps/mobile/.maestro/08-after.yaml
+            $HOME/.maestro/bin/maestro test apps/mobile/.maestro/09-engagement.yaml
+            $HOME/.maestro/bin/maestro test apps/mobile/.maestro/10-safety.yaml
+            $HOME/.maestro/bin/maestro test apps/mobile/.maestro/11-notifications.yaml
+
+  security:
+    name: Secret + dependency scanning
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with: { node-version-file: .nvmrc, cache: pnpm }
+      - run: pnpm audit --prod --audit-level high
+      - if: github.event_name == 'pull_request'
+        uses: actions/dependency-review-action@v4
+        with: { fail-on-severity: high }

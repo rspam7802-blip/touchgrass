@@ -1,0 +1,103 @@
+import type { PlaceDetails } from './maps.port.js';
+
+/** Real Hyderabad landmarks with approximate coordinates; used by the fake maps provider and seeds. */
+export const HYDERABAD_PLACES: (PlaceDetails & { sublocality: string })[] = [
+  {
+    placeId: 'fx_inorbit',
+    name: 'Inorbit Mall',
+    address: 'Mindspace, Madhapur, Hyderabad',
+    location: { lat: 17.4344, lng: 78.3866 },
+    sublocality: 'Madhapur',
+  },
+  {
+    placeId: 'fx_durgam_cheruvu',
+    name: 'Durgam Cheruvu Lake',
+    address: 'Madhapur, Hyderabad',
+    location: { lat: 17.4294, lng: 78.3891 },
+    sublocality: 'Madhapur',
+  },
+  {
+    placeId: 'fx_shilparamam',
+    name: 'Shilparamam',
+    address: 'HITEC City, Madhapur, Hyderabad',
+    location: { lat: 17.4526, lng: 78.3812 },
+    sublocality: 'Madhapur',
+  },
+  {
+    placeId: 'fx_kbr_park',
+    name: 'KBR National Park',
+    address: 'Road No. 2, Banjara Hills, Hyderabad',
+    location: { lat: 17.4239, lng: 78.4211 },
+    sublocality: 'Jubilee Hills',
+  },
+  {
+    placeId: 'fx_jubilee_checkpost',
+    name: 'Jubilee Hills Check Post',
+    address: 'Jubilee Hills, Hyderabad',
+    location: { lat: 17.4302, lng: 78.4085 },
+    sublocality: 'Jubilee Hills',
+  },
+  {
+    placeId: 'fx_gvk_one',
+    name: 'GVK One Mall',
+    address: 'Road No. 1, Banjara Hills, Hyderabad',
+    location: { lat: 17.4193, lng: 78.4487 },
+    sublocality: 'Banjara Hills',
+  },
+  {
+    placeId: 'fx_banjara_lake',
+    name: 'Lake View Park',
+    address: 'Banjara Hills, Hyderabad',
+    location: { lat: 17.4156, lng: 78.4347 },
+    sublocality: 'Banjara Hills',
+  },
+  {
+    placeId: 'fx_gachibowli_stadium',
+    name: 'Gachibowli Stadium',
+    address: 'Gachibowli, Hyderabad',
+    location: { lat: 17.4468, lng: 78.3481 },
+    sublocality: 'Gachibowli',
+  },
+  {
+    placeId: 'fx_dlf_cybercity',
+    name: 'DLF Cyber City',
+    address: 'Gachibowli, Hyderabad',
+    location: { lat: 17.4489, lng: 78.3481 },
+    sublocality: 'Gachibowli',
+  },
+  {
+    placeId: 'fx_botanical_garden',
+    name: 'Botanical Garden',
+    address: 'Kondapur, Hyderabad',
+    location: { lat: 17.4602, lng: 78.3519 },
+    sublocality: 'Kondapur',
+  },
+  {
+    placeId: 'fx_sarath_city',
+    name: 'Sarath City Capital Mall',
+    address: 'Kondapur, Hyderabad',
+    location: { lat: 17.4575, lng: 78.3639 },
+    sublocality: 'Kondapur',
+  },
+  {
+    placeId: 'fx_kondapur_main',
+    name: 'Kondapur Main Road',
+    address: 'Kondapur, Hyderabad',
+    location: { lat: 17.4698, lng: 78.3571 },
+    sublocality: 'Kondapur',
+  },
+  {
+    placeId: 'fx_charminar',
+    name: 'Charminar',
+    address: 'Char Kaman, Ghansi Bazaar, Hyderabad',
+    location: { lat: 17.3616, lng: 78.4747 },
+    sublocality: 'Old City',
+  },
+  {
+    placeId: 'fx_tank_bund',
+    name: 'Tank Bund',
+    address: 'Hussain Sagar, Hyderabad',
+    location: { lat: 17.4239, lng: 78.4738 },
+    sublocality: 'Khairatabad',
+  },
+];

@@ -1,0 +1,21 @@
+DROP TABLE IF EXISTS perk_redemptions;
+DROP TABLE IF EXISTS venue_perks;
+DROP INDEX IF EXISTS venues_partner_idx;
+ALTER TABLE venues DROP COLUMN IF EXISTS staff_pin_hash;
+ALTER TABLE venues DROP COLUMN IF EXISTS description;
+DROP TABLE IF EXISTS event_views;
+DROP TABLE IF EXISTS payment_webhook_events;
+DROP TABLE IF EXISTS payout_transfers;
+DROP TABLE IF EXISTS payouts;
+DROP TABLE IF EXISTS refunds;
+DROP TABLE IF EXISTS payments;
+DROP SEQUENCE IF EXISTS receipt_number_seq;
+DROP TABLE IF EXISTS host_accounts;
+DROP TABLE IF EXISTS host_applications;
+ALTER TABLE users DROP COLUMN IF EXISTS receipt_email;
+ALTER TABLE events DROP CONSTRAINT IF EXISTS events_paid_refund_policy;
+ALTER TABLE events DROP COLUMN IF EXISTS refund_policy;
+DELETE FROM rsvps WHERE status = 'held';
+ALTER TABLE rsvps DROP CONSTRAINT rsvps_status_check;
+ALTER TABLE rsvps ADD CONSTRAINT rsvps_status_check
+  CHECK (status IN ('going', 'interested', 'waitlisted', 'cancelled', 'checked_in'));

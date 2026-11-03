@@ -1,0 +1,61 @@
+# Engagement (F-ENG-01..03, F-GAM-01..03, F-GRW-01): seed member #2 (+91 90000 10002) sees squad members who are
+# free now, opens the Sunday Run Club crew and its schedule, their "Biryani crawl" plan vote, their badges and
+# challenges, and their referral code with the rewards from a friend who already checked in.
+appId: app.touchgrass
+name: Free now, crews, plan votes, badges and referrals
+---
+- launchApp:
+    clearState: true
+- tapOn: 'Get started'
+- tapOn:
+    id: phone-input
+- inputText: '9000010002'
+- tapOn: 'Send code'
+- tapOn:
+    id: otp-input
+- inputText: '000000'
+- tapOn: 'Verify'
+- runFlow: subflows/skip-after-prompt.yaml
+- tapOn: 'Discover'
+- assertVisible:
+    id: free-now
+- tapOn: 'Squad'
+- tapOn:
+    id: open-crews
+- tapOn: 'Sunday Run Club.*'
+- assertVisible:
+    id: crew-schedule
+- back
+- back
+- tapOn: 'Plans'
+- tapOn:
+    id: open-proposals
+- tapOn: 'Biryani crawl.*'
+- assertVisible:
+    id: proposal-screen
+- assertVisible: 'Where'
+- back
+- back
+- tapOn: 'Profile'
+- scrollUntilVisible:
+    element:
+      id: open-badges
+- assertVisible:
+    id: streak-card
+- tapOn:
+    id: open-badges
+- assertVisible:
+    id: badge-plug
+- back
+- tapOn:
+    id: open-challenges
+- assertVisible: '.*Café crawl'
+- back
+- scrollUntilVisible:
+    element:
+      id: open-referrals
+- tapOn:
+    id: open-referrals
+- assertVisible:
+    id: referral-code
+- assertVisible: 'Priority passes: .*'

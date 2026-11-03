@@ -1,0 +1,42 @@
+name: touchgrass
+services:
+  postgres:
+    image: postgis/postgis:16-3.4
+    environment:
+      POSTGRES_USER: touchgrass
+      POSTGRES_PASSWORD: touchgrass
+      POSTGRES_DB: touchgrass
+    ports: ['5432:5432']
+    volumes: ['pgdata:/var/lib/postgresql/data']
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U touchgrass -d touchgrass']
+      interval: 2s
+      timeout: 3s
+      retries: 30
+  redis:
+    image: redis:7-alpine
+    command: ['redis-server', '--appendonly', 'yes']
+    ports: ['6379:6379']
+    volumes: ['redisdata:/data']
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 2s
+      timeout: 3s
+      retries: 30
+  # MinIO no longer publishes container images; RustFS is an Apache-2.0, S3-compatible drop-in (see docs/DECISIONS.md D-004).
+  # Buckets are created idempotently by `pnpm --filter @touchgrass/api storage:init` (run by `pnpm dev`).
+  objectstore:
+    image: rustfs/rustfs:1.0.4
+    environment:
+      RUSTFS_ACCESS_KEY: touchgrass
+      RUSTFS_SECRET_KEY: touchgrass-secret
+      RUSTFS_CONSOLE_ENABLE: 'true'
+    ports: ['9000:9000', '9001:9001']
+    volumes: ['objectdata:/data']
+  mailpit:
+    image: axllent/mailpit:v1.27
+    ports: ['1025:1025', '8025:8025']
+volumes:
+  pgdata:
+  redisdata:
+  objectdata:

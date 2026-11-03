@@ -1,0 +1,17 @@
+# Settings, language switching inside the app, replaying the tutorial and logging out (F-ACC-07, F-A11Y-03).
+appId: app.touchgrass
+name: Settings, language and logout
+---
+- launchApp
+- tapOn: 'Settings'
+- tapOn: 'App language'
+- tapOn: 'తెలుగు'
+- assertVisible: 'యాప్ భాష'
+- tapOn: 'English'
+- back
+- tapOn: 'Replay tutorial'
+- assertVisible: 'How TouchGrass works'
+- tapOn: 'Skip tutorial'
+- tapOn: 'Settings'
+- tapOn: 'Log out'
+- assertVisible: 'Log off. Pull up.'

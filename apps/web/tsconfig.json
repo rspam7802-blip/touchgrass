@@ -1,0 +1,18 @@
+{
+  "extends": "@touchgrass/config/tsconfig/next.json",
+  "compilerOptions": {
+    "paths": { "@/*": ["./*"] },
+    "types": ["node"]
+  },
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    "app/.well-known/**/*.ts",
+    ".next/types/**/*.ts",
+    "eslint.config.mjs",
+    "postcss.config.mjs",
+    "vitest.config.mts"
+  ],
+  "exclude": ["node_modules", ".next"]
+}

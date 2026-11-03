@@ -1,0 +1,162 @@
+import {
+  type EventStatus,
+  type EventVisibility,
+  type Gender,
+  type HostRole,
+  LIMITS,
+  type RsvpStatus,
+} from '@touchgrass/shared';
+import type { Relationship } from '../profiles/profile.policy.js';
+
+export interface EventFacts {
+  status: EventStatus;
+  visibility: EventVisibility;
+  startsAt: Date;
+  endsAt: Date;
+  capacity: number;
+  balancedMaxSharePct: number | null;
+  mystery: boolean;
+  mysteryRevealMinutesBefore: number;
+  /** Held for review by the text filter (F-SAF-06). */
+  held?: boolean;
+}
+
+export interface ViewerFacts {
+  hostRole: HostRole | null;
+  invited: boolean;
+  rsvp: RsvpStatus | null;
+  /** Closest graph distance between the viewer and any host. */
+  relationshipToHosts: Relationship;
+  blockedWithHost: boolean;
+  gender: Gender | null;
+  verified: boolean;
+}
+
+export type IneligibleReason =
+  'CLOSED' | 'BLOCKED' | 'NOT_INVITED' | 'WOMEN_ONLY' | 'VERIFICATION_REQUIRED' | 'HOST';
+export type GenderBucket = 'woman' | 'man' | 'other';
+
+const HAS_SEAT: readonly RsvpStatus[] = ['going', 'checked_in'];
+
+export function holdsSeat(status: RsvpStatus | null): boolean {
+  return status !== null && HAS_SEAT.includes(status);
+}
+
+function isVerifiedWoman(v: ViewerFacts): boolean {
+  return v.verified && v.gender === 'woman';
+}
+
+/**
+ * Who can see an event (F-EVT-03, F-SAF-03). Hosts always; plans held for review and blocks with any host hide
+ * it; drafts are host-only;
+ * an invite or an existing RSVP opens invite-only and friends-of-friends events.
+ */
+export function canViewEvent(v: ViewerFacts, e: EventFacts): boolean {
+  if (v.hostRole) return true;
+  if (e.held) return false;
+  if (v.blockedWithHost) return false;
+  if (e.status === 'draft') return false;
+  if (e.visibility === 'women_only') return isVerifiedWoman(v);
+  if (v.invited || (v.rsvp !== null && v.rsvp !== 'cancelled')) return true;
+  switch (e.visibility) {
+    case 'public':
+    case 'balanced':
+      return true;
+    case 'friends_of_friends':
+      return v.relationshipToHosts === 'squad' || v.relationshipToHosts === 'friend_of_friend';
+    case 'invite_only':
+      return false;
+  }
+}
+
+/** Whether the viewer may pull up at all; capacity and gender balance are checked separately under lock. */
+export function rsvpEligibility(
+  v: ViewerFacts,
+  e: EventFacts,
+  now: Date,
+): { ok: true } | { ok: false; reason: IneligibleReason } {
+  if (v.hostRole) return { ok: false, reason: 'HOST' };
+  if (v.blockedWithHost) return { ok: false, reason: 'BLOCKED' };
+  if (e.status !== 'published' || now.getTime() >= e.endsAt.getTime())
+    return { ok: false, reason: 'CLOSED' };
+  if (e.visibility === 'women_only' && !isVerifiedWoman(v)) {
+    return {
+      ok: false,
+      reason: v.gender === 'woman' && !v.verified ? 'VERIFICATION_REQUIRED' : 'WOMEN_ONLY',
+    };
+  }
+  if (!canViewEvent(v, e)) return { ok: false, reason: 'NOT_INVITED' };
+  return { ok: true };
+}
+
+/** Only verified gender counts for balanced events (F-SAF-01); everyone else shares the "other" bucket. */
+export function genderBucket(gender: Gender | null, verified: boolean): GenderBucket {
+  if (verified && gender === 'woman') return 'woman';
+  if (verified && gender === 'man') return 'man';
+  return 'other';
+}
+
+/** Balanced events: no bucket may hold more than `pct`% of capacity (each bucket, including "other"). */
+export function balancedAllows(
+  e: Pick<EventFacts, 'visibility' | 'capacity' | 'balancedMaxSharePct'>,
+  bucketSeats: number,
+  adding: number,
+): boolean {
+  if (e.visibility !== 'balanced' || e.balancedMaxSharePct === null) return true;
+  const cap = Math.floor((e.capacity * e.balancedMaxSharePct) / 100);
+  return bucketSeats + adding <= cap;
+}
+
+/** Mystery spot is revealed to hosts always, and to people going once the reveal time has come (F-EVT-12). */
+export function isLocationRevealed(
+  v: Pick<ViewerFacts, 'hostRole' | 'rsvp'>,
+  e: Pick<EventFacts, 'mystery' | 'startsAt' | 'mysteryRevealMinutesBefore'>,
+  now: Date,
+): boolean {
+  if (!e.mystery || v.hostRole) return true;
+  return holdsSeat(v.rsvp) && now.getTime() >= revealTime(e).getTime();
+}
+
+export function revealTime(e: Pick<EventFacts, 'startsAt' | 'mysteryRevealMinutesBefore'>): Date {
+  return new Date(e.startsAt.getTime() - e.mysteryRevealMinutesBefore * 60_000);
+}
+
+export function checkInWindowOpen(
+  e: Pick<EventFacts, 'startsAt' | 'endsAt' | 'status'>,
+  now: Date,
+): boolean {
+  const t = now.getTime();
+  const opens = e.startsAt.getTime() - LIMITS.checkIn.windowBeforeMs;
+  const closes = Math.min(e.startsAt.getTime() + LIMITS.checkIn.windowAfterMs, e.endsAt.getTime());
+  return e.status === 'published' && t >= opens && t <= closes;
+}
+
+/** Cancelling within 3 h of the start counts as a late cancel for reliability (F-SAF-02). */
+export function isLateCancel(e: Pick<EventFacts, 'startsAt'>, now: Date): boolean {
+  return e.startsAt.getTime() - now.getTime() < LIMITS.reliability.lateCancelWindowMs;
+}
+
+/** Within 6 h of the start, freed spots go to the whole waitlist at once (F-EVT-08). */
+export function waitlistMode(
+  e: Pick<EventFacts, 'startsAt'>,
+  now: Date,
+): 'sequential' | 'broadcast' {
+  return e.startsAt.getTime() - now.getTime() <= LIMITS.waitlist.lastMinuteThresholdMs
+    ? 'broadcast'
+    : 'sequential';
+}
+
+export const MATERIAL_FIELDS = ['startsAt', 'endsAt', 'where', 'pricePaise'] as const;
+
+/** Changes attendees must be told about (F-EVT-16). */
+export function materialChanges(
+  before: { startsAt: Date; endsAt: Date; locationKey: string; pricePaise: number },
+  after: typeof before,
+): string[] {
+  const changed: string[] = [];
+  if (before.startsAt.getTime() !== after.startsAt.getTime()) changed.push('startsAt');
+  if (before.endsAt.getTime() !== after.endsAt.getTime()) changed.push('endsAt');
+  if (before.locationKey !== after.locationKey) changed.push('location');
+  if (before.pricePaise !== after.pricePaise) changed.push('price');
+  return changed;
+}

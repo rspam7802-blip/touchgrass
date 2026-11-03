@@ -1,0 +1,14 @@
+DROP TABLE IF EXISTS newcomer_welcomes;
+DROP TABLE IF EXISTS event_signals;
+DROP TABLE IF EXISTS event_icebreaker_pushes;
+DROP TABLE IF EXISTS icebreaker_cards;
+DROP TABLE IF EXISTS poll_votes;
+DROP TABLE IF EXISTS poll_options;
+DROP TABLE IF EXISTS polls;
+DROP TABLE IF EXISTS message_hidden;
+DROP TABLE IF EXISTS message_reactions;
+DROP TABLE IF EXISTS message_client_ids;
+DROP TABLE IF EXISTS messages;
+DROP TABLE IF EXISTS conversation_members;
+DROP TABLE IF EXISTS conversations;
+DROP FUNCTION IF EXISTS ensure_monthly_partition_for(text, timestamptz);

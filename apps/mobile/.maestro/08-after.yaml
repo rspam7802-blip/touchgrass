@@ -1,0 +1,55 @@
+# After the plan (F-AFT-01..04): seed member #2 (+91 90000 10002) checked in to "Sunrise walk + chai", which ended
+# yesterday and has seeded Lore photos. Signing in opens "How was it?": they rate it, tag it, send feedback, open
+# the Lore, look at a photo, and wrap up with Done (which stops the prompt coming back).
+appId: app.touchgrass
+name: Post-event feedback and Lore
+---
+- launchApp:
+    clearState: true
+- tapOn: 'Get started'
+- tapOn:
+    id: phone-input
+- inputText: '9000010002'
+- tapOn: 'Send code'
+- tapOn:
+    id: otp-input
+- inputText: '000000'
+- tapOn: 'Verify'
+- extendedWaitUntil:
+    visible:
+      id: after-screen
+    timeout: 10000
+- assertVisible: 'Sunrise walk + chai'
+- tapOn:
+    id: rate-event-5
+- tapOn: 'Great people'
+- scrollUntilVisible:
+    element:
+      id: send-feedback
+- tapOn:
+    id: send-feedback
+- assertVisible:
+    id: feedback-thanks
+- assertVisible: 'People you met'
+- scrollUntilVisible:
+    element:
+      id: after-lore
+- tapOn:
+    id: after-lore
+- assertVisible:
+    id: lore-grid
+- tapOn:
+    id: 'lore-item-.*'
+    index: 0
+- assertVisible:
+    id: lore-photo
+- assertVisible: 'Photo by .*'
+- back
+- back
+- scrollUntilVisible:
+    element:
+      id: after-done
+- tapOn:
+    id: after-done
+- assertNotVisible:
+    id: after-screen

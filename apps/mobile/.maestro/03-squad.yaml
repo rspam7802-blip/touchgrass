@@ -1,0 +1,32 @@
+# Squad (F-SOC-02..05): a seeded member signs in, sees their squad, accepts a request, opens a profile and reports it.
+# Seed member #4 (+91 90000 10004) has three squad members and incoming requests from the seeded ring.
+appId: app.touchgrass
+name: Squad, requests and reporting
+---
+- launchApp:
+    clearState: true
+- tapOn: 'Get started'
+- tapOn:
+    id: phone-input
+- inputText: '9000010004'
+- tapOn: 'Send code'
+- tapOn:
+    id: otp-input
+- inputText: '000000'
+- tapOn: 'Verify'
+- runFlow: subflows/skip-after-prompt.yaml
+- tapOn: 'Squad'
+- assertVisible: 'Your squad'
+- tapOn: 'Requests.*'
+- tapOn:
+    text: 'Accept'
+    index: 0
+- tapOn: 'Squad'
+- tapOn:
+    id: 'person-.*'
+    index: 0
+- tapOn: 'Report profile'
+- tapOn: 'Spam'
+- tapOn: 'Send report'
+- assertVisible: 'Thanks. We are on it.'
+- tapOn: 'Done'

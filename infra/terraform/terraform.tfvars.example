@@ -1,0 +1,11 @@
+environment         = "production"
+domain              = "touchgrass.app"
+support_email       = "support@touchgrass.app"
+route53_zone_id     = "Z0123456789EXAMPLE"
+image_tag           = "git-sha"
+alarm_email         = "oncall@touchgrass.app"
+admin_allowed_cidrs = ["203.0.113.0/24"]
+apple_team_id       = "ABCDE12345"
+android_sha256_cert_fingerprints = ["AA:BB:CC:DD:EE:FF:00:11:22:33:44:55:66:77:88:99:AA:BB:CC:DD:EE:FF:00:11:22:33:44:55:66:77:88:99"]
+seller_legal_name = "TouchGrass Technologies Private Limited"
+seller_gstin      = ""

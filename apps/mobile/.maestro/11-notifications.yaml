@@ -1,0 +1,42 @@
+# Notifications, calendar and sharing (F-NOT-01, F-CAL-01, F-GRW-02): seed member #2 (+91 90000 10002) opens the
+# inbox from Discover, sees the seeded squad request and plan reminder, marks everything read, sets quiet hours,
+# opens the calendar feed and shares their profile.
+appId: app.touchgrass
+name: Inbox, quiet hours, calendar feed and sharing
+---
+- launchApp:
+    clearState: true
+- tapOn: 'Get started'
+- tapOn:
+    id: phone-input
+- inputText: '9000010002'
+- tapOn: 'Send code'
+- tapOn:
+    id: otp-input
+- inputText: '000000'
+- tapOn: 'Verify'
+- runFlow: subflows/skip-after-prompt.yaml
+- tapOn: 'Discover'
+- tapOn:
+    id: open-notifications
+- assertVisible:
+    id: notifications-screen
+- assertVisible: '.*wants to join your squad'
+- tapOn:
+    id: notifications-read-all
+- assertVisible: '0 unread'
+- back
+- tapOn: 'Settings'
+- tapOn:
+    id: row-notifications
+- assertVisible:
+    id: quiet-hours
+- back
+- tapOn:
+    id: row-calendar
+- assertVisible:
+    id: calendar-subscribe
+- back
+- tapOn: 'Profile'
+- assertVisible:
+    id: share-my-profile

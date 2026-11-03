@@ -1,0 +1,48 @@
+# Discover (F-DSC-01..09): a seeded member browses the ranked feed, filters it, flips to the map, searches
+# for "board" (seeded "Board games night") and opens it. Seed member #6 (+91 90000 10006) lives in a seeded neighbourhood with plans nearby.
+appId: app.touchgrass
+name: Discover, filter, map and search
+---
+- launchApp:
+    clearState: true
+- tapOn: 'Get started'
+- tapOn:
+    id: phone-input
+- inputText: '9000010006'
+- tapOn: 'Send code'
+- tapOn:
+    id: otp-input
+- inputText: '000000'
+- tapOn: 'Verify'
+- runFlow: subflows/skip-after-prompt.yaml
+- tapOn: 'Discover'
+- assertVisible:
+    id: discover-screen
+- assertVisible:
+    id: 'event-seedev.*'
+- tapOn:
+    id: toggle-soloFriendly
+- tapOn:
+    id: when-weekend
+- tapOn:
+    id: more-filters
+- tapOn:
+    id: radius-25
+- tapOn:
+    id: clear-filters
+- tapOn: 'Map'
+- assertVisible:
+    id: discover-map
+- tapOn: 'List'
+- tapOn:
+    id: open-search
+- tapOn:
+    id: search-input
+- inputText: 'board'
+- assertVisible:
+    id: 'event-seedev.*'
+- tapOn:
+    id: 'event-seedev.*'
+    index: 0
+- assertVisible:
+    id: event-detail

@@ -1,0 +1,59 @@
+# Safety (F-SAF-01, F-SAF-04, F-SAF-07): seed member #2 (+91 90000 10002) opens the safety centre, sees the
+# emergency numbers and their two trusted contacts, starts sharing live location for 30 minutes (the contacts
+# get the link by SMS), then stops. Verification shows where they stand.
+appId: app.touchgrass
+name: Safety centre, trusted contacts and live location
+---
+- launchApp:
+    clearState: true
+- tapOn: 'Get started'
+- tapOn:
+    id: phone-input
+- inputText: '9000010002'
+- tapOn: 'Send code'
+- tapOn:
+    id: otp-input
+- inputText: '000000'
+- tapOn: 'Verify'
+- runFlow: subflows/skip-after-prompt.yaml
+- tapOn: 'Profile'
+- scrollUntilVisible:
+    element:
+      id: open-safety
+- tapOn:
+    id: open-safety
+- assertVisible:
+    id: safety-sos
+- assertVisible:
+    id: helpline-emergency
+- scrollUntilVisible:
+    element:
+      id: safety-open-contacts
+- tapOn:
+    id: safety-open-contacts
+- assertVisible: 'Amma'
+- assertVisible: 'Kiran \(flatmate\)'
+- back
+- tapOn:
+    id: safety-open-share
+- tapOn:
+    id: duration-30
+- tapOn:
+    id: share-start
+# Android asks for location once sharing starts.
+- tapOn:
+    text: 'While using the app'
+    optional: true
+- assertVisible:
+    id: share-active
+- assertVisible: 'Sent to 2 contacts'
+- tapOn:
+    id: share-stop
+- assertVisible:
+    id: share-ended
+- back
+- scrollUntilVisible:
+    element:
+      id: safety-verify-status
+- assertVisible:
+    id: safety-verify-status

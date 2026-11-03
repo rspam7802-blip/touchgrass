@@ -1,0 +1,57 @@
+# Plans (F-EVT-01/02/05/15): a verified seeded member plots a plan through place search, sees it in
+# Hosting, opens who's pulling up and their check-in code. Seed member #3 (+91 90000 10003) is verified.
+appId: app.touchgrass
+name: Plot a plan and manage it
+---
+- launchApp:
+    clearState: true
+- tapOn: 'Get started'
+- tapOn:
+    id: phone-input
+- inputText: '9000010003'
+- tapOn: 'Send code'
+- tapOn:
+    id: otp-input
+- inputText: '000000'
+- tapOn: 'Verify'
+- runFlow: subflows/skip-after-prompt.yaml
+- tapOn: 'Plans'
+- assertVisible: 'Your plans'
+- tapOn:
+    id: plot-cta
+- tapOn:
+    id: plot-title
+- inputText: 'Maestro chai walk'
+- tapOn:
+    id: 'plot-category-.*'
+    index: 0
+- tapOn:
+    id: plot-place-search
+- inputText: 'mall'
+- tapOn:
+    id: 'place-.*'
+    index: 0
+- assertVisible:
+    id: plot-picked
+- tapOn: 'Tomorrow'
+- scrollUntilVisible:
+    element:
+      id: plot-submit
+- tapOn:
+    id: plot-submit
+- assertVisible: 'Maestro chai walk'
+- assertVisible: "You're hosting."
+- scrollUntilVisible:
+    element:
+      id: who-is-going
+- tapOn:
+    id: who-is-going
+- assertVisible: "Who's pulling up"
+- back
+- tapOn:
+    id: open-ticket
+- assertVisible: 'Your check-in code'
+- back
+- back
+- tapOn: 'Hosting'
+- assertVisible: 'Maestro chai walk'

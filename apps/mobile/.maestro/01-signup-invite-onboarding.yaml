@@ -1,0 +1,73 @@
+# Gate 7: signup with an invite code + full onboarding + tutorial (F-ACC-01..04).
+# Backend runs with fake adapters, so OTP 000000 is accepted; the seed provides invite code GRASS-2026.
+appId: app.touchgrass
+name: Sign up with an invite code and onboard
+# Override per run with `maestro test -e PHONE=7xxxxxxxxx …` so each run signs up a new number.
+env:
+  PHONE: '7012345678'
+---
+- addMedia:
+    - assets/profile.jpg
+- launchApp:
+    clearState: true
+- tapOn: 'I have an invite code'
+- tapOn:
+    id: invite-input
+- inputText: GRASS-2026
+- tapOn: 'Check code'
+- assertVisible: 'Invite code accepted ✓'
+- tapOn:
+    id: phone-input
+- inputText: ${PHONE}
+- tapOn: 'Send code'
+- tapOn:
+    id: otp-input
+- inputText: '000000'
+- tapOn: 'Verify'
+# Onboarding
+- assertVisible: 'What should people call you?'
+- tapOn:
+    id: name-input
+- inputText: Maestro Tester
+- tapOn: 'Continue'
+- assertVisible: 'Add your photos'
+- tapOn: 'Add photo'
+- tapOn:
+    text: '.*'
+    index: 0
+    optional: true
+- tapOn:
+    text: 'Crop|Done|Choose'
+    optional: true
+- extendedWaitUntil:
+    visible:
+      id: remove-photo-1
+    timeout: 30000
+- tapOn: 'Continue'
+- tapOn:
+    id: dob-day
+- inputText: '20'
+- tapOn:
+    id: dob-month
+- inputText: '05'
+- tapOn:
+    id: dob-year
+- inputText: '1998'
+- tapOn: 'Continue'
+- tapOn: 'Skip'
+- tapOn: 'Hyderabad'
+- tapOn: 'Continue'
+- tapOn: 'Madhapur'
+- tapOn: 'Continue'
+- tapOn: '.*Chai runs'
+- tapOn: '.*Biryani hunts'
+- tapOn: '.*Café hopping'
+- tapOn: 'Continue'
+- tapOn: 'Skip'
+- tapOn: 'Not now'
+- tapOn: 'Not now'
+- tapOn: 'Not now'
+# Tutorial, then the profile tab
+- assertVisible: 'How TouchGrass works'
+- tapOn: 'Skip tutorial'
+- assertVisible: 'Maestro Tester'

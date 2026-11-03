@@ -1,0 +1,9 @@
+DROP TABLE IF EXISTS waitlist_offers;
+DROP TABLE IF EXISTS rsvps;
+DROP TABLE IF EXISTS event_invites;
+DROP TABLE IF EXISTS event_hosts;
+DROP TABLE IF EXISTS event_vibe_tags;
+DROP TABLE IF EXISTS event_interests;
+DROP TABLE IF EXISTS events;
+DROP TABLE IF EXISTS saved_venues;
+DROP TABLE IF EXISTS venues;

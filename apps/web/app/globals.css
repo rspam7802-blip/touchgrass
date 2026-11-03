@@ -1,0 +1,41 @@
+@import 'tailwindcss';
+
+@theme inline {
+  --color-bg: var(--tg-background);
+  --color-surface: var(--tg-surface);
+  --color-surface-alt: var(--tg-surface-alt);
+  --color-border: var(--tg-border);
+  --color-input: var(--tg-input-border);
+  --color-text: var(--tg-text);
+  --color-muted: var(--tg-text-muted);
+  --color-primary: var(--tg-primary);
+  --color-on-primary: var(--tg-on-primary);
+  --color-primary-muted: var(--tg-primary-muted);
+  --color-accent: var(--tg-accent);
+  --color-on-accent: var(--tg-on-accent);
+  --color-focus: var(--tg-focus);
+}
+
+html {
+  background: var(--tg-background);
+  color: var(--tg-text);
+}
+
+/* Reflow (WCAG 1.4.10): long words wrap instead of pushing the page sideways at 320px or 200% text. */
+body {
+  overflow-wrap: anywhere;
+}
+
+:focus-visible {
+  outline: 3px solid var(--tg-focus);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "name": "touchgrass",
+  "private": true,
+  "packageManager": "pnpm@10.28.0",
+  "engines": {
+    "node": ">=22.12"
+  },
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "infra:up": "docker compose -f infra/docker/docker-compose.yml up -d --wait",
+    "infra:down": "docker compose -f infra/docker/docker-compose.yml down",
+    "build": "turbo run build",
+    "typecheck": "turbo run typecheck",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "test:coverage": "turbo run test:coverage",
+    "test:integration": "turbo run test:integration --concurrency=1",
+    "test:e2e:web": "pnpm --filter @touchgrass/web test:e2e",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "db:migrate": "pnpm --filter @touchgrass/api db:migrate",
+    "db:seed": "pnpm --filter @touchgrass/api db:seed"
+  },
+  "devDependencies": {
+    "prettier": "3.9.10",
+    "turbo": "2.11.10",
+    "typescript": "5.9.3"
+  }
+}
