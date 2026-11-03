@@ -15,7 +15,8 @@ name: Discover, filter, map and search
 - inputText: '000000'
 - tapOn: 'Verify'
 - runFlow: subflows/skip-after-prompt.yaml
-- tapOn: 'Discover'
+- tapOn:
+    id: 'dock-discover'
 - assertVisible:
     id: discover-screen
 - assertVisible:

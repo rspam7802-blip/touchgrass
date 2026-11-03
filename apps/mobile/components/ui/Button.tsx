@@ -32,7 +32,8 @@ export function Button({
   const theme = useTheme();
   const palette = {
     primary: { bg: theme.colors.primary, fg: theme.colors.onPrimary, border: theme.colors.primary },
-    secondary: { bg: theme.colors.accent, fg: theme.colors.onAccent, border: theme.colors.accent },
+    // Frosted glass, as on the mock's map toggle and secondary actions.
+    secondary: { bg: theme.colors.surfaceAlt, fg: theme.colors.text, border: theme.colors.border },
     ghost: { bg: 'transparent', fg: theme.colors.text, border: theme.colors.border },
     danger: { bg: theme.colors.danger, fg: theme.colors.onDanger, border: theme.colors.danger },
   }[variant];
@@ -53,7 +54,7 @@ export function Button({
           minWidth: theme.minTouchTarget,
           backgroundColor: palette.bg,
           borderColor: palette.border,
-          borderRadius: theme.radii.pill,
+          borderRadius: theme.radii.md,
         },
         pressed && !theme.reduceMotion ? styles.pressed : null,
         isDisabled ? styles.disabled : null,
@@ -68,7 +69,7 @@ export function Button({
           importantForAccessibility="no-hide-descendants"
         />
       ) : (
-        <Text variant="label" style={{ color: palette.fg, textAlign: 'center' }}>
+        <Text variant="label" style={{ color: palette.fg, textAlign: 'center', fontWeight: '800' }}>
           {label}
         </Text>
       )}
@@ -80,10 +81,10 @@ const styles = StyleSheet.create({
   base: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 20,
+    paddingHorizontal: 18,
     paddingVertical: 12,
-    borderWidth: 2,
+    borderWidth: 1,
   },
-  pressed: { transform: [{ scale: 0.98 }], opacity: 0.9 },
+  pressed: { transform: [{ scale: 0.96 }], opacity: 0.9 },
   disabled: { opacity: 0.5 },
 });

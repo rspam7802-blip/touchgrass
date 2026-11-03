@@ -9,10 +9,13 @@ export function Avatar({
   photo,
   name,
   size = 48,
+  ring,
 }: {
   photo: MediaVariants | null;
   name: string;
   size?: number;
+  /** Border colour, e.g. lime for squad members who are free now. */
+  ring?: string;
 }) {
   const theme = useTheme();
   const style = [
@@ -23,6 +26,7 @@ export function Avatar({
       borderRadius: size / 2,
       backgroundColor: theme.colors.primaryMuted,
     },
+    ring ? { borderWidth: 2, borderColor: ring } : null,
   ];
   if (photo)
     return (

@@ -1,32 +1,28 @@
 import { Tabs } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { Text } from '../../../components/ui';
+import { DockTabBar } from '../../../components/DockTabBar';
 import { useTheme } from '../../../src/theme/theme';
 
-/** Tabs grow as features land (plans in Phase 3, discover in Phase 4, chats in Phase 5). */
+/**
+ * Bottom dock (D-144): Explore, Plans, the Plot button, Chats, Squad. Profile and settings stay tabs so their
+ * state survives switching, but open from the avatar on Explore and from Profile instead of the dock.
+ */
 export default function TabsLayout() {
   const { t } = useTranslation();
   const theme = useTheme();
   return (
     <Tabs
+      tabBar={(props) => <DockTabBar {...props} />}
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: theme.colors.primary,
-        tabBarInactiveTintColor: theme.colors.textMuted,
-        tabBarStyle: {
-          backgroundColor: theme.colors.surface,
-          borderTopColor: theme.colors.border,
-          minHeight: 56,
-        },
-        tabBarAllowFontScaling: true,
+        sceneStyle: { backgroundColor: theme.colors.background },
       }}
     >
       <Tabs.Screen
         name="discover"
         options={{
-          title: t('nav.discover'),
-          tabBarAccessibilityLabel: t('nav.discover'),
-          tabBarIcon: ({ color }) => <Text style={{ color }}>🧭</Text>,
+          title: t('nav.explore'),
+          tabBarAccessibilityLabel: t('nav.explore'),
         }}
       />
       <Tabs.Screen
@@ -34,7 +30,6 @@ export default function TabsLayout() {
         options={{
           title: t('nav.events'),
           tabBarAccessibilityLabel: t('nav.events'),
-          tabBarIcon: ({ color }) => <Text style={{ color }}>📍</Text>,
         }}
       />
       <Tabs.Screen
@@ -42,7 +37,6 @@ export default function TabsLayout() {
         options={{
           title: t('nav.chats'),
           tabBarAccessibilityLabel: t('nav.chats'),
-          tabBarIcon: ({ color }) => <Text style={{ color }}>💬</Text>,
         }}
       />
       <Tabs.Screen
@@ -50,7 +44,6 @@ export default function TabsLayout() {
         options={{
           title: t('nav.squad'),
           tabBarAccessibilityLabel: t('nav.squad'),
-          tabBarIcon: ({ color }) => <Text style={{ color }}>👯</Text>,
         }}
       />
       <Tabs.Screen
@@ -58,7 +51,6 @@ export default function TabsLayout() {
         options={{
           title: t('nav.profile'),
           tabBarAccessibilityLabel: t('nav.profile'),
-          tabBarIcon: ({ color }) => <Text style={{ color }}>🌱</Text>,
         }}
       />
       <Tabs.Screen
@@ -66,7 +58,6 @@ export default function TabsLayout() {
         options={{
           title: t('nav.settings'),
           tabBarAccessibilityLabel: t('nav.settings'),
-          tabBarIcon: ({ color }) => <Text style={{ color }}>⚙︎</Text>,
         }}
       />
     </Tabs>

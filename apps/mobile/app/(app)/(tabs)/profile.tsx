@@ -84,6 +84,7 @@ export default function MyProfileScreen() {
           ['/recaps', 'recap.title', 'open-recaps', flags.recaps],
           ['/referrals', 'referrals.title', 'open-referrals', flags.referrals],
           ['/safety', 'safety.title', 'open-safety', true],
+          ['/settings', 'nav.settings', 'open-settings', true],
         ] as const
       )
         .filter(([, , , on]) => on)

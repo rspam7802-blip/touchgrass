@@ -18,7 +18,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   scheme: 'touchgrass',
   version: VERSION,
   orientation: 'portrait',
-  userInterfaceStyle: 'automatic',
+  userInterfaceStyle: 'dark',
   ios: {
     bundleIdentifier: `app.touchgrass${SUFFIX}`,
     supportsTablet: false,
@@ -59,7 +59,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     'expo-localization',
     // Tokens are not behind biometrics, so no Face ID prompt.
     ['expo-secure-store', { faceIDPermission: false }],
-    ['expo-splash-screen', { backgroundColor: '#146A25' }],
+    ['expo-splash-screen', { backgroundColor: '#0B130E' }],
     [
       'expo-camera',
       {
@@ -91,7 +91,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         microphonePermission: false,
       },
     ],
-    ['expo-notifications', { color: '#146A25' }],
+    ['expo-notifications', { color: '#CCFF00' }],
     [
       'expo-location',
       {

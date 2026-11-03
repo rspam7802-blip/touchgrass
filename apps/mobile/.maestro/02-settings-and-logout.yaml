@@ -3,7 +3,15 @@ appId: app.touchgrass
 name: Settings, language and logout
 ---
 - launchApp
-- tapOn: 'Settings'
+- tapOn:
+    id: 'dock-discover'
+- tapOn:
+    id: 'open-profile'
+- scrollUntilVisible:
+    element:
+      id: 'open-settings'
+- tapOn:
+    id: 'open-settings'
 - tapOn: 'App language'
 - tapOn: 'తెలుగు'
 - assertVisible: 'యాప్ భాష'
@@ -12,6 +20,14 @@ name: Settings, language and logout
 - tapOn: 'Replay tutorial'
 - assertVisible: 'How TouchGrass works'
 - tapOn: 'Skip tutorial'
-- tapOn: 'Settings'
+- tapOn:
+    id: 'dock-discover'
+- tapOn:
+    id: 'open-profile'
+- scrollUntilVisible:
+    element:
+      id: 'open-settings'
+- tapOn:
+    id: 'open-settings'
 - tapOn: 'Log out'
 - assertVisible: 'Log off. Pull up.'

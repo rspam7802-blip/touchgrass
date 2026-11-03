@@ -16,7 +16,10 @@ name: Safety centre, trusted contacts and live location
 - inputText: '000000'
 - tapOn: 'Verify'
 - runFlow: subflows/skip-after-prompt.yaml
-- tapOn: 'Profile'
+- tapOn:
+    id: 'dock-discover'
+- tapOn:
+    id: 'open-profile'
 - scrollUntilVisible:
     element:
       id: open-safety

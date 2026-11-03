@@ -4,21 +4,27 @@ import { useRouter } from 'expo-router';
 import { FreeNowStrip } from '../../../components/engagement/FreeNowStrip';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { BRAND } from '@touchgrass/shared';
+import { Avatar } from '../../../components/Avatar';
 import { ChipGroup } from '../../../components/ChipGroup';
 import { DiscoverMap } from '../../../components/DiscoverMap';
 import { EventCard } from '../../../components/EventCard';
 import { SegmentedTabs } from '../../../components/SegmentedTabs';
 import {
   Button,
+  Card,
   Chip,
   EmptyState,
   ErrorState,
+  IconButton,
   LoadingState,
   OfflineState,
   Screen,
   Text,
 } from '../../../components/ui';
+import { useMe } from '../../../src/features/me/api';
+import { useTheme } from '../../../src/theme/theme';
 import { localized, useInterests, useVibeTags } from '../../../src/features/catalog/api';
 import { useFeed, useFeedClick } from '../../../src/features/discovery/api';
 import {
@@ -38,10 +44,15 @@ const WHENS: FeedWhen[] = ['any', 'tonight', 'tomorrow', 'weekend'];
 const RADII = [2, 5, 10, 25];
 const QUICK: Toggle[] = ['free', 'soloFriendly', 'squadGoing', 'smallGroup'];
 
-/** Discover (F-DSC-01..08): ranked feed with quick filters, a full filter panel, and a map. */
+/**
+ * Explore / Discover (F-DSC-01..08), in the matcha layout (D-144): brand header, search and list/map toggle,
+ * the Free now radar, one scrolling row of filter chips, and photo-led plan cards.
+ */
 export default function DiscoverScreen() {
   const { t, i18n } = useTranslation();
   const router = useRouter();
+  const theme = useTheme();
+  const me = useMe();
   const offline = useIsOffline();
   const [filters, setFilters] = useState<DiscoverFilters>(DEFAULT_FILTERS);
   const [location, setLocation] = useState<GeoPoint | null>(null);
@@ -121,16 +132,18 @@ export default function DiscoverScreen() {
   else
     body = (
       <>
-        {items.map((item, position) => (
-          <EventCard
-            key={item.id}
-            event={item}
-            feed={item}
-            onOpen={() => {
-              openEvent(item.id, position);
-            }}
-          />
-        ))}
+        <View style={styles.cards}>
+          {items.map((item, position) => (
+            <EventCard
+              key={item.id}
+              event={item}
+              feed={item}
+              onOpen={() => {
+                openEvent(item.id, position);
+              }}
+            />
+          ))}
+        </View>
         {feed.hasNextPage ? (
           <Button
             label={t('common.seeAll')}
@@ -143,25 +156,74 @@ export default function DiscoverScreen() {
       </>
     );
 
+  const myName = me.data?.displayName ?? t('nav.profile');
   return (
     <Screen testID="discover-screen">
-      <FreeNowStrip />
       <View style={styles.header}>
-        <Text variant="title" accessibilityRole="header" style={styles.grow}>
-          {t('discover.title')}
-        </Text>
-        <Button
-          label={t('discover.search')}
-          variant="secondary"
+        <View style={styles.grow}>
+          <View style={styles.brandRow}>
+            <View
+              style={[styles.dot, { backgroundColor: theme.colors.primary }]}
+              importantForAccessibility="no"
+              accessibilityElementsHidden
+            />
+            <Text variant="title" accessibilityRole="header" style={styles.brand}>
+              {BRAND.name}
+              <Text variant="title" style={{ color: theme.colors.primary }}>
+                .
+              </Text>
+            </Text>
+          </View>
+          <Text variant="caption" tone="primary">
+            {BRAND.tagline}
+          </Text>
+        </View>
+        <NotificationBell />
+        <IconButton
+          icon={<Avatar photo={me.data?.photos[0]?.urls ?? null} name={myName} size={40} />}
+          label={t('nav.profile')}
+          onPress={() => {
+            router.push('/profile');
+          }}
+          testID="open-profile"
+        />
+      </View>
+      <View style={styles.row}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t('discover.search')}
           onPress={() => {
             router.push('/search');
           }}
           testID="open-search"
-        />
-        <NotificationBell />
+          style={[
+            styles.search,
+            {
+              minHeight: theme.minTouchTarget,
+              backgroundColor: theme.colors.surfaceAlt,
+              borderColor: theme.colors.border,
+              borderRadius: theme.radii.pill,
+            },
+          ]}
+        >
+          <Text tone="muted" numberOfLines={1}>
+            🔍 {t('discover.search')}
+          </Text>
+        </Pressable>
+        {mapEnabled ? (
+          <SegmentedTabs
+            tabs={[
+              { key: 'list', label: t('discover.list') },
+              { key: 'map', label: t('discover.map') },
+            ]}
+            value={view}
+            onChange={setView}
+          />
+        ) : null}
       </View>
+      <FreeNowStrip />
       {weather ? (
-        <Text tone="muted" testID="weather-chip">
+        <Text variant="caption" tone="muted" testID="weather-chip">
           {t('discover.weatherNow', {
             temp: Math.round(weather.tempC),
             condition: t(`discover.conditions.${weather.condition}`),
@@ -169,19 +231,20 @@ export default function DiscoverScreen() {
         </Text>
       ) : null}
       {!location && !locationAsked ? (
-        <View style={styles.row}>
-          <Text tone="muted" style={styles.grow}>
-            {t('discover.locationPrompt')}
-          </Text>
+        <Card>
+          <Text tone="muted">{t('discover.locationPrompt')}</Text>
           <Button
-            label={t('discover.useLocation')}
-            variant="secondary"
+            label={`📍 ${t('discover.useLocation')}`}
             onPress={() => void askLocation()}
             testID="use-location"
           />
-        </View>
+        </Card>
       ) : null}
-      <View style={styles.row}>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.chips}
+      >
         {WHENS.map((w) => (
           <Chip
             key={w}
@@ -194,8 +257,6 @@ export default function DiscoverScreen() {
             testID={`when-${w}`}
           />
         ))}
-      </View>
-      <View style={styles.row}>
         {QUICK.map((k) => (
           <Chip
             key={k}
@@ -211,14 +272,14 @@ export default function DiscoverScreen() {
           label={
             nFilters > 0 ? `${t('discover.filters')} (${String(nFilters)})` : t('discover.filters')
           }
-          variant="ghost"
+          variant="secondary"
           accessibilityState={{ expanded: showFilters }}
           onPress={() => {
             setShowFilters((s) => !s);
           }}
           testID="more-filters"
         />
-      </View>
+      </ScrollView>
       {showFilters ? (
         <View style={styles.panel} testID="filters-panel">
           <Text variant="label">{t('discover.sortLabel')}</Text>
@@ -302,16 +363,6 @@ export default function DiscoverScreen() {
           ) : null}
         </View>
       ) : null}
-      {mapEnabled ? (
-        <SegmentedTabs
-          tabs={[
-            { key: 'list', label: t('discover.list') },
-            { key: 'map', label: t('discover.map') },
-          ]}
-          value={view}
-          onChange={setView}
-        />
-      ) : null}
       {body}
     </Screen>
   );
@@ -319,7 +370,19 @@ export default function DiscoverScreen() {
 
 const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  brandRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  brand: { fontSize: 22, lineHeight: 28 },
+  dot: { width: 10, height: 10, borderRadius: 5 },
+  search: {
+    flexGrow: 1,
+    flexShrink: 1,
+    justifyContent: 'center',
+    paddingHorizontal: 16,
+    borderWidth: 1,
+  },
+  chips: { gap: 8, alignItems: 'center', paddingVertical: 2 },
   row: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8 },
   grow: { flexGrow: 1, flexShrink: 1 },
   panel: { gap: 12 },
+  cards: { gap: 16 },
 });

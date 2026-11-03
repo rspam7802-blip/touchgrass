@@ -1,4 +1,5 @@
 import { StyleSheet, TextInput, type TextInputProps, View } from 'react-native';
+import { fontFamilyFor } from '../../src/theme/fonts';
 import { useTheme } from '../../src/theme/theme';
 import { Text } from './Text';
 
@@ -13,7 +14,9 @@ export function TextField({ label, hint, error, style, ...rest }: TextFieldProps
   const theme = useTheme();
   return (
     <View style={styles.wrap}>
-      <Text variant="label">{label}</Text>
+      <Text variant="overline" tone="muted" style={styles.upper}>
+        {label}
+      </Text>
       <TextInput
         accessibilityLabel={label}
         accessibilityHint={hint}
@@ -26,7 +29,8 @@ export function TextField({ label, hint, error, style, ...rest }: TextFieldProps
           {
             minHeight: theme.minTouchTarget,
             color: theme.colors.text,
-            backgroundColor: theme.colors.surface,
+            backgroundColor: theme.colors.surfaceAlt,
+            fontFamily: fontFamilyFor(theme.typography.body.fontWeight),
             borderColor: error ? theme.colors.danger : theme.colors.inputBorder,
             borderRadius: theme.radii.md,
           },
@@ -55,5 +59,6 @@ export function TextField({ label, hint, error, style, ...rest }: TextFieldProps
 
 const styles = StyleSheet.create({
   wrap: { gap: 6 },
-  input: { borderWidth: 2, paddingHorizontal: 14, paddingVertical: 10 },
+  input: { borderWidth: 1.5, paddingHorizontal: 14, paddingVertical: 10 },
+  upper: { textTransform: 'uppercase' },
 });

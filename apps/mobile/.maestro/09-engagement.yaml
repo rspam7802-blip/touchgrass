@@ -16,7 +16,8 @@ name: Free now, crews, plan votes, badges and referrals
 - inputText: '000000'
 - tapOn: 'Verify'
 - runFlow: subflows/skip-after-prompt.yaml
-- tapOn: 'Discover'
+- tapOn:
+    id: 'dock-discover'
 - assertVisible:
     id: free-now
 - tapOn: 'Squad'
@@ -36,7 +37,10 @@ name: Free now, crews, plan votes, badges and referrals
 - assertVisible: 'Where'
 - back
 - back
-- tapOn: 'Profile'
+- tapOn:
+    id: 'dock-discover'
+- tapOn:
+    id: 'open-profile'
 - scrollUntilVisible:
     element:
       id: open-badges

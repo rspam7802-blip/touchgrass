@@ -56,7 +56,7 @@ describe('Tutorial (F-ACC-04)', () => {
     expect(screen.getByTestId('tutorial-card-safety')).toBeOnTheScreen();
     expect(screen.queryByRole('button', { name: 'Skip tutorial' })).toBeNull();
     await fireEvent.press(screen.getByRole('button', { name: 'Got it' }));
-    await waitFor(() => expect(mockRouter.replace).toHaveBeenCalledWith('/profile'));
+    await waitFor(() => expect(mockRouter.replace).toHaveBeenCalledWith('/discover'));
     expect(api.callsTo('POST', '/v1/me/tutorial/complete')).toHaveLength(1);
     expect(useAuthStore.getState().session?.user.tutorialComplete).toBe(true);
   });
@@ -64,7 +64,7 @@ describe('Tutorial (F-ACC-04)', () => {
   it('can be skipped', async () => {
     await renderWithProviders(<TutorialScreen />, { fetchFn: api.fetch });
     await fireEvent.press(screen.getByRole('button', { name: 'Skip tutorial' }));
-    await waitFor(() => expect(mockRouter.replace).toHaveBeenCalledWith('/profile'));
+    await waitFor(() => expect(mockRouter.replace).toHaveBeenCalledWith('/discover'));
   });
 });
 

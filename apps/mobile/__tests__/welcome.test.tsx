@@ -94,6 +94,6 @@ describe('WelcomeScreen', () => {
 
   it('renders in dark mode', async () => {
     await renderWithProviders(<WelcomeScreen />, { fetchFn: config(), scheme: 'dark' });
-    expect(screen.getByTestId('welcome-screen')).toHaveStyle({ backgroundColor: '#0B0F0C' });
+    expect(screen.getByTestId('welcome-screen')).toHaveStyle({ backgroundColor: '#0B130E' });
   });
 });

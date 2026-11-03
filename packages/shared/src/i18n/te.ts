@@ -265,6 +265,7 @@ export const te: Translation = {
     tooManyPhotos: 'గరిష్ఠంగా {{max}} ఫోటోలు జోడించవచ్చు.',
   },
   nav: {
+    explore: 'అన్వేషించు',
     chats: 'చాట్స్',
     discover: 'డిస్కవర్',
     search: 'సెర్చ్',
@@ -997,6 +998,9 @@ export const te: Translation = {
     via: '{{name}} ద్వారా',
     previewMore: '+{{count}} మంది',
     distanceAway: '{{km}} కి.మీ దూరం',
+    pulledUpCount: '{{going}}/{{capacity}} మంది వస్తున్నారు',
+    pullingUp: '{{names}} వస్తున్నారు',
+    metersAway: '{{m}} మీ దూరంలో',
     locationPrompt: 'దగ్గరలో ప్లాన్స్ చూడటానికి లొకేషన్ అనుమతించు. అప్పటివరకు నీ ఏరియా వాడుతాం.',
     useLocation: 'నా లొకేషన్ వాడు',
     resultsEvents: 'ప్లాన్స్',
@@ -1792,7 +1796,7 @@ export const te: Translation = {
     title: 'మీ TouchGrass ఖాతాను తొలగించండి',
     intro: 'మీరు ఎప్పుడైనా యాప్ నుంచే మీ ఖాతాను తొలగించవచ్చు.',
     stepsTitle: 'యాప్‌లో',
-    step1: 'సెట్టింగ్స్ ట్యాబ్ తెరవండి.',
+    step1: 'మీ ప్రొఫైల్ తెరవండి (అన్వేషించు పైన ఉన్న మీ ఫోటో), ఆపై సెట్టింగ్స్ నొక్కండి.',
     step2: 'అకౌంట్ నొక్కి, ఆపై అకౌంట్ డిలీట్ చేయి నొక్కండి.',
     step3:
       'నిర్ధారించడానికి DELETE అని టైప్ చేయండి. మీరు అన్ని పరికరాల నుంచి వెంటనే సైన్ అవుట్ అవుతారు.',

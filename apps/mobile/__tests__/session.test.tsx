@@ -48,7 +48,7 @@ describe('auth store', () => {
     expect(landingRoute('public', false)).toBe('/');
     expect(landingRoute('onboarding', false)).toBe('/start');
     expect(landingRoute('app', false)).toBe('/tutorial');
-    expect(landingRoute('app', true)).toBe('/profile');
+    expect(landingRoute('app', true)).toBe('/discover');
   });
 });
 

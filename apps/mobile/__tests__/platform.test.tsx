@@ -73,7 +73,8 @@ describe('theme and config', () => {
       reduceMotion: true,
       minTouchTarget: 44,
     });
-    expect(buildTheme('light', false).colors.primary).toBe('#146A25');
+    expect(buildTheme('light', false).colors.primary).toBe('#3D5E0F');
+    expect(buildTheme('dark', false).colors.primary).toBe('#CCFF00');
   });
   it('reads build-time config', () => {
     expect(readAppEnvironment()).toEqual({

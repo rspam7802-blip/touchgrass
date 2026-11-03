@@ -67,7 +67,11 @@ env:
 - tapOn: 'Not now'
 - tapOn: 'Not now'
 - tapOn: 'Not now'
-# Tutorial, then the profile tab
+# Tutorial, then Explore; the profile opens from the avatar at the top
 - assertVisible: 'How TouchGrass works'
 - tapOn: 'Skip tutorial'
+- assertVisible:
+    id: 'discover-screen'
+- tapOn:
+    id: 'open-profile'
 - assertVisible: 'Maestro Tester'

@@ -26,10 +26,10 @@ export default function TutorialScreen() {
   const finish = (): void => {
     void tutorial.mutateAsync(true).then(
       () => {
-        router.replace('/profile');
+        router.replace('/discover');
       },
       () => {
-        router.replace('/profile');
+        router.replace('/discover');
       },
     );
   };

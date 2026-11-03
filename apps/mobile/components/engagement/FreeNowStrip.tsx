@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useFreeNow, useSetFree } from '../../src/features/engagement/api';
 import { formatTime } from '../../src/features/events/format';
 import { useTheme } from '../../src/theme/theme';
@@ -8,7 +8,12 @@ import { Avatar } from '../Avatar';
 import { Button, Text } from '../ui';
 import { useFlag } from '../../src/features/app-config/use-flag';
 
-/** "I'm free now" (F-ENG-01): your own status and the squad members free right now. */
+const SIZE = 52;
+
+/**
+ * "I'm free now" (F-ENG-01) as the mock's radar: a dashed "+" to say you're free, then squad members free right
+ * now as lime-ringed faces; tapping one starts a plan with them.
+ */
 export function FreeNowStrip() {
   const { t, i18n } = useTranslation();
   const router = useRouter();
@@ -21,8 +26,8 @@ export function FreeNowStrip() {
   return (
     <View style={styles.wrap} testID="free-now">
       <View style={styles.header}>
-        <Text variant="heading" accessibilityRole="header">
-          {t('free.title')}
+        <Text variant="overline" tone="muted" accessibilityRole="header" style={styles.upper}>
+          ⚡ {t('free.title')}
         </Text>
         {me.until ? (
           <Button
@@ -32,81 +37,107 @@ export function FreeNowStrip() {
             onPress={() => void set.mutateAsync(null)}
             testID="free-clear"
           />
-        ) : (
-          <Button
-            label={t('free.setTitle')}
-            variant="secondary"
+        ) : null}
+      </View>
+      {me.until ? (
+        <Text variant="caption" tone="primary" testID="free-me">
+          {t('free.youAreFree', { time: formatTime(me.until, i18n.language) })}
+        </Text>
+      ) : null}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.row}
+      >
+        {me.until ? null : (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t('free.setTitle')}
+            accessibilityHint={t('a11y.opensScreen', { screen: t('free.setTitle') })}
             onPress={() => {
               router.push('/free');
             }}
             testID="free-set"
-          />
-        )}
-      </View>
-      {me.until ? (
-        <Text tone="primary" testID="free-me">
-          {t('free.youAreFree', { time: formatTime(me.until, i18n.language) })}
-        </Text>
-      ) : null}
-      {items.length === 0 ? (
-        <Text tone="muted">{t('free.nobody')}</Text>
-      ) : (
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.row}
-        >
-          {items.map((f) => (
+            style={styles.person}
+          >
             <View
-              key={f.person.id}
               style={[
-                styles.card,
-                { borderColor: theme.colors.border, borderRadius: theme.radii.md },
+                styles.add,
+                { borderColor: theme.colors.primary, backgroundColor: theme.colors.surfaceAlt },
               ]}
-              testID={`free-${f.person.id}`}
             >
-              <View
-                accessible
-                accessibilityLabel={[
-                  f.person.displayName,
-                  t('free.until', { time: formatTime(f.until, i18n.language) }),
-                  f.note,
-                ]
-                  .filter(Boolean)
-                  .join(', ')}
-              >
-                <Avatar photo={f.person.photo} name={f.person.displayName} />
-                <Text variant="label">{f.person.displayName}</Text>
-                <Text variant="caption" tone="muted">
-                  {t('free.until', { time: formatTime(f.until, i18n.language) })}
-                </Text>
-                {f.note ? <Text variant="caption">{f.note}</Text> : null}
-              </View>
-              <Button
-                label={t('free.planWith', { name: f.person.displayName })}
-                variant="secondary"
-                onPress={() => {
-                  router.push({ pathname: '/plot', params: { inviteUserId: f.person.id } });
-                }}
-                testID={`plan-with-${f.person.id}`}
-              />
+              <Text style={{ color: theme.colors.primary, fontSize: 22, fontWeight: '800' }}>
+                +
+              </Text>
             </View>
-          ))}
-        </ScrollView>
-      )}
+            <Text variant="caption" tone="muted" numberOfLines={1} style={styles.name}>
+              {t('free.setTitle')}
+            </Text>
+          </Pressable>
+        )}
+        {items.map((f) => (
+          <View key={f.person.id} testID={`free-${f.person.id}`}>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={t('free.planWith', { name: f.person.displayName })}
+              // Read after the name: until when they're free, and their note.
+              accessibilityValue={{
+                text: [t('free.until', { time: formatTime(f.until, i18n.language) }), f.note]
+                  .filter(Boolean)
+                  .join(', '),
+              }}
+              onPress={() => {
+                router.push({ pathname: '/plot', params: { inviteUserId: f.person.id } });
+              }}
+              testID={`plan-with-${f.person.id}`}
+              style={styles.person}
+            >
+              <Avatar
+                photo={f.person.photo}
+                name={f.person.displayName}
+                size={SIZE}
+                ring={theme.colors.primary}
+              />
+              <Text
+                variant="caption"
+                numberOfLines={1}
+                style={[styles.name, { fontWeight: '700' }]}
+              >
+                {f.person.displayName}
+              </Text>
+              {f.note ? (
+                <Text variant="caption" tone="muted" numberOfLines={1} style={styles.name}>
+                  {f.note}
+                </Text>
+              ) : null}
+            </Pressable>
+          </View>
+        ))}
+        {items.length === 0 ? (
+          <Text tone="muted" style={styles.nobody}>
+            {t('free.nobody')}
+          </Text>
+        ) : null}
+      </ScrollView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   wrap: { gap: 8 },
-  header: {
-    flexDirection: 'row',
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
+  upper: { textTransform: 'uppercase' },
+  row: { gap: 14, alignItems: 'flex-start', paddingVertical: 2 },
+  person: { alignItems: 'center', gap: 4, width: 64, minHeight: 44 },
+  add: {
+    width: SIZE,
+    height: SIZE,
+    borderRadius: SIZE / 2,
+    borderWidth: 2,
+    borderStyle: 'dashed',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    flexWrap: 'wrap',
-    gap: 8,
+    justifyContent: 'center',
   },
-  row: { gap: 12 },
-  card: { borderWidth: 1, padding: 12, gap: 6, width: 200 },
+  name: { textAlign: 'center', width: 64 },
+  nobody: { alignSelf: 'center', maxWidth: 220 },
 });

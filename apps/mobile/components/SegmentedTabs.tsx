@@ -37,7 +37,10 @@ export function SegmentedTabs<K extends string>({ tabs, value, onChange }: Segme
           >
             <Text
               variant="label"
-              style={{ color: selected ? theme.colors.onPrimary : theme.colors.text }}
+              style={{
+                color: selected ? theme.colors.onPrimary : theme.colors.text,
+                fontWeight: selected ? '800' : '600',
+              }}
             >
               {label}
             </Text>

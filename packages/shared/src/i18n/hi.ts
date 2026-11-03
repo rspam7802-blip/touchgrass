@@ -264,6 +264,7 @@ export const hi: Translation = {
     tooManyPhotos: 'ज़्यादा से ज़्यादा {{max}} फ़ोटो जोड़ सकते हो.',
   },
   nav: {
+    explore: 'एक्सप्लोर',
     chats: 'चैट्स',
     discover: 'डिस्कवर',
     search: 'सर्च',
@@ -988,6 +989,9 @@ export const hi: Translation = {
     via: '{{name}} के ज़रिए',
     previewMore: '+{{count}} और',
     distanceAway: '{{km}} कि.मी. दूर',
+    pulledUpCount: '{{going}}/{{capacity}} आ रहे हैं',
+    pullingUp: '{{names}} आ रहे हैं',
+    metersAway: '{{m}} मी दूर',
     locationPrompt:
       'पास के प्लान देखने के लिए लोकेशन की इजाज़त दो. तब तक तुम्हारा इलाका इस्तेमाल करेंगे.',
     useLocation: 'मेरी लोकेशन इस्तेमाल करो',
@@ -1784,7 +1788,7 @@ export const hi: Translation = {
     title: 'अपना TouchGrass खाता हटाएँ',
     intro: 'आप कभी भी ऐप से खुद अपना खाता हटा सकते हैं।',
     stepsTitle: 'ऐप में',
-    step1: 'सेटिंग्स टैब खोलें।',
+    step1: 'अपनी प्रोफ़ाइल खोलें (एक्सप्लोर के ऊपर आपकी फ़ोटो), फिर सेटिंग्स पर टैप करें।',
     step2: 'अकाउंट पर टैप करें, फिर अकाउंट डिलीट करो।',
     step3: 'पुष्टि के लिए DELETE टाइप करें। आप तुरंत हर डिवाइस से साइन आउट हो जाएँगे।',
     happensTitle: 'इसके बाद क्या होता है',

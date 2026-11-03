@@ -1,3 +1,4 @@
+import { useFonts } from 'expo-font';
 import { Stack, useRouter } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
@@ -9,6 +10,7 @@ import { createSessionClient } from '../src/lib/session-client';
 import { AppProviders } from '../src/providers/app-providers';
 import { type AppArea, appArea, useAuthStore } from '../src/stores/auth-store';
 import { useSettingsStore } from '../src/stores/settings-store';
+import { FONT_FILES } from '../src/theme/fonts';
 
 void SplashScreen.preventAutoHideAsync();
 
@@ -16,7 +18,7 @@ void SplashScreen.preventAutoHideAsync();
 export function landingRoute(
   area: AppArea,
   tutorialComplete: boolean,
-): '/' | '/start' | '/tutorial' | '/profile' | null {
+): '/' | '/start' | '/tutorial' | '/discover' | null {
   switch (area) {
     case 'loading':
       return null;
@@ -25,7 +27,7 @@ export function landingRoute(
     case 'onboarding':
       return '/start';
     case 'app':
-      return tutorialComplete ? '/profile' : '/tutorial';
+      return tutorialComplete ? '/discover' : '/tutorial';
   }
 }
 
@@ -74,10 +76,13 @@ export default function RootLayout() {
   const apiClient = useMemo(() => createSessionClient(env.apiUrl, env.appVersion), [env]);
   const settingsHydrated = useSettingsStore((s) => s.hydrated);
   const authStatus = useAuthStore((s) => s.status);
+  // A font that fails to load falls back to the system font rather than blocking the app.
+  const [fontsLoaded, fontError] = useFonts(FONT_FILES);
+  const fontsReady = fontsLoaded || fontError !== null;
 
   useEffect(() => {
-    if (settingsHydrated && authStatus !== 'loading') void SplashScreen.hideAsync();
-  }, [settingsHydrated, authStatus]);
+    if (settingsHydrated && authStatus !== 'loading' && fontsReady) void SplashScreen.hideAsync();
+  }, [settingsHydrated, authStatus, fontsReady]);
 
   // Offline cache (F-PLT-04): restored at launch, dropped on sign-out so nobody sees another person's data.
   useEffect(() => persistOfflineCache(queryClient), [queryClient]);
@@ -89,8 +94,8 @@ export default function RootLayout() {
 
   return (
     <AppProviders queryClient={queryClient} apiClient={apiClient} appVersion={env.appVersion}>
-      <StatusBar style="auto" />
-      <RootNavigator />
+      <StatusBar style="light" />
+      {fontsReady ? <RootNavigator /> : null}
     </AppProviders>
   );
 }

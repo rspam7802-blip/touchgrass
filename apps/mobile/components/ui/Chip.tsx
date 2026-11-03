@@ -46,7 +46,10 @@ export function Chip({
     >
       <Text
         variant="label"
-        style={{ color: selected ? theme.colors.onPrimary : theme.colors.text }}
+        style={{
+          color: selected ? theme.colors.onPrimary : theme.colors.text,
+          fontWeight: selected ? '800' : '600',
+        }}
       >
         {label}
       </Text>
@@ -55,5 +58,5 @@ export function Chip({
 }
 
 const styles = StyleSheet.create({
-  chip: { borderWidth: 2, paddingHorizontal: 14, paddingVertical: 10, justifyContent: 'center' },
+  chip: { borderWidth: 1, paddingHorizontal: 14, paddingVertical: 10, justifyContent: 'center' },
 });

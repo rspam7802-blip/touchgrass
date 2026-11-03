@@ -575,3 +575,7 @@ Production gets reference data (the launch city, neighbourhoods, flags, taxonomy
 ## D-143 Account deletion page
 
 `/delete-account` explains the in-app steps, the 14-day grace period (signing in cancels it), what is erased and what tax law keeps, in all three languages. It shows the support address only when `SUPPORT_EMAIL` is set. Google Play requires such a page.
+
+## D-144 The matcha look and the dock
+
+The app's visual design follows the founder's mock: deep forest-black surfaces (`#0B130E`, frosted cards `#142017`), a neon lime accent (`#CCFF00`, dark text on it), Plus Jakarta Sans, photo-led plan cards with the title over the cover, and a bottom dock with a big lime "+" to plot. The app is dark-only; the web keeps a light variant for people whose system is light (lime is unreadable on white, so light uses a deep lime-green `#3D5E0F`). Every text pair still passes WCAG AA (`tokens.test.ts`). The dock holds Explore, Plans, Plot, Chats and Squad; Profile opens from the avatar at the top of Explore and Settings from Profile, and members land on Explore after sign-in. Plan cards stay one button whose label reads every fact; the pills, faces and "Pull up" pill on them are visual only, and pulling up still happens on the plan, where price, questions and approval are handled. The mock's "Squad Lore" reel needs a feed of recent albums the viewer may see, which the API doesn't have yet, so it isn't shown.

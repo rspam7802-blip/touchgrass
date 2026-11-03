@@ -7,7 +7,7 @@ import {
   typography,
 } from '@touchgrass/shared';
 import { createContext, type ReactNode, useContext, useEffect, useMemo, useState } from 'react';
-import { AccessibilityInfo, useColorScheme } from 'react-native';
+import { AccessibilityInfo } from 'react-native';
 
 export interface Theme {
   scheme: 'light' | 'dark';
@@ -31,7 +31,7 @@ export function buildTheme(scheme: 'light' | 'dark', reduceMotion: boolean): The
   };
 }
 
-const ThemeContext = createContext<Theme>(buildTheme('light', false));
+const ThemeContext = createContext<Theme>(buildTheme('dark', false));
 
 export function ThemeProvider({
   children,
@@ -40,7 +40,6 @@ export function ThemeProvider({
   children: ReactNode;
   forcedScheme?: 'light' | 'dark';
 }) {
-  const system = useColorScheme();
   const [reduceMotion, setReduceMotion] = useState(false);
 
   useEffect(() => {
@@ -55,7 +54,8 @@ export function ThemeProvider({
     };
   }, []);
 
-  const scheme = forcedScheme ?? (system === 'dark' ? 'dark' : 'light');
+  // The app is dark-only (the matcha look, D-144); the web follows the system instead.
+  const scheme = forcedScheme ?? 'dark';
   const theme = useMemo(() => buildTheme(scheme, reduceMotion), [scheme, reduceMotion]);
   return <ThemeContext.Provider value={theme}>{children}</ThemeContext.Provider>;
 }

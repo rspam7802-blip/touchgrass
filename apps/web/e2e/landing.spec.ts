@@ -58,7 +58,7 @@ test('dark mode uses dark tokens', async ({ browser }) => {
   const bg = await page.evaluate(() =>
     getComputedStyle(document.documentElement).getPropertyValue('--tg-background').trim(),
   );
-  expect(bg).toBe('#0B0F0C');
+  expect(bg).toBe('#0B130E');
   await context.close();
 });
 
