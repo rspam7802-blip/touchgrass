@@ -13,6 +13,7 @@ import { BrandLogo } from '../../../components/BrandLogo';
 import { ChipGroup } from '../../../components/ChipGroup';
 import { DiscoverMap } from '../../../components/DiscoverMap';
 import { EventCard } from '../../../components/EventCard';
+import { FeedSkeleton } from '../../../components/FeedSkeleton';
 import { SegmentedTabs } from '../../../components/SegmentedTabs';
 import {
   Button,
@@ -20,11 +21,12 @@ import {
   Chip,
   EmptyState,
   ErrorState,
+  FadeIn,
   Icon,
   IconButton,
-  LoadingState,
   OfflineState,
   Screen,
+  staggerDelay,
   Text,
 } from '../../../components/ui';
 import { useMe } from '../../../src/features/me/api';
@@ -101,7 +103,7 @@ export default function DiscoverScreen() {
   const weather = firstPage?.weather;
 
   let body;
-  if (feed.isPending) body = <LoadingState />;
+  if (feed.isPending) body = <FeedSkeleton label={t('states.loading')} />;
   else if (feed.isError)
     body = offline ? (
       <OfflineState onRetry={() => void feed.refetch()} />
@@ -128,14 +130,15 @@ export default function DiscoverScreen() {
       <>
         <View style={styles.cards}>
           {items.map((item, position) => (
-            <EventCard
-              key={item.id}
-              event={item}
-              feed={item}
-              onOpen={() => {
-                openEvent(item.id, position);
-              }}
-            />
+            <FadeIn key={item.id} delay={staggerDelay(position)}>
+              <EventCard
+                event={item}
+                feed={item}
+                onOpen={() => {
+                  openEvent(item.id, position);
+                }}
+              />
+            </FadeIn>
           ))}
         </View>
         {feed.hasNextPage ? (
@@ -295,7 +298,7 @@ export default function DiscoverScreen() {
         />
       </ScrollView>
       {showFilters ? (
-        <View style={styles.panel} testID="filters-panel">
+        <FadeIn style={styles.panel} testID="filters-panel" distance={-8}>
           <Text variant="label">{t('discover.sortLabel')}</Text>
           <View style={styles.row}>
             {(['recommended', 'soonest', 'nearest'] as const).map((s) => (
@@ -375,7 +378,7 @@ export default function DiscoverScreen() {
               testID="clear-filters"
             />
           ) : null}
-        </View>
+        </FadeIn>
       ) : null}
       {body}
     </Screen>

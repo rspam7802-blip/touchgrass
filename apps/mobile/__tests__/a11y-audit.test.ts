@@ -14,6 +14,7 @@ import ts from 'typescript';
 const ROOT = join(__dirname, '..');
 const PRESSABLES = new Set([
   'Pressable',
+  'AnimatedPressable',
   'TouchableOpacity',
   'TouchableHighlight',
   'TouchableWithoutFeedback',

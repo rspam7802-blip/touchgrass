@@ -9,7 +9,7 @@ import { type DiscoverFilters, regionToBox } from '../src/features/discovery/fil
 import { formatWhen } from '../src/features/events/format';
 import { useTheme } from '../src/theme/theme';
 import { MapPin as PinIcon, People } from './icons';
-import { Icon, Text } from './ui';
+import { FadeIn, Icon, staggerDelay, Text } from './ui';
 
 /**
  * Map view (F-DSC-03), full screen (D-153). Pins sit on each plan's public centre; unrevealed mystery plans are
@@ -155,30 +155,31 @@ export function DiscoverMap({
               <Text variant="label">{t('discover.clusterLabel', { count: c.count })}</Text>
             </Pressable>
           ))}
-          {q.data?.pins.map((p) => (
-            <Pressable
-              key={`l-${p.id}`}
-              accessibilityRole="button"
-              accessibilityLabel={`${p.title}, ${formatWhen(p.startsAt, i18n.language)}`}
-              testID={`pin-${p.slug}`}
-              onPress={() => {
-                onOpen(p);
-              }}
-              style={[
-                styles.card,
-                { backgroundColor: theme.colors.surface, borderColor: theme.colors.border },
-              ]}
-            >
-              <Text variant="label" numberOfLines={2}>
-                {p.title}
-              </Text>
-              <View style={styles.when}>
-                <Icon icon={PinIcon} size={13} color={theme.colors.primary} />
-                <Text variant="caption" tone="muted" numberOfLines={1}>
-                  {formatWhen(p.startsAt, i18n.language)}
+          {q.data?.pins.map((p, i) => (
+            <FadeIn key={`l-${p.id}`} delay={staggerDelay(i, 50)}>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={`${p.title}, ${formatWhen(p.startsAt, i18n.language)}`}
+                testID={`pin-${p.slug}`}
+                onPress={() => {
+                  onOpen(p);
+                }}
+                style={[
+                  styles.card,
+                  { backgroundColor: theme.colors.surface, borderColor: theme.colors.border },
+                ]}
+              >
+                <Text variant="label" numberOfLines={2}>
+                  {p.title}
                 </Text>
-              </View>
-            </Pressable>
+                <View style={styles.when}>
+                  <Icon icon={PinIcon} size={13} color={theme.colors.primary} />
+                  <Text variant="caption" tone="muted" numberOfLines={1}>
+                    {formatWhen(p.startsAt, i18n.language)}
+                  </Text>
+                </View>
+              </Pressable>
+            </FadeIn>
           ))}
         </ScrollView>
       </View>

@@ -3,7 +3,15 @@ import { StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { BrandLogo } from '../components/BrandLogo';
 import { LanguagePicker } from '../components/LanguagePicker';
-import { Button, ErrorState, LoadingState, OfflineState, Screen, Text } from '../components/ui';
+import {
+  Button,
+  ErrorState,
+  FadeIn,
+  LoadingState,
+  OfflineState,
+  Screen,
+  Text,
+} from '../components/ui';
 import { useAppConfig } from '../src/features/app-config/use-app-config';
 import { useIsOffline } from '../src/hooks/use-is-offline';
 import { ApiError } from '../src/lib/api-client';
@@ -50,12 +58,12 @@ export default function WelcomeScreen() {
 
   return (
     <Screen testID="welcome-screen">
-      <View style={styles.hero}>
+      <FadeIn style={styles.hero} distance={18}>
         <BrandLogo size={112} />
         <Text variant="display">{t('brand.tagline')}</Text>
         <Text variant="title">{t('welcome.headline')}</Text>
         <Text tone="muted">{t('welcome.body')}</Text>
-      </View>
+      </FadeIn>
       {status}
       {ready ? (
         <View style={styles.actions}>

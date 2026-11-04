@@ -2,7 +2,15 @@ import type { NotificationItem } from '@touchgrass/shared';
 import { type Href, useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { FlatList, Pressable, StyleSheet, View } from 'react-native';
-import { Button, EmptyState, ErrorState, LoadingState, Text } from '../../components/ui';
+import {
+  Button,
+  EmptyState,
+  ErrorState,
+  FadeIn,
+  LoadingState,
+  staggerDelay,
+  Text,
+} from '../../components/ui';
 import { useTrack } from '../../src/features/analytics/analytics';
 import { formatWhen } from '../../src/features/events/format';
 import { useInbox, useMarkRead } from '../../src/features/notifications/api';
@@ -65,39 +73,41 @@ export default function NotificationsScreen() {
         onEndReached={() => {
           if (q.hasNextPage && !q.isFetchingNextPage) void q.fetchNextPage();
         }}
-        renderItem={({ item }) => (
-          <Pressable
-            onPress={() => {
-              open(item);
-            }}
-            accessibilityRole="button"
-            accessibilityLabel={[
-              item.read ? null : t('notifications.unread', { count: 1 }),
-              item.title,
-              item.body,
-              formatWhen(item.createdAt, i18n.language),
-            ]
-              .filter(Boolean)
-              .join('. ')}
-            style={[
-              styles.item,
-              {
-                borderColor: theme.colors.border,
-                backgroundColor: item.read ? theme.colors.background : theme.colors.surfaceAlt,
-                borderRadius: theme.radii.md,
-              },
-            ]}
-            testID={`notification-${item.id}`}
-          >
-            <Text variant="label">
-              {item.read ? '' : '● '}
-              {item.title}
-            </Text>
-            {item.body ? <Text>{item.body}</Text> : null}
-            <Text variant="caption" tone="muted">
-              {formatWhen(item.createdAt, i18n.language)}
-            </Text>
-          </Pressable>
+        renderItem={({ item, index }) => (
+          <FadeIn delay={staggerDelay(index, 40, 8)}>
+            <Pressable
+              onPress={() => {
+                open(item);
+              }}
+              accessibilityRole="button"
+              accessibilityLabel={[
+                item.read ? null : t('notifications.unread', { count: 1 }),
+                item.title,
+                item.body,
+                formatWhen(item.createdAt, i18n.language),
+              ]
+                .filter(Boolean)
+                .join('. ')}
+              style={[
+                styles.item,
+                {
+                  borderColor: theme.colors.border,
+                  backgroundColor: item.read ? theme.colors.background : theme.colors.surfaceAlt,
+                  borderRadius: theme.radii.md,
+                },
+              ]}
+              testID={`notification-${item.id}`}
+            >
+              <Text variant="label">
+                {item.read ? '' : '● '}
+                {item.title}
+              </Text>
+              {item.body ? <Text>{item.body}</Text> : null}
+              <Text variant="caption" tone="muted">
+                {formatWhen(item.createdAt, i18n.language)}
+              </Text>
+            </Pressable>
+          </FadeIn>
         )}
       />
     </View>

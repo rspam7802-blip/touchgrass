@@ -4,17 +4,19 @@ import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Animated, Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Avatar } from '../../../components/Avatar';
 import { Eye, Flag, Heart, Pause, Play, Send, Trash, X } from '../../../components/icons';
 import {
   Button,
   ErrorState,
+  FadeIn,
   Icon,
   IconButton,
   LoadingState,
   OfflineState,
+  Pop,
   Text,
 } from '../../../components/ui';
 import { useStartDirect } from '../../../src/features/chat/api';
@@ -142,12 +144,9 @@ export default function StoryViewerScreen() {
         testID="story-progress"
       >
         {items.map((s, i) => (
-          <View
+          <ProgressBar
             key={s.id}
-            style={[
-              styles.bar,
-              { backgroundColor: i <= current ? theme.colors.primary : theme.colors.border },
-            ]}
+            state={i < current ? 'done' : i > current ? 'todo' : moving ? 'playing' : 'held'}
           />
         ))}
       </View>
@@ -179,14 +178,16 @@ export default function StoryViewerScreen() {
       </View>
 
       <View style={styles.stage}>
-        <Image
-          source={{ uri: story.image.lg }}
-          style={[styles.image, { borderRadius: theme.radii.md }]}
-          contentFit="contain"
-          accessibilityIgnoresInvertColors
-          accessibilityLabel={t('stories.personSeen', { name: person.displayName })}
-          testID="story-image"
-        />
+        <FadeIn key={story.id} distance={0} style={styles.image}>
+          <Image
+            source={{ uri: story.image.lg }}
+            style={[styles.image, { borderRadius: theme.radii.md }]}
+            contentFit="contain"
+            accessibilityIgnoresInvertColors
+            accessibilityLabel={t('stories.personSeen', { name: person.displayName })}
+            testID="story-image"
+          />
+        </FadeIn>
         <View style={styles.taps}>
           <Pressable
             accessibilityRole="button"
@@ -254,12 +255,14 @@ export default function StoryViewerScreen() {
         <View style={styles.actions}>
           <IconButton
             icon={
-              <Icon
-                icon={Heart}
-                size={20}
-                filled={story.liked}
-                color={story.liked ? theme.colors.primary : theme.colors.text}
-              />
+              <Pop trigger={story.liked} when={story.liked}>
+                <Icon
+                  icon={Heart}
+                  size={20}
+                  filled={story.liked}
+                  color={story.liked ? theme.colors.primary : theme.colors.text}
+                />
+              </Pop>
             }
             label={story.liked ? t('stories.unlike') : t('stories.like')}
             onPress={() =>
@@ -302,6 +305,50 @@ export default function StoryViewerScreen() {
         />
       ) : null}
     </SafeAreaView>
+  );
+}
+
+/**
+ * One segment of the progress bar: the current story fills over its duration while playing and holds
+ * when paused; seen ones are full, later ones empty. No fill animation with Reduce Motion.
+ */
+function ProgressBar({ state }: { state: 'done' | 'todo' | 'playing' | 'held' }) {
+  const theme = useTheme();
+  const fill = useRef(new Animated.Value(state === 'done' ? 1 : 0)).current;
+  useEffect(() => {
+    if (state === 'done' || state === 'todo') {
+      fill.setValue(state === 'done' ? 1 : 0);
+      return undefined;
+    }
+    if (theme.reduceMotion) {
+      fill.setValue(1);
+      return undefined;
+    }
+    if (state === 'held') return undefined;
+    fill.setValue(0);
+    const anim = Animated.timing(fill, {
+      toValue: 1,
+      duration: STORY_DURATION_MS,
+      easing: (x: number) => x,
+      useNativeDriver: false,
+    });
+    anim.start();
+    return () => {
+      anim.stop();
+    };
+  }, [state, fill, theme.reduceMotion]);
+  return (
+    <View style={[styles.bar, { backgroundColor: theme.colors.border }]}>
+      <Animated.View
+        style={[
+          styles.barFill,
+          {
+            backgroundColor: theme.colors.primary,
+            width: fill.interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'] }),
+          },
+        ]}
+      />
+    </View>
   );
 }
 
@@ -387,7 +434,8 @@ const styles = StyleSheet.create({
   root: { flex: 1, paddingHorizontal: 12, gap: 10 },
   center: { alignItems: 'center', justifyContent: 'center', gap: 16, padding: 24 },
   bars: { flexDirection: 'row', gap: 4, paddingTop: 8 },
-  bar: { flex: 1, height: 3, borderRadius: 2 },
+  bar: { flex: 1, height: 3, borderRadius: 2, overflow: 'hidden' },
+  barFill: { height: 3 },
   header: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   headerText: { flex: 1, gap: 2 },
   stage: { flex: 1 },

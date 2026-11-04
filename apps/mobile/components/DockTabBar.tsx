@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { CalendarDays, Compass, MessageCircle, Plus, Users } from './icons';
 import { useTheme } from '../src/theme/theme';
-import { Icon, type GlyphIcon, Text } from './ui';
+import { AnimatedPressable, Icon, type GlyphIcon, Pop, Text, usePressScale } from './ui';
 
 /** Tabs shown in the dock, in order; the Plot button sits in the middle. Profile and settings open from headers. */
 export const DOCK_TABS = ['discover', 'plans', 'chats', 'squad'] as const;
@@ -26,6 +26,7 @@ export function DockTabBar({
   const theme = useTheme();
   const router = useRouter();
   const { t } = useTranslation();
+  const plotPress = usePressScale(0.9);
   const visible = DOCK_TABS.map((name) => state.routes.find((r) => r.name === name)).filter(
     (r): r is (typeof state.routes)[number] => r !== undefined,
   );
@@ -52,12 +53,14 @@ export function DockTabBar({
         }}
         style={[styles.tab, { minHeight: theme.minTouchTarget }]}
       >
-        <Icon
-          icon={ICONS[route.name as (typeof DOCK_TABS)[number]]}
-          size={20}
-          color={color}
-          strokeWidth={focused ? 2.4 : 1.8}
-        />
+        <Pop trigger={focused} when={focused}>
+          <Icon
+            icon={ICONS[route.name as (typeof DOCK_TABS)[number]]}
+            size={20}
+            color={color}
+            strokeWidth={focused ? 2.4 : 1.8}
+          />
+        </Pop>
         <Text
           variant="caption"
           numberOfLines={1}
@@ -83,7 +86,7 @@ export function DockTabBar({
       ]}
     >
       {visible.slice(0, half).map(tab)}
-      <Pressable
+      <AnimatedPressable
         accessibilityRole="button"
         accessibilityLabel={t('events.plot')}
         accessibilityHint={t('a11y.opensScreen', { screen: t('events.plot') })}
@@ -91,7 +94,9 @@ export function DockTabBar({
         onPress={() => {
           router.push('/plot');
         }}
-        style={({ pressed }) => [
+        onPressIn={plotPress.onPressIn}
+        onPressOut={plotPress.onPressOut}
+        style={[
           styles.plot,
           {
             backgroundColor: theme.colors.primary,
@@ -99,11 +104,11 @@ export function DockTabBar({
             width: 54,
             height: 54,
           },
-          pressed && !theme.reduceMotion ? styles.pressed : null,
+          plotPress.scaleStyle,
         ]}
       >
         <Icon icon={Plus} size={24} color={theme.colors.onPrimary} strokeWidth={2.6} />
-      </Pressable>
+      </AnimatedPressable>
       {visible.slice(half).map(tab)}
     </View>
   );
@@ -131,5 +136,4 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     elevation: 8,
   },
-  pressed: { transform: [{ scale: 0.94 }] },
 });

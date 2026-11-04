@@ -10,7 +10,7 @@ import { formatTime } from '../../src/features/events/format';
 import { errorMessage } from '../../src/lib/errors';
 import { useTheme } from '../../src/theme/theme';
 import { Avatar } from '../Avatar';
-import { Button, Text } from '../ui';
+import { Button, FadeIn, Text } from '../ui';
 
 /**
  * What you can do with a squad member who is free now (the mock's ping card): ping them, message them, or start
@@ -72,9 +72,11 @@ export function FreeNowSheet({ item, onClose }: { item: FreeNowItem | null; onCl
         </View>
         {item.note ? <Text testID="free-sheet-note">{item.note}</Text> : null}
         {notice ? (
-          <Text tone="primary" accessibilityLiveRegion="polite" testID="free-sheet-notice">
-            {notice}
-          </Text>
+          <FadeIn distance={6}>
+            <Text tone="primary" accessibilityLiveRegion="polite" testID="free-sheet-notice">
+              {notice}
+            </Text>
+          </FadeIn>
         ) : null}
         {error ? (
           <Text tone="danger" accessibilityLiveRegion="assertive" testID="free-sheet-error">

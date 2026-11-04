@@ -38,7 +38,20 @@ export function Screen({ children, scroll = true, testID }: ScreenProps) {
       edges={['top', 'bottom']}
     >
       <OfflineBanner />
-      {scroll ? <ScrollView contentContainerStyle={styles.grow}>{content}</ScrollView> : content}
+      {scroll ? (
+        // "handled": a tap on a result while the keyboard is open selects it, instead of only closing the
+        // keyboard (search results on Plot and Search were unpickable on the first tap).
+        <ScrollView
+          contentContainerStyle={styles.grow}
+          keyboardShouldPersistTaps="handled"
+          testID={testID ? `${testID}-scroll` : undefined}
+          keyboardDismissMode="on-drag"
+        >
+          {content}
+        </ScrollView>
+      ) : (
+        content
+      )}
     </SafeAreaView>
   );
 }

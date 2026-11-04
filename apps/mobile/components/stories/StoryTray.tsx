@@ -7,7 +7,7 @@ import { useStoryTray } from '../../src/features/stories/api';
 import { useTheme } from '../../src/theme/theme';
 import { Avatar } from '../Avatar';
 import { Plus } from '../icons';
-import { Icon, Text } from '../ui';
+import { FadeIn, Icon, staggerDelay, Text } from '../ui';
 
 const SIZE = 52;
 
@@ -87,36 +87,37 @@ export function StoryTray() {
             {t('stories.yours')}
           </Text>
         </View>
-        {others.map((entry) => (
-          <Pressable
-            key={entry.person.id}
-            accessibilityRole="button"
-            accessibilityLabel={
-              entry.unseen
-                ? t('stories.personNew', { name: entry.person.displayName })
-                : t('stories.personSeen', { name: entry.person.displayName })
-            }
-            onPress={() => {
-              open(entry);
-            }}
-            testID={`story-person-${entry.person.id}`}
-            style={styles.person}
-          >
-            <Avatar
-              photo={entry.person.photo}
-              name={entry.person.displayName}
-              size={SIZE}
-              ring={entry.unseen ? theme.colors.primary : theme.colors.border}
-            />
-            <Text
-              variant="caption"
-              numberOfLines={1}
-              tone={entry.unseen ? undefined : 'muted'}
-              style={[styles.name, entry.unseen ? styles.bold : null]}
+        {others.map((entry, i) => (
+          <FadeIn key={entry.person.id} delay={staggerDelay(i + 1, 50)}>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={
+                entry.unseen
+                  ? t('stories.personNew', { name: entry.person.displayName })
+                  : t('stories.personSeen', { name: entry.person.displayName })
+              }
+              onPress={() => {
+                open(entry);
+              }}
+              testID={`story-person-${entry.person.id}`}
+              style={styles.person}
             >
-              {entry.person.displayName}
-            </Text>
-          </Pressable>
+              <Avatar
+                photo={entry.person.photo}
+                name={entry.person.displayName}
+                size={SIZE}
+                ring={entry.unseen ? theme.colors.primary : theme.colors.border}
+              />
+              <Text
+                variant="caption"
+                numberOfLines={1}
+                tone={entry.unseen ? undefined : 'muted'}
+                style={[styles.name, entry.unseen ? styles.bold : null]}
+              >
+                {entry.person.displayName}
+              </Text>
+            </Pressable>
+          </FadeIn>
         ))}
       </ScrollView>
     </View>

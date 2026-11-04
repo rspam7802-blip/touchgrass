@@ -5,7 +5,14 @@ import { useTranslation } from 'react-i18next';
 import { FlatList, Modal, Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MessageBubble } from '../../../../components/chat/MessageBubble';
-import { Button, ErrorState, LoadingState, Text, TextField } from '../../../../components/ui';
+import {
+  Button,
+  ErrorState,
+  FadeIn,
+  LoadingState,
+  Text,
+  TextField,
+} from '../../../../components/ui';
 import {
   useClosePoll,
   useConversation,
@@ -236,6 +243,7 @@ export default function ThreadScreen() {
       {banner}
       <FlatList
         inverted
+        keyboardShouldPersistTaps="handled"
         data={rows}
         keyExtractor={(r) => (r.kind === 'message' ? r.message.id : r.clientId)}
         onEndReached={() => {
@@ -247,26 +255,28 @@ export default function ThreadScreen() {
             item.kind === 'pending' ? pending.find((x) => x.clientId === item.clientId) : undefined;
           const m = item.kind === 'message' ? item.message : null;
           return (
-            <MessageBubble
-              message={m}
-              pending={p}
-              group={group}
-              seenBy={m && m.mine ? (seenOn.get(m.id) ?? []).filter(Boolean) : []}
-              canVote={canWrite}
-              canClosePoll={m?.poll ? m.mine || c.canCreatePoll : false}
-              onLongPress={() => {
-                if (m) setSelected(m);
-              }}
-              onRetry={() => {
-                if (p) void retry(p);
-              }}
-              onVote={(pollId, optionIds) => {
-                vote.mutate({ pollId, optionIds });
-              }}
-              onClosePoll={(pollId) => {
-                closePoll.mutate(pollId);
-              }}
-            />
+            <FadeIn distance={6}>
+              <MessageBubble
+                message={m}
+                pending={p}
+                group={group}
+                seenBy={m && m.mine ? (seenOn.get(m.id) ?? []).filter(Boolean) : []}
+                canVote={canWrite}
+                canClosePoll={m?.poll ? m.mine || c.canCreatePoll : false}
+                onLongPress={() => {
+                  if (m) setSelected(m);
+                }}
+                onRetry={() => {
+                  if (p) void retry(p);
+                }}
+                onVote={(pollId, optionIds) => {
+                  vote.mutate({ pollId, optionIds });
+                }}
+                onClosePoll={(pollId) => {
+                  closePoll.mutate(pollId);
+                }}
+              />
+            </FadeIn>
           );
         }}
       />

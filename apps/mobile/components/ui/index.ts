@@ -11,3 +11,12 @@ export { Screen, type ScreenProps } from './Screen';
 export { EmptyState, ErrorState, LoadingState, OfflineState } from './StateViews';
 export { Text, type TextProps, type TextVariant } from './Text';
 export { TextField, type TextFieldProps } from './TextField';
+export {
+  AnimatedPressable,
+  FadeIn,
+  Pop,
+  Pulse,
+  Skeleton,
+  staggerDelay,
+  usePressScale,
+} from './motion';

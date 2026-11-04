@@ -23,10 +23,12 @@ import {
   Button,
   Chip,
   ErrorState,
+  FadeIn,
   IconText,
   ListRow,
   LoadingState,
   Screen,
+  staggerDelay,
   SwitchRow,
   Text,
   TextField,
@@ -400,33 +402,61 @@ function PlotForm({
         error={errors.where || null}
         testID="plot-place-search"
       />
-      {search.data?.venues.map((v) => (
-        <ListRow
-          key={v.id}
-          label={v.name}
-          detail={v.address}
-          onPress={() => {
-            choose({ where: { venueId: v.id }, label: v.name });
-          }}
-        />
+      {search.isFetching && query.trim().length >= 2 ? (
+        <Text
+          tone="muted"
+          variant="caption"
+          testID="plot-place-searching"
+          accessibilityLiveRegion="polite"
+        >
+          {t('events.searchingPlaces')}
+        </Text>
+      ) : search.isError ? (
+        <Text tone="danger" variant="caption" accessibilityRole="alert" testID="plot-place-error">
+          {errorMessage(t, search.error) ?? t('events.searchFailed')}
+        </Text>
+      ) : search.data &&
+        query.trim().length >= 2 &&
+        search.data.venues.length === 0 &&
+        search.data.places.length === 0 ? (
+        <Text
+          tone="muted"
+          variant="caption"
+          testID="plot-place-empty"
+          accessibilityLiveRegion="polite"
+        >
+          {t('events.noPlaces', { q: query.trim() })}
+        </Text>
+      ) : null}
+      {search.data?.venues.map((v, i) => (
+        <FadeIn key={v.id} delay={staggerDelay(i, 35)} distance={6}>
+          <ListRow
+            label={v.name}
+            detail={v.address}
+            onPress={() => {
+              choose({ where: { venueId: v.id }, label: v.name });
+            }}
+          />
+        </FadeIn>
       ))}
-      {search.data?.places.map((p) => (
-        <ListRow
-          key={p.placeId}
-          label={p.primaryText}
-          detail={p.secondaryText}
-          testID={`place-${p.placeId}`}
-          onPress={() => {
-            void fromPlace.mutateAsync({ placeId: p.placeId, sessionToken: session }).then(
-              (v) => {
-                choose({ where: { venueId: v.id }, label: v.name });
-              },
-              (err: unknown) => {
-                setErrors((e) => ({ ...e, where: errorMessage(t, err) ?? '' }));
-              },
-            );
-          }}
-        />
+      {search.data?.places.map((p, i) => (
+        <FadeIn key={p.placeId} delay={staggerDelay(i, 35)} distance={6}>
+          <ListRow
+            label={p.primaryText}
+            detail={p.secondaryText}
+            testID={`place-${p.placeId}`}
+            onPress={() => {
+              void fromPlace.mutateAsync({ placeId: p.placeId, sessionToken: session }).then(
+                (v) => {
+                  choose({ where: { venueId: v.id }, label: v.name });
+                },
+                (err: unknown) => {
+                  setErrors((e) => ({ ...e, where: errorMessage(t, err) ?? '' }));
+                },
+              );
+            }}
+          />
+        </FadeIn>
       ))}
       {(saved.data?.items.length ?? 0) > 0 ? (
         <>

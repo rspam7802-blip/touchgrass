@@ -376,6 +376,23 @@ describe('Plot flow (F-EVT-01/02)', () => {
       .on('POST', '/v1/events', { status: 201, body: eventFixture() });
   });
 
+  it('place search says when nothing matches and when search fails', async () => {
+    let fail = false;
+    api.on('GET', '/v1/venues/search', () =>
+      fail
+        ? { status: 500, body: { error: { code: 'INTERNAL', message: 'x' } } }
+        : { status: 200, body: { venues: [], places: [] } },
+    );
+    await renderWithProviders(<PlotScreen />, { fetchFn: api.fetch });
+    await fireEvent.changeText(screen.getByTestId('plot-place-search'), 'zzz');
+    expect(await screen.findByTestId('plot-place-empty')).toHaveTextContent(
+      'No places match "zzz". Try another name, or drop a pin on the map.',
+    );
+    fail = true;
+    await fireEvent.changeText(screen.getByTestId('plot-place-search'), 'zzzz');
+    expect(await screen.findByTestId('plot-place-error')).toBeOnTheScreen();
+  });
+
   it('needs a place, then publishes with IST times and the chosen venue', async () => {
     await renderWithProviders(<PlotScreen />, { fetchFn: api.fetch });
     await fireEvent.changeText(screen.getByTestId('plot-title'), 'Sunset frisbee');

@@ -8,7 +8,7 @@ import { formatTime } from '../../src/features/events/format';
 import { useTheme } from '../../src/theme/theme';
 import { Avatar } from '../Avatar';
 import { Plus, Zap } from '../icons';
-import { Button, Icon, Text } from '../ui';
+import { Button, FadeIn, Icon, Pulse, staggerDelay, Text } from '../ui';
 import { FreeNowSheet } from './FreeNowSheet';
 import { useFlag } from '../../src/features/app-config/use-flag';
 
@@ -32,7 +32,9 @@ export function FreeNowStrip() {
     <View style={styles.wrap} testID="free-now">
       <View style={styles.header}>
         <View style={styles.title}>
-          <Icon icon={Zap} size={13} color={theme.colors.primary} strokeWidth={2.4} />
+          <Pulse>
+            <Icon icon={Zap} size={13} color={theme.colors.primary} strokeWidth={2.4} />
+          </Pulse>
           <Text variant="overline" tone="muted" accessibilityRole="header" style={styles.upper}>
             {t('free.title')}
           </Text>
@@ -81,8 +83,8 @@ export function FreeNowStrip() {
             </Text>
           </Pressable>
         )}
-        {items.map((f) => (
-          <View key={f.person.id} testID={`free-${f.person.id}`}>
+        {items.map((f, i) => (
+          <FadeIn key={f.person.id} delay={staggerDelay(i, 50)} testID={`free-${f.person.id}`}>
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={f.person.displayName}
@@ -118,7 +120,7 @@ export function FreeNowStrip() {
                 </Text>
               ) : null}
             </Pressable>
-          </View>
+          </FadeIn>
         ))}
         {items.length === 0 ? (
           <Text tone="muted" style={styles.nobody}>

@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
-import { Pressable, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { useTheme } from '../../src/theme/theme';
+import { AnimatedPressable, usePressScale } from './motion';
 import { Text } from './Text';
 
 /** Round glass button for header actions (bell, profile). Always 44pt; the label is what screen readers hear. */
@@ -16,14 +17,17 @@ export function IconButton({
   testID?: string;
 }) {
   const theme = useTheme();
+  const press = usePressScale(0.9);
   return (
-    <Pressable
+    <AnimatedPressable
       accessibilityRole="button"
       accessibilityLabel={label}
       onPress={onPress}
       testID={testID}
       hitSlop={4}
-      style={({ pressed }) => [
+      onPressIn={press.onPressIn}
+      onPressOut={press.onPressOut}
+      style={[
         styles.base,
         {
           width: theme.minTouchTarget,
@@ -32,7 +36,7 @@ export function IconButton({
           backgroundColor: theme.colors.surfaceAlt,
           borderColor: theme.colors.border,
         },
-        pressed && !theme.reduceMotion ? styles.pressed : null,
+        press.scaleStyle,
       ]}
     >
       {typeof icon === 'string' ? (
@@ -42,12 +46,11 @@ export function IconButton({
       ) : (
         icon
       )}
-    </Pressable>
+    </AnimatedPressable>
   );
 }
 
 const styles = StyleSheet.create({
   base: { alignItems: 'center', justifyContent: 'center', borderWidth: 1, overflow: 'hidden' },
-  pressed: { transform: [{ scale: 0.94 }] },
   emoji: { fontSize: 18 },
 });

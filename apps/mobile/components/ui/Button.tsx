@@ -1,12 +1,12 @@
 import {
   ActivityIndicator,
-  Pressable,
   type PressableProps,
   StyleSheet,
   type StyleProp,
   type ViewStyle,
 } from 'react-native';
 import { useTheme } from '../../src/theme/theme';
+import { AnimatedPressable, usePressScale } from './motion';
 import { Text } from './Text';
 
 export interface ButtonProps extends Omit<PressableProps, 'style' | 'children'> {
@@ -38,16 +38,17 @@ export function Button({
     danger: { bg: theme.colors.danger, fg: theme.colors.onDanger, border: theme.colors.danger },
   }[variant];
   const isDisabled = disabled === true || loading;
+  const press = usePressScale(0.97, { onPressIn: rest.onPressIn, onPressOut: rest.onPressOut });
 
   return (
-    <Pressable
+    <AnimatedPressable
       accessibilityRole="button"
       accessibilityLabel={label}
       accessibilityHint={accessibilityHint}
       accessibilityState={{ disabled: isDisabled, busy: loading, selected }}
       disabled={isDisabled}
       hitSlop={4}
-      style={({ pressed }) => [
+      style={[
         styles.base,
         {
           minHeight: variant === 'ghost' ? theme.minTouchTarget : PROMINENT_HEIGHT,
@@ -56,11 +57,13 @@ export function Button({
           borderColor: palette.border,
           borderRadius: theme.radii.pill,
         },
-        pressed && !theme.reduceMotion ? styles.pressed : null,
         isDisabled ? styles.disabled : null,
         style,
+        press.scaleStyle,
       ]}
       {...rest}
+      onPressIn={press.onPressIn}
+      onPressOut={press.onPressOut}
     >
       {loading ? (
         <ActivityIndicator
@@ -76,7 +79,7 @@ export function Button({
           {label}
         </Text>
       )}
-    </Pressable>
+    </AnimatedPressable>
   );
 }
 
@@ -91,6 +94,5 @@ const styles = StyleSheet.create({
     paddingVertical: 11,
     borderWidth: StyleSheet.hairlineWidth,
   },
-  pressed: { transform: [{ scale: 0.98 }], opacity: 0.88 },
   disabled: { opacity: 0.5 },
 });

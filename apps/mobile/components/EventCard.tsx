@@ -2,13 +2,13 @@ import type { EventSummary, FeedItem } from '@touchgrass/shared';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ArrowRight, Calendar, Check, Compass, EyeOff, Heart, Lock, People } from './icons';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { localized } from '../src/features/catalog/api';
 import { capacityLabel, formatWhen, locationLabel, rsvpLabel } from '../src/features/events/format';
 import { useTheme } from '../src/theme/theme';
 import { Avatar } from './Avatar';
-import { Icon, Pill, Text } from './ui';
+import { AnimatedPressable, Icon, Pill, Text, usePressScale } from './ui';
 
 type FeedExtras = Pick<FeedItem, 'preview' | 'via' | 'reasons' | 'distanceMeters' | 'weather'>;
 
@@ -103,21 +103,24 @@ export function EventCard({
       ? t('events.smallGroup')
       : null;
 
+  const press = usePressScale(0.98);
   return (
-    <Pressable
+    <AnimatedPressable
       accessibilityRole="button"
       accessibilityLabel={summary}
       accessibilityHint={t('a11y.opensScreen', { screen: event.title })}
       onPress={onOpen}
       testID={`event-${event.slug}`}
-      style={({ pressed }) => [
+      onPressIn={press.onPressIn}
+      onPressOut={press.onPressOut}
+      style={[
         styles.card,
         {
           backgroundColor: theme.colors.surface,
           borderColor: event.mystery ? theme.colors.primary : theme.colors.border,
           borderRadius: theme.radii.lg,
         },
-        pressed && !theme.reduceMotion ? styles.pressed : null,
+        press.scaleStyle,
       ]}
     >
       <View
@@ -235,7 +238,7 @@ export function EventCard({
           </View>
         </View>
       </View>
-    </Pressable>
+    </AnimatedPressable>
   );
 }
 
@@ -267,7 +270,6 @@ function feedDetails(
 
 const styles = StyleSheet.create({
   card: { borderWidth: StyleSheet.hairlineWidth, overflow: 'hidden' },
-  pressed: { opacity: 0.9, transform: [{ scale: 0.99 }] },
   hero: { height: HERO_HEIGHT, justifyContent: 'space-between', padding: 12 },
   placeholder: { alignItems: 'center', justifyContent: 'center' },
 
