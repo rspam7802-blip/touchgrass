@@ -1,0 +1,21 @@
+{
+	email {$ACME_EMAIL}
+}
+
+api.{$BASE_HOST} {
+	encode gzip
+	reverse_proxy api:4000
+}
+
+rt.{$BASE_HOST} {
+	reverse_proxy realtime:4001
+}
+
+app.{$BASE_HOST} {
+	encode gzip
+	reverse_proxy web:3000
+}
+
+media.{$BASE_HOST} {
+	reverse_proxy objectstore:9000
+}

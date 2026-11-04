@@ -222,6 +222,34 @@ describe('store review sign-in', () => {
   });
 });
 
+describe('test server sign-in (staging)', () => {
+  it('with the dev shortcut off, 000000 fails; each tester signs in only with their own code', async () => {
+    const [tester, other] = [freshPhone(), freshPhone()];
+    const env = {
+      ...integrationEnv(),
+      OTP_DEV_BYPASS: false,
+      TEST_LOGINS: `${tester}:482913`,
+    };
+    const sms = new FakeSmsSender();
+    const otp = new OtpService(drizzle(h.pool, { schema }), env, sms);
+
+    await otp.issue(tester, null);
+    expect(sms.lastOtpFor(tester)).toBeUndefined();
+    await expect(otp.check(tester, LIMITS.otp.devBypassCode)).rejects.toMatchObject({
+      code: 'OTP_INVALID',
+    });
+    expect(await otp.check(tester, '482913')).toEqual(expect.any(String));
+
+    // Someone else's number can't use the tester's code or 000000; it gets a random code as usual.
+    await otp.issue(other, null);
+    await expect(otp.check(other, '482913')).rejects.toMatchObject({ code: 'OTP_INVALID' });
+    await expect(otp.check(other, LIMITS.otp.devBypassCode)).rejects.toMatchObject({
+      code: 'OTP_INVALID',
+    });
+    expect(sms.lastOtpFor(other)).toMatch(/^\d{6}$/);
+  });
+});
+
 describe('invite gate (F-ACC-01)', () => {
   it('requires an invite for new users while the gate is on, without burning the code', async () => {
     const phone = freshPhone();

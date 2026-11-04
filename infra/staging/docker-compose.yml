@@ -1,0 +1,121 @@
+# Test server: the whole TouchGrass stack on one machine (Oracle Cloud Free, Hetzner, any Docker host).
+# Test mode: fake SMS (testers sign in with codes from TEST_LOGINS), fake payments, fake maps. See README.md.
+name: touchgrass-staging
+
+x-api: &api
+  build:
+    context: ../..
+    dockerfile: apps/api/Dockerfile
+  image: touchgrass-api:staging
+  env_file: .env
+  restart: unless-stopped
+  depends_on:
+    postgres: { condition: service_healthy }
+    redis: { condition: service_healthy }
+    objectstore: { condition: service_started }
+
+services:
+  postgres:
+    # Multi-architecture build of the official PostGIS image (Oracle's free servers are ARM).
+    image: imresamu/postgis:16-3.4
+    environment:
+      POSTGRES_USER: touchgrass
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?run ./setup.sh first}
+      POSTGRES_DB: touchgrass
+    volumes: ['pgdata:/var/lib/postgresql/data']
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U touchgrass -d touchgrass']
+      interval: 3s
+      timeout: 3s
+      retries: 30
+
+  redis:
+    image: redis:7-alpine
+    command: ['redis-server', '--appendonly', 'yes']
+    volumes: ['redisdata:/data']
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 3s
+      timeout: 3s
+      retries: 30
+
+  objectstore:
+    image: rustfs/rustfs:1.0.4
+    environment:
+      RUSTFS_ACCESS_KEY: ${S3_ACCESS_KEY_ID:?run ./setup.sh first}
+      RUSTFS_SECRET_KEY: ${S3_SECRET_ACCESS_KEY:?run ./setup.sh first}
+    volumes: ['objectdata:/data']
+    restart: unless-stopped
+
+  mailpit:
+    # Receipts and other email land here (not sent anywhere); view with an SSH tunnel to port 8025.
+    image: axllent/mailpit:v1.27
+    restart: unless-stopped
+
+  api:
+    <<: *api
+    command: ['node', 'dist/main.js']
+
+  realtime:
+    <<: *api
+    command: ['node', 'dist/realtime.js']
+
+  worker:
+    <<: *api
+    command: ['node', 'dist/worker.js']
+
+  # One-off tasks: `docker compose run --rm migrate`, `docker compose run --rm seed`, `... storage-init`.
+  migrate:
+    <<: *api
+    restart: 'no'
+    profiles: ['tools']
+    command: ['node', 'dist/infra/database/migrate.cli.js', 'up']
+  storage-init:
+    <<: *api
+    restart: 'no'
+    profiles: ['tools']
+    command: ['node', 'dist/adapters/storage/storage-init.cli.js']
+  seed:
+    <<: *api
+    restart: 'no'
+    profiles: ['tools']
+    command: ['node', 'dist/seed/seed.cli.js']
+
+  web:
+    build:
+      context: ../..
+      dockerfile: apps/web/Dockerfile
+    image: touchgrass-web:staging
+    environment:
+      API_URL: http://api:4000
+      MEDIA_PUBLIC_BASE_URL: ${MEDIA_PUBLIC_BASE_URL}
+    restart: unless-stopped
+    depends_on: [api]
+
+  caddy:
+    # HTTPS for every public address (free certificates from Let's Encrypt, renewed automatically).
+    image: caddy:2.10
+    ports: ['80:80', '443:443']
+    environment:
+      BASE_HOST: ${BASE_HOST:?run ./setup.sh first}
+      ACME_EMAIL: ${ACME_EMAIL:?run ./setup.sh first}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddydata:/data
+      - caddyconfig:/config
+    restart: unless-stopped
+    depends_on: [api, realtime, web, objectstore]
+    networks:
+      default:
+        # The API signs photo links for the public media address; inside the server that name points at
+        # Caddy directly, so uploads and downloads never leave the machine.
+        aliases: ['media.${BASE_HOST}']
+
+volumes:
+  pgdata:
+  redisdata:
+  objectdata:
+  caddydata:
+  caddyconfig:

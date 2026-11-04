@@ -647,3 +647,7 @@ My profile was a profile card followed by ten full-width buttons. Now: the profi
 ## D-160 No category tiles; every plan scrolls sideways
 
 The founder did not want category tiles (D-158's Explore row is removed; Plot keeps its category picker because every plan needs one). Instead Explore is made only of themed sideways rows, each shown with at least two plans and never when it would hold every plan: Your squad is going, Tonight, This weekend, Good to go solo, Near you (within 3 km), Through friends of friends, Small groups, Free plans, Mystery plans, Popular right now and Picked for you. Plan cards never stack vertically: "All plans" on Explore and plan results in Search are one sideways row of full plan cards (next card peeking, loading more at the end). Filters narrow what goes into the rows; the layout stays the same.
+
+## D-161 A cheap test server, and test sign-ins without SMS
+
+Before launch, testers use a single-machine test server (`infra/staging`: Docker Compose with Caddy for HTTPS on `sslip.io` names; documented for Oracle Cloud Always Free in Hyderabad) instead of AWS. It runs in test mode (fake SMS, payments, maps). The development shortcut that accepts `000000` for any number is now a setting, `OTP_DEV_BYPASS` (on by default for local development), and the test server turns it off; instead `TEST_LOGINS` gives each tester their own number and 6-digit code, so testers cannot sign in as each other or as the admin. `TEST_LOGINS` is refused in production, codes must not be `000000`, and attempt caps and rate limits still apply.

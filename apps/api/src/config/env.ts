@@ -59,6 +59,24 @@ export const EnvSchema = z
       .regex(/^\d{6}$/, 'must be 6 digits')
       .refine((v) => v !== '000000', 'must not be the development code')
       .optional(),
+    /**
+     * Outside production, OTP 000000 signs in any number (local development). Turn it off on any server
+     * other people can reach (staging), or anyone could sign in as anyone.
+     */
+    OTP_DEV_BYPASS: bool.default(true),
+    /**
+     * Test servers without SMS: give each tester their own number and secret code,
+     * "+919876543210:482913,+919812345678:730164". Codes replace the SMS for those numbers only, so testers
+     * can't sign in as each other. Not allowed in production.
+     */
+    TEST_LOGINS: z
+      .string()
+      .regex(
+        /^\+[1-9]\d{7,14}:\d{6}(,\+[1-9]\d{7,14}:\d{6})*$/,
+        'must be "+<E.164 number>:<6 digits>" pairs separated by commas',
+      )
+      .refine((v) => !v.split(',').some((p) => p.endsWith(':000000')), 'must not use 000000')
+      .optional(),
 
     PAYMENTS_PROVIDER: z.enum(['fake', 'razorpay']).default('fake'),
     RAZORPAY_KEY_ID: z.string().optional(),
@@ -138,6 +156,12 @@ export const EnvSchema = z
       'ANALYTICS_PROVIDER=posthog',
     );
 
+    if (env.NODE_ENV === 'production' && env.TEST_LOGINS)
+      ctx.addIssue({
+        code: 'custom',
+        path: ['TEST_LOGINS'],
+        message: 'TEST_LOGINS is not allowed in production',
+      });
     if (env.NODE_ENV === 'production') {
       const fakes: [keyof typeof env, string][] = [
         ['SMS_PROVIDER', 'fake'],

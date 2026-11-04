@@ -44,6 +44,16 @@ export class OtpService {
     );
   }
 
+  /** A tester's own fixed code on a test server (TEST_LOGINS), or null. */
+  private testCode(phoneE164: string): string | null {
+    if (!this.env.TEST_LOGINS || this.env.NODE_ENV === 'production') return null;
+    for (const pair of this.env.TEST_LOGINS.split(',')) {
+      const [phone, code] = pair.split(':');
+      if (phone === phoneE164 && code) return code;
+    }
+    return null;
+  }
+
   async issue(phoneE164: string, ip: string | null, now: Date = new Date()): Promise<OtpIssued> {
     const [latest] = await this.db
       .select({ createdAt: otpRequests.createdAt })
@@ -60,7 +70,10 @@ export class OtpService {
       });
     }
     const review = this.isReviewNumber(phoneE164);
-    const code = review ? (this.env.STORE_REVIEW_OTP ?? '') : randomNumericCode(LIMITS.otp.length);
+    const fixed = this.testCode(phoneE164);
+    const code = review
+      ? (this.env.STORE_REVIEW_OTP ?? '')
+      : (fixed ?? randomNumericCode(LIMITS.otp.length));
     const expiresAt = new Date(now.getTime() + LIMITS.otp.ttlMs);
     await this.db.transaction(async (tx) => {
       // A new code supersedes any outstanding one for this number.
@@ -78,6 +91,7 @@ export class OtpService {
       });
     });
     if (review) this.logger.log('Issued the store review sign-in code (no SMS sent)');
+    else if (fixed) this.logger.log('Issued a tester sign-in code (no SMS sent)');
     else await this.sms.sendOtp(phoneE164, code);
     return { expiresAt, resendAfterSeconds: LIMITS.otp.resendAfterMs / 1000 };
   }
@@ -100,7 +114,10 @@ export class OtpService {
     if (pending.attempts >= LIMITS.otp.maxAttempts)
       throw new AppError('OTP_TOO_MANY_ATTEMPTS', 'Too many attempts');
 
-    const devBypass = this.env.NODE_ENV !== 'production' && code === LIMITS.otp.devBypassCode;
+    const devBypass =
+      this.env.NODE_ENV !== 'production' &&
+      this.env.OTP_DEV_BYPASS &&
+      code === LIMITS.otp.devBypassCode;
     if (devBypass) this.logger.warn('Accepted development OTP bypass code');
     if (!devBypass && !safeEqualHex(this.hash(phoneE164, code), pending.codeHash)) {
       // Atomic increment guarded by the attempt cap, so parallel guesses cannot exceed it.

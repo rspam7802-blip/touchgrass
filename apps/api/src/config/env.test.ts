@@ -32,6 +32,19 @@ describe('env', () => {
       /RAZORPAY_KEY_SECRET/,
     );
   });
+  it('test sign-ins: valid pairs only, never 000000, never in production (staging)', () => {
+    expect(loadEnv({ ...base }).OTP_DEV_BYPASS).toBe(true);
+    expect(loadEnv({ ...base, OTP_DEV_BYPASS: 'false' }).OTP_DEV_BYPASS).toBe(false);
+    expect(
+      loadEnv({ ...base, TEST_LOGINS: '+919876543210:482913,+919812345678:730164' }).TEST_LOGINS,
+    ).toBe('+919876543210:482913,+919812345678:730164');
+    expect(() => loadEnv({ ...base, TEST_LOGINS: '9876543210:482913' })).toThrow(/TEST_LOGINS/);
+    expect(() => loadEnv({ ...base, TEST_LOGINS: '+919876543210:000000' })).toThrow(/000000/);
+    expect(() =>
+      loadEnv({ ...base, NODE_ENV: 'production', TEST_LOGINS: '+919876543210:482913' }),
+    ).toThrow(/TEST_LOGINS is not allowed in production/);
+  });
+
   it('refuses fake adapters in production', () => {
     try {
       loadEnv({ ...base, NODE_ENV: 'production' });
