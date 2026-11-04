@@ -19,7 +19,7 @@ export function EventTogetherTools({ event }: { event: EventDetail }) {
   const v = event.viewer;
   const member = v.isHost || v.rsvp === 'going' || v.rsvp === 'checked_in';
   const live = event.status === 'published';
-  const chat = useEventChat(event.id, member && event.status !== 'draft');
+  const chat = useEventChat(event.id, member && event.chatEnabled && event.status !== 'draft');
   const socket = useRealtime((s) => s.events);
 
   useEffect(() => {
@@ -45,6 +45,11 @@ export function EventTogetherTools({ event }: { event: EventDetail }) {
       <Text variant="heading" accessibilityRole="header">
         {t('chat.eventChat')}
       </Text>
+      {!event.chatEnabled ? (
+        <Text tone="muted" testID="event-chat-off">
+          {t('events.chatOff')}
+        </Text>
+      ) : null}
       {chat.data ? (
         <Card testID="event-chat-preview">
           <ChatPreview id={chat.data.id} />

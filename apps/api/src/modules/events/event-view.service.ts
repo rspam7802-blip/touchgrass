@@ -200,6 +200,7 @@ export class EventViewService {
       vibeTags,
       minGroupSize: core.minGroupSize,
       allowPlusOnes: core.allowPlusOnes,
+      chatEnabled: core.chatEnabled,
       balancedMaxSharePct: core.balancedMaxSharePct,
       soloPercent,
       cancelledReason: core.cancelledReason,

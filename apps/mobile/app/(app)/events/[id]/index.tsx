@@ -1,6 +1,7 @@
 import { useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { EventTogetherTools } from '../../../../components/at-event/EventTogetherTools';
+import { EventComments } from '../../../../components/EventComments';
 import { EventDetailView } from '../../../../components/EventDetailView';
 import { ErrorState, LoadingState, OfflineState, Screen } from '../../../../components/ui';
 import { useEvent } from '../../../../src/features/events/api';
@@ -26,7 +27,10 @@ export default function EventScreen() {
           />
         )
       ) : (
-        <EventDetailView event={q.data} afterRsvp={<EventTogetherTools event={q.data} />} />
+        <>
+          <EventDetailView event={q.data} afterRsvp={<EventTogetherTools event={q.data} />} />
+          <EventComments eventId={q.data.id} />
+        </>
       )}
     </Screen>
   );

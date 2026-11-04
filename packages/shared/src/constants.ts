@@ -148,6 +148,10 @@ export const LIMITS = {
     /** Most people the story tray lists. */
     trayMaxAuthors: 100,
   },
+  comments: {
+    /** Longest comment on a plan. */
+    maxLength: 500,
+  },
   availability: { minHours: 1, maxHours: 6, noteMaxLength: 120 },
   crews: {
     nameMinLength: 3,

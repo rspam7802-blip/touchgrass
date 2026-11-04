@@ -1,5 +1,6 @@
 import { act, fireEvent, screen, waitFor } from '@testing-library/react-native';
 import type {
+  EventComment,
   ConversationSummary,
   EventDetail,
   IcebreakerCard,
@@ -9,6 +10,7 @@ import type {
 import * as Crypto from 'expo-crypto';
 import { IcebreakerOverlay } from '../components/at-event/IcebreakerOverlay';
 import { EventTogetherTools } from '../components/at-event/EventTogetherTools';
+import { EventComments } from '../components/EventComments';
 import ChatsScreen from '../app/(app)/(tabs)/chats';
 import ThreadScreen from '../app/(app)/chats/[id]/index';
 import NewPollScreen from '../app/(app)/chats/[id]/poll';
@@ -170,6 +172,7 @@ function eventFixture(viewer: Partial<EventDetail['viewer']> = {}): EventDetail 
     vibeTags: [],
     minGroupSize: 2,
     allowPlusOnes: false,
+    chatEnabled: true,
     balancedMaxSharePct: null,
     soloPercent: 50,
     cancelledReason: null,
@@ -779,5 +782,96 @@ describe('profile → message', () => {
       });
     });
     expect(api.callsTo('POST', '/v1/chats/direct')[0]?.body).toEqual({ userId: ids.other });
+  });
+});
+
+describe('plan comments and the group chat switch (D-156)', () => {
+  const comment = (id: string, over: Partial<EventComment> = {}): EventComment => ({
+    id,
+    author: {
+      id: ids.other,
+      displayName: 'Kiran',
+      photo: null,
+      verified: false,
+      mutualFriendCount: 0,
+    },
+    body: 'Is parking available?',
+    createdAt: '2026-11-03T08:00:00.000Z',
+    mine: false,
+    fromHost: false,
+    held: false,
+    canDelete: false,
+    ...over,
+  });
+  const C1 = '0192f3a4-5b6c-7d8e-9f01-0000000c0c01';
+  const C2 = '0192f3a4-5b6c-7d8e-9f01-0000000c0c02';
+
+  it('lists comments with the host marked; posts, deletes your own and reports others', async () => {
+    let items: EventComment[] = [
+      comment(C1, {
+        fromHost: true,
+        body: 'Yes, behind the gate.',
+        author: {
+          id: ids.me,
+          displayName: 'Asha',
+          photo: null,
+          verified: true,
+          mutualFriendCount: 0,
+        },
+      }),
+    ];
+    api
+      .on('GET', `/v1/events/${EVENT_ID}/comments`, () => ({
+        status: 200,
+        body: { items, nextCursor: null, canComment: true },
+      }))
+      .on('POST', `/v1/events/${EVENT_ID}/comments`, () => {
+        items = [comment(C2, { mine: true, canDelete: true, body: 'See you there' }), ...items];
+        return { status: 201, body: items[0] };
+      })
+      .on('DELETE', `/v1/comments/${C2}`, () => {
+        items = items.filter((c) => c.id !== C2);
+        return { status: 204 };
+      });
+    await renderWithProviders(<EventComments eventId={EVENT_ID} />, { fetchFn: api.fetch });
+    expect(await screen.findByText('Yes, behind the gate.')).toBeOnTheScreen();
+    expect(screen.getByText('Host')).toBeOnTheScreen();
+    await fireEvent.changeText(screen.getByTestId('comment-input'), '  See you there ');
+    await fireEvent.press(screen.getByRole('button', { name: 'Post comment' }));
+    expect(await screen.findByText('See you there')).toBeOnTheScreen();
+    const sent = api.callsTo('POST', `/v1/events/${EVENT_ID}/comments`)[0];
+    expect(sent?.body).toEqual({ body: 'See you there' });
+    expect(sent?.headers['idempotency-key']).toMatch(/^comment-/);
+    expect(screen.getByTestId('comment-input')).toHaveDisplayValue('');
+
+    await fireEvent.press(screen.getByTestId(`comment-delete-${C2}`));
+    await waitFor(() => expect(screen.queryByText('See you there')).toBeNull());
+    await fireEvent.press(screen.getByTestId(`comment-report-${C1}`));
+    expect(mockRouter.push).toHaveBeenCalledWith({
+      pathname: '/report',
+      params: { targetType: 'event_comment', targetId: C1, name: 'Asha' },
+    });
+  });
+
+  it('says when comments are closed or empty', async () => {
+    api.on('GET', `/v1/events/${EVENT_ID}/comments`, {
+      status: 200,
+      body: { items: [], nextCursor: null, canComment: false },
+    });
+    await renderWithProviders(<EventComments eventId={EVENT_ID} />, { fetchFn: api.fetch });
+    expect(await screen.findByText('Comments are closed for this plan.')).toBeOnTheScreen();
+    expect(screen.getByTestId('comments-empty')).toBeOnTheScreen();
+    expect(screen.queryByTestId('comment-input')).toBeNull();
+  });
+
+  it('when the host turned group chat off, people going see why and no chat loads', async () => {
+    await renderWithProviders(
+      <EventTogetherTools event={{ ...eventFixture({ rsvp: 'going' }), chatEnabled: false }} />,
+      { fetchFn: api.fetch },
+    );
+    expect(await screen.findByTestId('event-chat-off')).toHaveTextContent(
+      'The host has turned off group chat for this plan. Ask questions in the comments.',
+    );
+    expect(api.callsTo('GET', `/v1/events/${EVENT_ID}/chat`)).toHaveLength(0);
   });
 });

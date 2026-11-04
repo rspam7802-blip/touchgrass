@@ -91,6 +91,13 @@ export const NOTIFICATION_TEMPLATES = {
     link: 'discover',
     batch: true,
   },
+  event_comment: {
+    category: 'event_updates',
+    title: 'notifications.kinds.eventComment.title',
+    body: 'notifications.kinds.eventComment.body',
+    link: 'events/{{eventId}}',
+    batch: true,
+  },
   free_now_ping: {
     category: 'free_now',
     title: 'notifications.kinds.freeNowPing.title',

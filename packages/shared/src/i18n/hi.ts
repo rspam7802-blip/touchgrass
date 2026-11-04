@@ -739,6 +739,9 @@ export const hi: Translation = {
     titleLabel: 'क्या करेंगे?',
     titlePlaceholder: 'दुर्गम चेरुवु पर चाय',
     categoryLabel: 'श्रेणी',
+    chatOff: 'होस्ट ने इस प्लान का ग्रुप चैट बंद किया है। सवाल कमेंट में पूछो।',
+    chatToggle: 'आने वालों के लिए ग्रुप चैट',
+    chatToggleHint: 'आने वाले (पेड प्लान में पैसे देने वाले) तुम्हारे साथ ग्रुप चैट में होंगे।',
     searchingPlaces: 'जगहें ढूँढ रहे हैं…',
     noPlaces: '"{{q}}" से कोई जगह नहीं मिली। कोई और नाम आज़माओ, या मैप पर पिन लगाओ।',
     searchFailed: 'अभी खोज काम नहीं कर रही। फिर कोशिश करो, या मैप पर पिन लगाओ।',
@@ -966,6 +969,18 @@ export const hi: Translation = {
     shareStory: 'स्टोरी के रूप में शेयर करो',
     profileMessage: 'TouchGrass पर मुझे ढूंढो {{url}}',
     crewMessage: 'TouchGrass पर {{name}} में जुड़ो {{url}}',
+  },
+  comments: {
+    title: 'कमेंट',
+    placeholder: 'कुछ पूछो या हाय बोलो',
+    send: 'कमेंट पोस्ट करो',
+    empty: 'अभी कोई कमेंट नहीं। होस्ट से कुछ भी पूछो।',
+    host: 'होस्ट',
+    held: 'रिव्यू होने तक यह सिर्फ़ तुम्हें दिखेगा।',
+    delete: 'कमेंट डिलीट करो',
+    report: 'कमेंट रिपोर्ट करो',
+    more: 'पुराने कमेंट',
+    closed: 'इस प्लान पर कमेंट बंद हैं।',
   },
   explore: {
     featured: 'फ़ीचर्ड',
@@ -1822,6 +1837,10 @@ export const hi: Translation = {
       squadOutside: {
         title: 'तुम्हारा स्क्वाड बाहर है। और तुम?',
         body: 'तुम्हारे स्क्वाड के {{count}} लोगों ने पिछले कुछ घंटों में प्लान पर चेक इन किया।',
+      },
+      eventComment: {
+        title: '{{name}} ने {{title}} पर कमेंट किया',
+        body: '{{excerpt}}',
       },
       freeNowPing: {
         title: '{{name}} मिलना चाहते हैं',

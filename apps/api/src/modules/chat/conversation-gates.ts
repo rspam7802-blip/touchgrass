@@ -70,7 +70,8 @@ export class EventChatGate implements ConversationGate {
     const ctx = await this.access_.context(userId);
     const facts = await this.access_.facts(ctx, eventId);
     const member = facts.hostRole !== null || holdsSeat(facts.rsvp);
-    if (!member || !canViewEvent(facts, core)) return NO_ACCESS;
+    // The host switched the group chat off for this plan (D-156): nobody can read or post.
+    if (!core.chatEnabled || !member || !canViewEvent(facts, core)) return NO_ACCESS;
     const state = eventChatState(core, now);
     return {
       read: true,

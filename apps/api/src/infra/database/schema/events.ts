@@ -87,6 +87,7 @@ export const events = pgTable('events', {
   mystery: boolean('mystery').notNull().default(false),
   mysteryRevealMinutesBefore: integer('mystery_reveal_minutes_before').notNull().default(120),
   allowPlusOnes: boolean('allow_plus_ones').notNull().default(false),
+  chatEnabled: boolean('chat_enabled').notNull().default(true),
   indoor: boolean('indoor').notNull().default(false),
   accessibility: jsonb('accessibility').$type<AccessibilityJson>().notNull(),
   creatorUserId: uuid('creator_user_id').notNull(),

@@ -104,6 +104,7 @@ function eventDetail(over: Partial<EventDetail> = {}): EventDetail {
     vibeTags: [],
     minGroupSize: 2,
     allowPlusOnes: false,
+    chatEnabled: true,
     balancedMaxSharePct: null,
     soloPercent: 50,
     cancelledReason: null,

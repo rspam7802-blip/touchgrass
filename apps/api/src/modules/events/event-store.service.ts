@@ -43,6 +43,7 @@ export interface EventCore {
   mystery: boolean;
   mysteryRevealMinutesBefore: number;
   allowPlusOnes: boolean;
+  chatEnabled: boolean;
   refundPolicy: RefundPolicyJson | null;
   indoor: boolean;
   accessibility: { stepFree: boolean; accessibleRestroom: boolean; quietSpace: boolean };
@@ -113,6 +114,7 @@ export class EventStore {
       mystery: events.mystery,
       mysteryRevealMinutesBefore: events.mysteryRevealMinutesBefore,
       allowPlusOnes: events.allowPlusOnes,
+      chatEnabled: events.chatEnabled,
       refundPolicy: events.refundPolicy,
       indoor: events.indoor,
       accessibility: events.accessibility,

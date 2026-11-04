@@ -741,6 +741,9 @@ export const en = {
     titleLabel: 'What are we doing?',
     titlePlaceholder: 'Chai at Durgam Cheruvu',
     categoryLabel: 'Category',
+    chatOff: 'The host has turned off group chat for this plan. Ask questions in the comments.',
+    chatToggle: 'Group chat for people pulling up',
+    chatToggleHint: 'People who pull up (or pay, for paid plans) get a group chat with you.',
     searchingPlaces: 'Searching places…',
     noPlaces: 'No places match "{{q}}". Try another name, or drop a pin on the map.',
     searchFailed: 'Search is not working right now. Try again, or drop a pin on the map.',
@@ -967,6 +970,18 @@ export const en = {
     shareStory: 'Share as a story',
     profileMessage: 'Find me on TouchGrass: {{url}}',
     crewMessage: 'Join {{name}} on TouchGrass: {{url}}',
+  },
+  comments: {
+    title: 'Comments',
+    placeholder: 'Ask a question or say hi',
+    send: 'Post comment',
+    empty: 'No comments yet. Ask the host anything.',
+    host: 'Host',
+    held: 'Only you can see this until it has been reviewed.',
+    delete: 'Delete comment',
+    report: 'Report comment',
+    more: 'Older comments',
+    closed: 'Comments are closed for this plan.',
   },
   explore: {
     featured: 'Featured',
@@ -1817,6 +1832,10 @@ export const en = {
       squadOutside: {
         title: 'Your squad is outside. Are you?',
         body: '{{count}} of your squad checked in to plans in the last few hours.',
+      },
+      eventComment: {
+        title: '{{name}} commented on {{title}}',
+        body: '{{excerpt}}',
       },
       freeNowPing: {
         title: '{{name}} wants to meet up',

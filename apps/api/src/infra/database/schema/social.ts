@@ -59,7 +59,7 @@ export const reports = pgTable('reports', {
   id: uuid('id').primaryKey(),
   reporterId: uuid('reporter_id'),
   targetType: text('target_type', {
-    enum: ['user', 'event', 'message', 'lore_media', 'story'],
+    enum: ['user', 'event', 'message', 'lore_media', 'story', 'event_comment'],
   }).notNull(),
   targetId: uuid('target_id').notNull(),
   category: text('category').notNull(),

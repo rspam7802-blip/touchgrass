@@ -17,6 +17,7 @@ import { AfterModule } from './modules/after/after.module.js';
 import { FeedbackModule } from './modules/feedback/feedback.module.js';
 import { LoreModule } from './modules/lore/lore.module.js';
 import { StoriesModule } from './modules/stories/stories.module.js';
+import { EventCommentsModule } from './modules/event-comments/event-comments.module.js';
 import { ReliabilityModule } from './modules/reliability/reliability.module.js';
 import { AvailabilityModule } from './modules/availability/availability.module.js';
 import { CrewsModule } from './modules/crews/crews.module.js';
@@ -94,6 +95,7 @@ export class AppModule {
         FeedbackModule,
         LoreModule,
         StoriesModule,
+        EventCommentsModule,
         AfterModule,
         ReliabilityModule,
         AvailabilityModule,

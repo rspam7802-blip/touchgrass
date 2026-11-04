@@ -106,6 +106,8 @@ const EventFields = z.object({
     .max(24 * 60)
     .default(120),
   allowPlusOnes: z.boolean().default(false),
+  /** Group chat for people pulling up (paid plans: those who paid). Hosts can switch it off (D-156). */
+  chatEnabled: z.boolean().default(true),
   /** Paid plans only; defaults to full refunds until 24 h before (F-PAY-02). */
   refundPolicy: RefundPolicy.nullable().default(null),
   indoor: z.boolean().default(false),
@@ -273,6 +275,8 @@ export const EventDetail = EventSummary.extend({
   vibeTags: z.array(VibeTag),
   minGroupSize: z.number().int(),
   allowPlusOnes: z.boolean(),
+  /** The host keeps a group chat for this plan (D-156). */
+  chatEnabled: z.boolean(),
   balancedMaxSharePct: z.number().int().nullable(),
   /** Percentage (0–100) of going attendees coming without squad or +1 (F-EVT-10). */
   soloPercent: z.number().int(),

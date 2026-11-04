@@ -32,6 +32,7 @@ import { AfterModule } from '../modules/after/after.module.js';
 import { FeedbackModule } from '../modules/feedback/feedback.module.js';
 import { LoreModule } from '../modules/lore/lore.module.js';
 import { StoriesModule } from '../modules/stories/stories.module.js';
+import { EventCommentsModule } from '../modules/event-comments/event-comments.module.js';
 import { ReliabilityModule } from '../modules/reliability/reliability.module.js';
 import { AvailabilityModule } from '../modules/availability/availability.module.js';
 import { CrewsModule } from '../modules/crews/crews.module.js';
@@ -46,6 +47,7 @@ import { CalendarModule } from '../modules/calendar/calendar.module.js';
 import { NotificationsModule } from '../modules/notifications/notifications.module.js';
 import { RemindersModule } from '../modules/reminders/reminders.module.js';
 import { LoreHandlers } from '../modules/lore/lore.handlers.js';
+import { EventCommentsHandlers } from '../modules/event-comments/event-comments.handlers.js';
 import { ReliabilityHandlers } from '../modules/reliability/reliability.handlers.js';
 import { HostingModule } from '../modules/hosting/hosting.module.js';
 import { PaymentsModule } from '../modules/payments/payments.module.js';
@@ -83,6 +85,7 @@ export class WorkerModule implements OnApplicationBootstrap, OnApplicationShutdo
     private readonly chatHandlers: ChatHandlers,
     private readonly paymentsHandlers: PaymentsHandlers,
     private readonly loreHandlers: LoreHandlers,
+    private readonly eventCommentsHandlers: EventCommentsHandlers,
     private readonly reliabilityHandlers: ReliabilityHandlers,
     private readonly availabilityHandlers: AvailabilityHandlers,
     private readonly crewsHandlers: CrewsHandlers,
@@ -118,6 +121,7 @@ export class WorkerModule implements OnApplicationBootstrap, OnApplicationShutdo
         FeedbackModule,
         LoreModule,
         StoriesModule,
+        EventCommentsModule,
         AfterModule,
         ReliabilityModule,
         AvailabilityModule,
@@ -154,6 +158,7 @@ export class WorkerModule implements OnApplicationBootstrap, OnApplicationShutdo
     this.chatHandlers.registerOn(this.bus);
     this.paymentsHandlers.registerOn(this.bus);
     this.loreHandlers.registerOn(this.bus);
+    this.eventCommentsHandlers.registerOn(this.bus);
     this.reliabilityHandlers.registerOn(this.bus);
     this.availabilityHandlers.registerOn(this.bus);
     this.crewsHandlers.registerOn(this.bus);

@@ -90,6 +90,7 @@ function eventFixture(
     vibeTags: [],
     minGroupSize: 2,
     allowPlusOnes: true,
+    chatEnabled: true,
     balancedMaxSharePct: null,
     soloPercent: 50,
     cancelledReason: null,
