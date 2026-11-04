@@ -43,11 +43,20 @@ export interface SwitchRowProps {
   value: boolean;
   onChange: (value: boolean) => void;
   disabled?: boolean;
+  /** A short explanation under the label (read after it). */
+  hint?: string;
   testID?: string;
 }
 
 /** Labelled toggle; the whole row is the touch target. */
-export function SwitchRow({ label, value, onChange, disabled = false, testID }: SwitchRowProps) {
+export function SwitchRow({
+  label,
+  value,
+  onChange,
+  disabled = false,
+  hint,
+  testID,
+}: SwitchRowProps) {
   const theme = useTheme();
   const { t } = useTranslation();
   return (
@@ -57,14 +66,19 @@ export function SwitchRow({ label, value, onChange, disabled = false, testID }: 
         { minHeight: theme.minTouchTarget + 8, borderBottomColor: theme.colors.border },
       ]}
     >
-      <Text style={styles.label} importantForAccessibility="no">
-        {label}
-      </Text>
+      <View style={styles.label} importantForAccessibility="no-hide-descendants">
+        <Text>{label}</Text>
+        {hint ? (
+          <Text variant="caption" tone="muted">
+            {hint}
+          </Text>
+        ) : null}
+      </View>
       <Switch
         testID={testID}
         accessibilityRole="switch"
         accessibilityLabel={label}
-        accessibilityHint={t('a11y.switchHint')}
+        accessibilityHint={hint ? `${hint} ${t('a11y.switchHint')}` : t('a11y.switchHint')}
         accessibilityState={{ checked: value, disabled }}
         value={value}
         disabled={disabled}

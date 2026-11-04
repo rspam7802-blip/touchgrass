@@ -16,11 +16,13 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useApi } from '../../src/providers/api-context';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import MapView, { Marker, type MapPressEvent } from 'react-native-maps';
 import { ChipGroup } from '../../components/ChipGroup';
+import { SegmentedTabs } from '../../components/SegmentedTabs';
 import {
   Button,
+  Card,
   Chip,
   ErrorState,
   FadeIn,
@@ -49,6 +51,8 @@ import { errorMessage } from '../../src/lib/errors';
 import { useTheme } from '../../src/theme/theme';
 
 const HYDERABAD: GeoPoint = { lat: 17.385, lng: 78.4867 };
+/** At most this many place suggestions show while typing. */
+const SUGGESTIONS_MAX = 5;
 const VISIBILITIES: EventVisibility[] = [
   'public',
   'friends_of_friends',
@@ -82,11 +86,15 @@ interface FormState {
   stepFree: boolean;
   accessibleRestroom: boolean;
   quietSpace: boolean;
+  /** Free or paid (paid only for approved hosts). */
+  paid: boolean;
   /** Ticket price in rupees (text), '0' for free. */
   price: string;
   refundKind: 'full' | 'partial' | 'none';
   cutoffHours: string;
   partialPct: string;
+  /** Group chat for people pulling up (D-156). */
+  chatEnabled: boolean;
 }
 
 function initialState(): FormState {
@@ -111,10 +119,12 @@ function initialState(): FormState {
     stepFree: false,
     accessibleRestroom: false,
     quietSpace: false,
+    paid: false,
     price: '0',
     refundKind: 'full',
     cutoffHours: '24',
     partialPct: '50',
+    chatEnabled: true,
   };
 }
 
@@ -141,10 +151,12 @@ function fromEvent(e: EventDetail): FormState {
     stepFree: e.accessibility.stepFree,
     accessibleRestroom: e.accessibility.accessibleRestroom,
     quietSpace: e.accessibility.quietSpace,
+    paid: e.pricePaise > 0,
     price: String(e.pricePaise / 100),
     refundKind: e.refundPolicy?.kind ?? 'full',
     cutoffHours: String(e.refundPolicy?.cutoffHours ?? 24),
     partialPct: String(e.refundPolicy?.partialPct ?? 50),
+    chatEnabled: e.chatEnabled,
   };
 }
 
@@ -214,6 +226,7 @@ function PlotForm({
       : initialPick,
   );
   const [whereChanged, setWhereChanged] = useState(false);
+  const [changingPlace, setChangingPlace] = useState(false);
   const [query, setQuery] = useState('');
   const [near, setNear] = useState<GeoPoint>(HYDERABAD);
   const [mapOpen, setMapOpen] = useState(false);
@@ -245,6 +258,7 @@ function PlotForm({
     setWhereChanged(true);
     setQuery('');
     setMapOpen(false);
+    setChangingPlace(false);
     setErrors((e) => ({ ...e, where: '' }));
   };
 
@@ -280,6 +294,7 @@ function PlotForm({
       ...(existing && !revealTouched ? {} : { mysteryRevealMinutesBefore: form.revealHours * 60 }),
       // Paid plans have no +1s: every seat is a ticket.
       allowPlusOnes: canSell && pricePaise > 0 ? false : form.allowPlusOnes,
+      chatEnabled: form.chatEnabled,
       indoor: form.indoor,
       accessibility: {
         stepFree: form.stepFree,
@@ -331,7 +346,7 @@ function PlotForm({
   /** Price and refund policy (F-PAY-01/02): only approved hosts sell tickets. */
   function pricing(): Record<string, unknown> {
     if (!canSell) return {};
-    const pricePaise = Math.round(Number(form.price || '0') * 100);
+    const pricePaise = form.paid ? Math.round(Number(form.price || '0') * 100) : 0;
     if (!Number.isFinite(pricePaise) || pricePaise <= 0)
       return { pricePaise: 0, refundPolicy: null };
     return {
@@ -344,11 +359,46 @@ function PlotForm({
       },
     };
   }
-  const pricePaise = Math.round(Number(form.price || '0') * 100);
+  const pricePaise = form.paid ? Math.round(Number(form.price || '0') * 100) : 0;
   const hostShare =
     canSell && pricePaise > 0 && host.data
       ? feeBreakdown(pricePaise, host.data.platformFeeBps, host.data.gstBps).hostNetPaise
       : null;
+
+  // One short list of suggestions for what was typed (D-157): known venues first, then map places, at most 5.
+  const typing = query.trim().length >= 2;
+  const suggestions: {
+    key: string;
+    label: string;
+    detail: string;
+    testID?: string;
+    onPick: () => void;
+  }[] = [
+    ...(search.data?.venues ?? []).map((v) => ({
+      key: `v-${v.id}`,
+      label: v.name,
+      detail: v.address,
+      onPick: () => {
+        choose({ where: { venueId: v.id }, label: v.name });
+      },
+    })),
+    ...(search.data?.places ?? []).map((p) => ({
+      key: `p-${p.placeId}`,
+      label: p.primaryText,
+      detail: p.secondaryText,
+      testID: `place-${p.placeId}`,
+      onPick: () => {
+        void fromPlace.mutateAsync({ placeId: p.placeId, sessionToken: session }).then(
+          (v) => {
+            choose({ where: { venueId: v.id }, label: v.name });
+          },
+          (err: unknown) => {
+            setErrors((e) => ({ ...e, where: errorMessage(t, err) ?? '' }));
+          },
+        );
+      },
+    })),
+  ].slice(0, SUGGESTIONS_MAX);
 
   const categoryOptions = (interests.data?.items ?? []).map((i) => ({
     id: i.id,
@@ -383,6 +433,7 @@ function PlotForm({
           set('categoryId', ids[0] ?? null);
         }}
         mode="single"
+        scroll
         testIDPrefix="plot-category"
       />
       {errors.categoryId ? <Text tone="danger">{errors.categoryId}</Text> : null}
@@ -390,148 +441,157 @@ function PlotForm({
       <Text variant="heading" accessibilityRole="header">
         {t('events.where')}
       </Text>
-      {picked ? (
-        <IconText icon={MapPin} testID="plot-picked" accessibilityLiveRegion="polite">
-          {picked.label}
-        </IconText>
-      ) : null}
-      <TextField
-        label={t('events.searchPlace')}
-        value={query}
-        onChangeText={setQuery}
-        error={errors.where || null}
-        testID="plot-place-search"
-      />
-      {search.isFetching && query.trim().length >= 2 ? (
-        <Text
-          tone="muted"
-          variant="caption"
-          testID="plot-place-searching"
-          accessibilityLiveRegion="polite"
-        >
-          {t('events.searchingPlaces')}
-        </Text>
-      ) : search.isError ? (
-        <Text tone="danger" variant="caption" accessibilityRole="alert" testID="plot-place-error">
-          {errorMessage(t, search.error) ?? t('events.searchFailed')}
-        </Text>
-      ) : search.data &&
-        query.trim().length >= 2 &&
-        search.data.venues.length === 0 &&
-        search.data.places.length === 0 ? (
-        <Text
-          tone="muted"
-          variant="caption"
-          testID="plot-place-empty"
-          accessibilityLiveRegion="polite"
-        >
-          {t('events.noPlaces', { q: query.trim() })}
-        </Text>
-      ) : null}
-      {search.data?.venues.map((v, i) => (
-        <FadeIn key={v.id} delay={staggerDelay(i, 35)} distance={6}>
-          <ListRow
-            label={v.name}
-            detail={v.address}
+      {picked && !changingPlace ? (
+        <Card style={styles.picked}>
+          <IconText icon={MapPin} testID="plot-picked" accessibilityLiveRegion="polite">
+            {picked.label}
+          </IconText>
+          <Button
+            label={t('events.changePlace')}
+            variant="ghost"
             onPress={() => {
-              choose({ where: { venueId: v.id }, label: v.name });
+              setChangingPlace(true);
             }}
+            testID="plot-change-place"
           />
-        </FadeIn>
-      ))}
-      {search.data?.places.map((p, i) => (
-        <FadeIn key={p.placeId} delay={staggerDelay(i, 35)} distance={6}>
-          <ListRow
-            label={p.primaryText}
-            detail={p.secondaryText}
-            testID={`place-${p.placeId}`}
-            onPress={() => {
-              void fromPlace.mutateAsync({ placeId: p.placeId, sessionToken: session }).then(
-                (v) => {
-                  choose({ where: { venueId: v.id }, label: v.name });
-                },
-                (err: unknown) => {
-                  setErrors((e) => ({ ...e, where: errorMessage(t, err) ?? '' }));
-                },
-              );
-            }}
-          />
-        </FadeIn>
-      ))}
-      {(saved.data?.items.length ?? 0) > 0 ? (
+        </Card>
+      ) : (
         <>
-          <Text variant="label">{t('events.savedVenues')}</Text>
-          <View style={styles.chips}>
-            {saved.data?.items.map((v) => (
-              <Chip
-                key={v.id}
-                label={v.name}
-                kind="radio"
-                selected={
-                  picked?.where !== undefined &&
-                  'venueId' in picked.where &&
-                  picked.where.venueId === v.id
-                }
-                onToggle={() => {
-                  choose({ where: { venueId: v.id }, label: v.name });
+          <TextField
+            label={t('events.searchPlace')}
+            placeholder={t('events.searchPlaceHint')}
+            value={query}
+            onChangeText={setQuery}
+            error={errors.where || null}
+            testID="plot-place-search"
+          />
+          {typing ? (
+            <Card style={styles.suggestions} testID="plot-suggestions">
+              {search.isFetching && suggestions.length === 0 ? (
+                <Text
+                  tone="muted"
+                  variant="caption"
+                  testID="plot-place-searching"
+                  accessibilityLiveRegion="polite"
+                >
+                  {t('events.searchingPlaces')}
+                </Text>
+              ) : search.isError ? (
+                <Text
+                  tone="danger"
+                  variant="caption"
+                  accessibilityRole="alert"
+                  testID="plot-place-error"
+                >
+                  {errorMessage(t, search.error) ?? t('events.searchFailed')}
+                </Text>
+              ) : search.data && suggestions.length === 0 ? (
+                <Text
+                  tone="muted"
+                  variant="caption"
+                  testID="plot-place-empty"
+                  accessibilityLiveRegion="polite"
+                >
+                  {t('events.noPlaces', { q: query.trim() })}
+                </Text>
+              ) : null}
+              {suggestions.map((sug, i) => (
+                <FadeIn key={sug.key} delay={staggerDelay(i, 35)} distance={6}>
+                  <ListRow
+                    label={sug.label}
+                    detail={sug.detail}
+                    testID={sug.testID}
+                    onPress={sug.onPick}
+                  />
+                </FadeIn>
+              ))}
+            </Card>
+          ) : (saved.data?.items.length ?? 0) > 0 ? (
+            <>
+              <Text variant="label" tone="muted">
+                {t('events.savedVenues')}
+              </Text>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.chipRow}
+              >
+                {saved.data?.items.map((v) => (
+                  <Chip
+                    key={v.id}
+                    label={v.name}
+                    kind="radio"
+                    selected={
+                      picked?.where !== undefined &&
+                      'venueId' in picked.where &&
+                      picked.where.venueId === v.id
+                    }
+                    onToggle={() => {
+                      choose({ where: { venueId: v.id }, label: v.name });
+                    }}
+                  />
+                ))}
+              </ScrollView>
+            </>
+          ) : null}
+          <Button
+            label={t('events.pickOnMap')}
+            variant="ghost"
+            onPress={() => {
+              setMapOpen((o) => !o);
+            }}
+          />
+          {mapOpen ? (
+            <View style={styles.mapWrap}>
+              <MapView
+                style={[styles.map, { borderRadius: theme.radii.md }]}
+                initialRegion={{
+                  latitude: near.lat,
+                  longitude: near.lng,
+                  latitudeDelta: 0.05,
+                  longitudeDelta: 0.05,
+                }}
+                onPress={(e: MapPressEvent) => {
+                  setPin({
+                    lat: e.nativeEvent.coordinate.latitude,
+                    lng: e.nativeEvent.coordinate.longitude,
+                  });
+                }}
+                accessibilityLabel={t('events.pickOnMap')}
+                testID="plot-map"
+              >
+                {pin ? <Marker coordinate={{ latitude: pin.lat, longitude: pin.lng }} /> : null}
+              </MapView>
+              <TextField
+                label={t('events.addressLabel')}
+                value={pinAddress}
+                onChangeText={setPinAddress}
+                testID="plot-pin-address"
+              />
+              <Button
+                label={t('events.usePin')}
+                disabled={!pin || pinAddress.trim().length < 3}
+                onPress={() => {
+                  if (pin)
+                    choose({
+                      where: { point: pin, address: pinAddress.trim(), placeName: null },
+                      label: pinAddress.trim(),
+                    });
                 }}
               />
-            ))}
-          </View>
+            </View>
+          ) : null}
         </>
-      ) : null}
-      <Button
-        label={t('events.pickOnMap')}
-        variant="secondary"
-        onPress={() => {
-          setMapOpen((o) => !o);
-        }}
-      />
-      {mapOpen ? (
-        <View style={styles.mapWrap}>
-          <MapView
-            style={[styles.map, { borderRadius: theme.radii.md }]}
-            initialRegion={{
-              latitude: near.lat,
-              longitude: near.lng,
-              latitudeDelta: 0.05,
-              longitudeDelta: 0.05,
-            }}
-            onPress={(e: MapPressEvent) => {
-              setPin({
-                lat: e.nativeEvent.coordinate.latitude,
-                lng: e.nativeEvent.coordinate.longitude,
-              });
-            }}
-            accessibilityLabel={t('events.pickOnMap')}
-            testID="plot-map"
-          >
-            {pin ? <Marker coordinate={{ latitude: pin.lat, longitude: pin.lng }} /> : null}
-          </MapView>
-          <TextField
-            label={t('events.addressLabel')}
-            value={pinAddress}
-            onChangeText={setPinAddress}
-            testID="plot-pin-address"
-          />
-          <Button
-            label={t('events.usePin')}
-            disabled={!pin || pinAddress.trim().length < 3}
-            onPress={() => {
-              if (pin)
-                choose({
-                  where: { point: pin, address: pinAddress.trim(), placeName: null },
-                  label: pinAddress.trim(),
-                });
-            }}
-          />
-        </View>
-      ) : null}
+      )}
 
       <Text variant="heading" accessibilityRole="header">
         {t('events.when')}
       </Text>
-      <View style={styles.chips}>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.chipRow}
+      >
         {(['tonight', 'tomorrow', 'weekend'] as const).map((k) => (
           <Chip
             key={k}
@@ -547,26 +607,32 @@ function PlotForm({
             }}
           />
         ))}
+      </ScrollView>
+      <View style={styles.pair}>
+        <View style={styles.half}>
+          <TextField
+            label={t('events.dateLabel')}
+            value={form.date}
+            onChangeText={(v) => {
+              set('date', v);
+            }}
+            keyboardType="numbers-and-punctuation"
+            error={errors.date || errors.startsAt || null}
+            testID="plot-date"
+          />
+        </View>
+        <View style={styles.half}>
+          <TextField
+            label={t('events.timeLabel')}
+            value={form.time}
+            onChangeText={(v) => {
+              set('time', v);
+            }}
+            keyboardType="numbers-and-punctuation"
+            testID="plot-time"
+          />
+        </View>
       </View>
-      <TextField
-        label={t('events.dateLabel')}
-        value={form.date}
-        onChangeText={(v) => {
-          set('date', v);
-        }}
-        keyboardType="numbers-and-punctuation"
-        error={errors.date || errors.startsAt || null}
-        testID="plot-date"
-      />
-      <TextField
-        label={t('events.timeLabel')}
-        value={form.time}
-        onChangeText={(v) => {
-          set('time', v);
-        }}
-        keyboardType="numbers-and-punctuation"
-        testID="plot-time"
-      />
       <TextField
         label={t('events.durationHours')}
         value={form.durationHours}
@@ -590,7 +656,22 @@ function PlotForm({
         error={errors.capacity || null}
         testID="plot-capacity"
       />
-      {canSell ? (
+      <SegmentedTabs
+        tabs={[
+          { key: 'free', label: t('events.free') },
+          ...(canSell ? [{ key: 'paid' as const, label: t('events.paid') }] : []),
+        ]}
+        value={form.paid ? 'paid' : 'free'}
+        onChange={(k) => {
+          set('paid', k === 'paid');
+        }}
+      />
+      {!canSell ? (
+        <Text variant="caption" tone="muted" testID="plot-paid-hint">
+          {t('events.paidNeedsHost')}
+        </Text>
+      ) : null}
+      {canSell && form.paid ? (
         <>
           <TextField
             label={t('payments.priceLabel')}
@@ -622,6 +703,7 @@ function PlotForm({
                   if (k) set('refundKind', k);
                 }}
                 mode="single"
+                scroll
                 testIDPrefix="plot-refund"
               />
               {form.refundKind !== 'none' ? (
@@ -660,6 +742,7 @@ function PlotForm({
           if (v) set('visibility', v);
         }}
         mode="single"
+        scroll
         testIDPrefix="plot-visibility"
       />
       {form.visibility === 'balanced' ? (
@@ -677,6 +760,16 @@ function PlotForm({
           ))}
         </View>
       ) : null}
+
+      <SwitchRow
+        label={t('events.chatToggle')}
+        hint={t('events.chatToggleHint')}
+        value={form.chatEnabled}
+        onChange={(v) => {
+          set('chatEnabled', v);
+        }}
+        testID="plot-chat"
+      />
 
       <Button
         label={t('events.more')}
@@ -709,6 +802,7 @@ function PlotForm({
             }}
             mode="multi"
             max={5}
+            scroll
             testIDPrefix="plot-vibe"
           />
           <SwitchRow
@@ -804,6 +898,11 @@ function PlotForm({
 
 const styles = StyleSheet.create({
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  chipRow: { gap: 8, paddingRight: 8 },
+  picked: { gap: 4 },
+  suggestions: { gap: 0, paddingVertical: 6 },
+  pair: { flexDirection: 'row', gap: 12 },
+  half: { flex: 1 },
   mapWrap: { gap: 12 },
   map: { height: 260 },
 });

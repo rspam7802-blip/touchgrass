@@ -680,6 +680,9 @@ describe('hosting (F-HST-01/02, F-PAY-03)', () => {
       .on('GET', '/v1/interests', { status: 200, body: { items: interestsFixture } })
       .on('GET', '/v1/venues/saved', { status: 200, body: { items: [] } });
     await renderWithProviders(<PlotScreen />, { fetchFn: api.fetch });
+    // Plans start free; approved hosts switch to Paid to set a price.
+    expect(screen.queryByTestId('plot-price')).toBeNull();
+    await fireEvent.press(await screen.findByRole('tab', { name: 'Paid' }));
     await fireEvent.changeText(await screen.findByTestId('plot-price'), '500');
     expect(screen.getByTestId('plot-host-share')).toHaveTextContent(
       'You get about ₹441 per ticket.',
@@ -702,6 +705,8 @@ describe('hosting (F-HST-01/02, F-PAY-03)', () => {
       expect(api.callsTo('GET', '/v1/host/status')).toHaveLength(1);
     });
     expect(screen.queryByTestId('plot-price')).toBeNull();
+    expect(screen.queryByRole('tab', { name: 'Paid' })).toBeNull();
+    expect(screen.getByTestId('plot-paid-hint')).toBeOnTheScreen();
   });
 });
 

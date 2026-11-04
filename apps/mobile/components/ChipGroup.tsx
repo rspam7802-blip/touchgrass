@@ -1,4 +1,4 @@
-import { StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { Chip } from './ui';
 
 export interface ChipOption {
@@ -15,6 +15,8 @@ export interface ChipGroupProps {
   mode: 'single' | 'multi';
   max?: number;
   testIDPrefix?: string;
+  /** One sideways-scrolling row instead of wrapping lines (long lists like categories). */
+  scroll?: boolean;
 }
 
 /** Accessible single (radio) or multi (checkbox) selection of chips with an optional maximum. */
@@ -26,13 +28,14 @@ export function ChipGroup({
   mode,
   max,
   testIDPrefix = 'chip',
+  scroll = false,
 }: ChipGroupProps) {
   const atMax = max !== undefined && selected.length >= max;
-  return (
+  const group = (
     <View
       accessibilityRole={mode === 'single' ? 'radiogroup' : 'list'}
       accessibilityLabel={label}
-      style={styles.wrap}
+      style={scroll ? styles.row : styles.wrap}
     >
       {options.map((o) => {
         const isSelected = selected.includes(o.id);
@@ -53,6 +56,17 @@ export function ChipGroup({
       })}
     </View>
   );
+  return scroll ? (
+    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.scroller}>
+      {group}
+    </ScrollView>
+  ) : (
+    group
+  );
 }
 
-const styles = StyleSheet.create({ wrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 } });
+const styles = StyleSheet.create({
+  wrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  row: { flexDirection: 'row', gap: 8, paddingRight: 8 },
+  scroller: { flexGrow: 0 },
+});

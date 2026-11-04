@@ -377,6 +377,30 @@ describe('Plot flow (F-EVT-01/02)', () => {
       .on('POST', '/v1/events', { status: 201, body: eventFixture() });
   });
 
+  it('suggests at most five places while typing, then shows only the pick (D-157)', async () => {
+    api.on('GET', '/v1/venues/search', {
+      status: 200,
+      body: {
+        venues: [],
+        places: Array.from({ length: 8 }, (_, i) => ({
+          placeId: `fx_${String(i)}`,
+          primaryText: `Lake ${String(i)}`,
+          secondaryText: 'Gachibowli',
+        })),
+      },
+    });
+    await renderWithProviders(<PlotScreen />, { fetchFn: api.fetch });
+    await fireEvent.changeText(screen.getByTestId('plot-place-search'), 'lake');
+    expect(await screen.findByTestId('place-fx_4')).toBeOnTheScreen();
+    expect(screen.queryByTestId('place-fx_5')).toBeNull();
+    await fireEvent.press(screen.getByTestId('place-fx_0'));
+    expect(await screen.findByTestId('plot-picked')).toBeOnTheScreen();
+    expect(screen.queryByTestId('plot-suggestions')).toBeNull();
+    expect(screen.queryByTestId('plot-place-search')).toBeNull();
+    await fireEvent.press(screen.getByTestId('plot-change-place'));
+    expect(screen.getByTestId('plot-place-search')).toBeOnTheScreen();
+  });
+
   it('place search says when nothing matches and when search fails', async () => {
     let fail = false;
     api.on('GET', '/v1/venues/search', () =>
@@ -408,11 +432,14 @@ describe('Plot flow (F-EVT-01/02)', () => {
     await fireEvent.changeText(screen.getByTestId('plot-place-search'), 'lake');
     await fireEvent.press(await screen.findByTestId('place-fx_lake'));
     expect(await screen.findByTestId('plot-picked')).toHaveTextContent('Lake View Park');
+    // Hosts can do without a group chat (D-156).
+    await fireEvent(screen.getByTestId('plot-chat'), 'valueChange', false);
     await fireEvent.press(screen.getByTestId('plot-submit'));
     await waitFor(() => expect(api.callsTo('POST', '/v1/events')).toHaveLength(1));
     const call = api.callsTo('POST', '/v1/events')[0];
     expect(call?.body).toMatchObject({
       title: 'Sunset frisbee',
+      chatEnabled: false,
       categoryInterestId: interestsFixture[0]?.id,
       where: { venueId: '0192f3a4-5b6c-7d8e-9f01-00000000f00d' },
       startsAt: '2026-11-03T12:30:00.000Z',
