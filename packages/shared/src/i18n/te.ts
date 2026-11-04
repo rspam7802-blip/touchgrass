@@ -975,6 +975,18 @@ export const te: Translation = {
     profileMessage: 'TouchGrassలో నన్ను కనుక్కో {{url}}',
     crewMessage: 'TouchGrassలో {{name}}లో చేరు {{url}}',
   },
+  explore: {
+    featured: 'ఫీచర్డ్',
+    going: '{{count}} మంది వస్తున్నారు',
+    going_other: '{{count}} మంది వస్తున్నారు',
+    allPlans: 'అన్ని ప్లాన్లు',
+    rails: {
+      squad: 'నీ స్క్వాడ్ వెళ్తోంది',
+      tonight: 'ఈ రాత్రి',
+      weekend: 'ఈ వీకెండ్',
+      solo: 'ఒంటరిగా వెళ్లడానికి బాగుంటుంది',
+    },
+  },
   discover: {
     title: 'డిస్కవర్',
     search: 'సెర్చ్',

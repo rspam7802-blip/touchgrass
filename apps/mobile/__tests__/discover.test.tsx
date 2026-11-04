@@ -213,6 +213,50 @@ describe('Discover tab (F-DSC-01..08)', () => {
     expect(label).toMatch(/4:30\s?pm/i);
   });
 
+  it('browses like an events app: featured carousel, themed rails, then all plans (D-155)', async () => {
+    const items = [
+      item(1, { reasons: ['interests'], soloFriendly: true }),
+      item(2, { reasons: ['squad_going'], soloFriendly: true }),
+      item(3, { reasons: ['featured'] }),
+      item(4, { reasons: ['squad_going'] }),
+      item(5, { reasons: ['nearby'] }),
+    ];
+    api.on('GET', '/v1/discover/feed', {
+      status: 200,
+      body: {
+        items,
+        nextCursor: null,
+        requestId: REQUEST_ID,
+        center: { lat: 17.44, lng: 78.35 },
+        weather: null,
+      },
+    });
+    await renderWithProviders(<DiscoverScreen />, { fetchFn: api.fetch });
+    await screen.findByTestId('hero-carousel');
+    // Featured first, then the ranked order.
+    const heroIds = screen
+      .getAllByTestId(/^hero-Slug/)
+      .map((n) => String(n.props.testID).replace('hero-', ''));
+    expect(heroIds).toEqual(['Slug0003', 'Slug0001', 'Slug0002', 'Slug0004', 'Slug0005']);
+    expect(screen.getByRole('header', { name: 'Your squad is going' })).toBeOnTheScreen();
+    expect(screen.getByTestId('tile-squad-Slug0004')).toBeOnTheScreen();
+    expect(screen.getByRole('header', { name: 'Good to go solo' })).toBeOnTheScreen();
+    expect(screen.getByRole('header', { name: 'All plans' })).toBeOnTheScreen();
+    expect(screen.getByTestId('event-Slug0005')).toBeOnTheScreen();
+    // Opening from a rail logs the plan's real feed position.
+    await fireEvent.press(screen.getByTestId('tile-squad-Slug0004'));
+    expect(mockRouter.push).toHaveBeenCalledWith({
+      pathname: '/events/[id]',
+      params: { id: item(4).id },
+    });
+    await waitFor(() =>
+      expect(api.callsTo('POST', '/v1/discover/clicks')[0]?.body).toMatchObject({ position: 3 }),
+    );
+    // A filter narrows to the plain list.
+    await fireEvent.press(screen.getByTestId('toggle-soloFriendly'));
+    await waitFor(() => expect(screen.queryByTestId('hero-carousel')).toBeNull());
+  });
+
   it('quick chips and the filter panel change the query; clear resets it', async () => {
     const urls: string[] = [];
     api.on('GET', '/v1/discover/feed', (c) => {

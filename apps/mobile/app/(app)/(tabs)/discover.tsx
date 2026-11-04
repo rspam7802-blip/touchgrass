@@ -14,6 +14,8 @@ import { ChipGroup } from '../../../components/ChipGroup';
 import { DiscoverMap } from '../../../components/DiscoverMap';
 import { EventCard } from '../../../components/EventCard';
 import { FeedSkeleton } from '../../../components/FeedSkeleton';
+import { HeroCarousel } from '../../../components/explore/HeroCarousel';
+import { PlanRail } from '../../../components/explore/PlanRail';
 import { SegmentedTabs } from '../../../components/SegmentedTabs';
 import {
   Button,
@@ -40,6 +42,7 @@ import {
   TOGGLES,
   type Toggle,
 } from '../../../src/features/discovery/filters';
+import { buildSections } from '../../../src/features/discovery/sections';
 import { flatten } from '../../../src/features/social/api';
 import { useIsOffline } from '../../../src/hooks/use-is-offline';
 import { errorMessage } from '../../../src/lib/errors';
@@ -125,9 +128,38 @@ export default function DiscoverScreen() {
         }}
       />
     );
-  else
+  else {
+    // District-style browsing (D-155) when no filter narrows the feed: carousel, themed rails, then all plans.
+    const sections = nFilters === 0 ? buildSections(items) : { hero: [], rails: [] };
+    const positionOf = (id: string): number => items.findIndex((i) => i.id === id);
     body = (
       <>
+        {sections.hero.length > 0 ? (
+          <HeroCarousel
+            items={sections.hero}
+            gutter={GUTTER}
+            onOpen={(item) => {
+              openEvent(item.id, positionOf(item.id));
+            }}
+          />
+        ) : null}
+        {sections.rails.map((rail) => (
+          <PlanRail
+            key={rail.key}
+            railKey={rail.key}
+            title={t(`explore.rails.${rail.key}`)}
+            items={rail.items}
+            gutter={GUTTER}
+            onOpen={(item) => {
+              openEvent(item.id, positionOf(item.id));
+            }}
+          />
+        ))}
+        {sections.hero.length > 0 ? (
+          <Text variant="heading" accessibilityRole="header" testID="all-plans">
+            {t('explore.allPlans')}
+          </Text>
+        ) : null}
         <View style={styles.cards}>
           {items.map((item, position) => (
             <FadeIn key={item.id} delay={staggerDelay(position)}>
@@ -152,6 +184,7 @@ export default function DiscoverScreen() {
         ) : null}
       </>
     );
+  }
 
   const myName = me.data?.displayName ?? t('nav.profile');
   const searchRow = (
@@ -384,6 +417,9 @@ export default function DiscoverScreen() {
     </Screen>
   );
 }
+
+/** The Screen's side padding: the carousel and rails run edge to edge past it. */
+const GUTTER = 20;
 
 const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingTop: 4 },

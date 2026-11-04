@@ -968,6 +968,18 @@ export const en = {
     profileMessage: 'Find me on TouchGrass: {{url}}',
     crewMessage: 'Join {{name}} on TouchGrass: {{url}}',
   },
+  explore: {
+    featured: 'Featured',
+    going: '{{count}} going',
+    going_other: '{{count}} going',
+    allPlans: 'All plans',
+    rails: {
+      squad: 'Your squad is going',
+      tonight: 'Tonight',
+      weekend: 'This weekend',
+      solo: 'Good to go solo',
+    },
+  },
   discover: {
     title: 'Discover',
     search: 'Search',

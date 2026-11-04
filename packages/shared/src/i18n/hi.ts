@@ -967,6 +967,18 @@ export const hi: Translation = {
     profileMessage: 'TouchGrass पर मुझे ढूंढो {{url}}',
     crewMessage: 'TouchGrass पर {{name}} में जुड़ो {{url}}',
   },
+  explore: {
+    featured: 'फ़ीचर्ड',
+    going: '{{count}} जा रहे हैं',
+    going_other: '{{count}} जा रहे हैं',
+    allPlans: 'सारे प्लान',
+    rails: {
+      squad: 'तुम्हारा स्क्वॉड जा रहा है',
+      tonight: 'आज रात',
+      weekend: 'इस वीकेंड',
+      solo: 'अकेले जाने के लिए बढ़िया',
+    },
+  },
   discover: {
     title: 'डिस्कवर',
     search: 'सर्च',
