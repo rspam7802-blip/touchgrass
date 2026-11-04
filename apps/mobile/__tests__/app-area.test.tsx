@@ -78,6 +78,12 @@ describe('My profile (F-ACC-05)', () => {
     expect(mockRouter.push).toHaveBeenCalledWith('/profile-edit');
     await fireEvent.press(screen.getByRole('button', { name: 'Invite friends' }));
     expect(mockRouter.push).toHaveBeenCalledWith('/invites');
+    // Settings and share sit beside Edit; the rest is a grid of tiles (D-159).
+    await fireEvent.press(screen.getByTestId('open-settings'));
+    expect(mockRouter.push).toHaveBeenCalledWith('/settings');
+    await fireEvent.press(screen.getByTestId('open-hosting'));
+    expect(mockRouter.push).toHaveBeenCalledWith('/hosting');
+    expect(screen.getByTestId('open-safety')).toBeOnTheScreen();
   });
 
   it('error state with retry', async () => {

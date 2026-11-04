@@ -639,3 +639,7 @@ The "where" step showed every known venue, every map suggestion and every saved 
 ## D-158 Sideways browsing everywhere
 
 Following the founder's references (District, BookMyShow, Ripple), browsing is sideways rows rather than long vertical lists. Explore gets a category row under the stories: round tiles ("All", then every interest with an icon for its group) that filter the feed; tapping the selected one again clears it. The Plans tab shows the next plan as a big card, then sideways rows for the rest of what's coming up, what you host and what's done (all three load at once). The Squad tab shows "People you might know" as sideways cards (photo, why, Add) above its lists. All rows snap card by card, cascade in, and every tile is a labelled button or radio.
+
+## D-159 Profile layout
+
+My profile was a profile card followed by ten full-width buttons. Now: the profile card, then one primary "Edit profile" with Share and Settings as icon buttons beside it, the streak card, your upcoming plans as a sideways row, and the rest (invites, host plans, badges, challenges, recaps, referrals, safety) as a two-column grid of icon tiles. Flags still hide challenges, recaps and referrals.

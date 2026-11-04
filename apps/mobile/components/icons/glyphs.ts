@@ -92,6 +92,10 @@ export const GLYPHS = {
   dice: '<rect x="4" y="4" width="16" height="16" rx="4"/><circle cx="9" cy="9" r="1.2" fill="CURRENT" stroke="none"/><circle cx="15" cy="15" r="1.2" fill="CURRENT" stroke="none"/><circle cx="12" cy="12" r="1.4" fill="ACCENT" stroke="none"/>',
   book: '<path d="M12 6.5c-2-1.5-4.75-2-8-1.75v13.5c3.25-.25 6 .25 8 1.75 2-1.5 4.75-2 8-1.75V4.75c-3.25-.25-6 .25-8 1.75Z"/><path d="M12 6.5v13.5"/>',
   grid: '<rect x="4" y="4" width="6.5" height="6.5" rx="2"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="2"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="2"/><circle cx="16.75" cy="16.75" r="3.25" fill="ACCENT" stroke="none"/>',
+  // Profile
+  share:
+    '<path d="M12 15.5V3.5M7.5 8 12 3.5 16.5 8"/><path d="M7 11.5H6a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5a2 2 0 0 0-2-2h-1"/>',
+  gear: '<circle cx="12" cy="12" r="3"/><path d="M12 2.75v2.5M12 18.75v2.5M2.75 12h2.5M18.75 12h2.5M5.46 5.46l1.77 1.77M16.77 16.77l1.77 1.77M5.46 18.54l1.77-1.77M16.77 7.23l1.77-1.77"/><circle cx="12" cy="12" r="1.1" fill="ACCENT" stroke="none"/>',
 } as const;
 
 export type GlyphName = keyof typeof GLYPHS;
