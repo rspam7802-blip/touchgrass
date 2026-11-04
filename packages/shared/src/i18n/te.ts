@@ -997,8 +997,6 @@ export const te: Translation = {
     closed: 'ఈ ప్లాన్‌కి కామెంట్లు మూసేశారు.',
   },
   explore: {
-    categories: 'వర్గాలు',
-    all: 'అన్నీ',
     featured: 'ఫీచర్డ్',
     going: '{{count}} మంది వస్తున్నారు',
     going_other: '{{count}} మంది వస్తున్నారు',
@@ -1008,6 +1006,13 @@ export const te: Translation = {
       tonight: 'ఈ రాత్రి',
       weekend: 'ఈ వీకెండ్',
       solo: 'ఒంటరిగా వెళ్లడానికి బాగుంటుంది',
+      near: 'నీ దగ్గర',
+      fof: 'ఫ్రెండ్స్ ఫ్రెండ్స్ ద్వారా',
+      small: 'చిన్న గ్రూపులు',
+      free: 'ఫ్రీ ప్లాన్లు',
+      mystery: 'మిస్టరీ ప్లాన్లు',
+      popular: 'ఇప్పుడు పాపులర్',
+      forYou: 'నీ కోసం ఎంచినవి',
     },
   },
   discover: {

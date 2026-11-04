@@ -217,9 +217,9 @@ describe('Discover tab (F-DSC-01..08)', () => {
     const items = [
       item(1, { reasons: ['interests'], soloFriendly: true }),
       item(2, { reasons: ['squad_going'], soloFriendly: true }),
-      item(3, { reasons: ['featured'] }),
-      item(4, { reasons: ['squad_going'] }),
-      item(5, { reasons: ['nearby'] }),
+      item(3, { reasons: ['featured'], soloFriendly: false }),
+      item(4, { reasons: ['squad_going'], soloFriendly: false }),
+      item(5, { reasons: ['nearby'], soloFriendly: false }),
     ];
     api.on('GET', '/v1/discover/feed', {
       status: 200,
@@ -252,28 +252,22 @@ describe('Discover tab (F-DSC-01..08)', () => {
     await waitFor(() =>
       expect(api.callsTo('POST', '/v1/discover/clicks')[0]?.body).toMatchObject({ position: 3 }),
     );
-    // A filter narrows to the plain list.
+    // Plans never stack vertically: all plans are one sideways row of cards (D-160), and the category
+    // tiles are gone.
+    expect(screen.getByTestId('all-plans-rail')).toBeOnTheScreen();
+    expect(screen.queryByTestId('category-rail')).toBeNull();
+    // A filter narrows what goes into the rows; the layout stays.
     await fireEvent.press(screen.getByTestId('toggle-soloFriendly'));
-    await waitFor(() => expect(screen.queryByTestId('hero-carousel')).toBeNull());
-  });
-
-  it('category tiles filter the feed and tapping again clears it (D-158)', async () => {
-    await renderWithProviders(<DiscoverScreen />, { fetchFn: api.fetch });
-    const tile = await screen.findByTestId('category-i1');
-    expect(screen.getByRole('radio', { name: 'All' })).toBeChecked();
-    await fireEvent.press(tile);
     await waitFor(() =>
       expect(
         api.calls.some(
           (c) =>
             c.path === '/v1/discover/feed' &&
-            new URL(c.url).searchParams.get('categoryId') === interestsFixture[1]?.id,
+            new URL(c.url).searchParams.get('soloFriendly') === 'true',
         ),
       ).toBe(true),
     );
-    expect(screen.getByTestId('category-i1')).toBeChecked();
-    await fireEvent.press(screen.getByTestId('category-i1'));
-    expect(screen.getByRole('radio', { name: 'All' })).toBeChecked();
+    expect(screen.getByTestId('hero-carousel')).toBeOnTheScreen();
   });
 
   it('quick chips and the filter panel change the query; clear resets it', async () => {

@@ -14,8 +14,19 @@ const plan = (n: number, over: Partial<FeedItem> = {}): FeedItem =>
   }) as FeedItem;
 
 describe('Explore sections', () => {
-  it('stays a plain list for small feeds', () => {
+  it('skips the carousel for small feeds', () => {
     expect(buildSections([plan(1), plan(2)], now)).toEqual({ hero: [], rails: [] });
+  });
+
+  it('adds near-you, free, small-group, mystery and picked-for-you rows, never a row of every plan', () => {
+    const items = [
+      plan(1, { distanceMeters: 800, pricePaise: 0, smallGroup: true }),
+      plan(2, { distanceMeters: 1200, pricePaise: 0, smallGroup: true, mystery: true }),
+      plan(3, { distanceMeters: 9000, pricePaise: 0, mystery: true, reasons: ['interests'] }),
+      plan(4, { distanceMeters: 9000, pricePaise: 50000, reasons: ['vibes'] }),
+    ];
+    const keys = buildSections(items, now).rails.map((r) => r.key);
+    expect(keys).toEqual(['near', 'small', 'free', 'mystery', 'forYou']);
   });
 
   it('puts featured plans first in the carousel, up to five', () => {

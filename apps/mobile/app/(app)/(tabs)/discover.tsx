@@ -12,9 +12,8 @@ import { Avatar } from '../../../components/Avatar';
 import { BrandLogo } from '../../../components/BrandLogo';
 import { ChipGroup } from '../../../components/ChipGroup';
 import { DiscoverMap } from '../../../components/DiscoverMap';
-import { EventCard } from '../../../components/EventCard';
 import { FeedSkeleton } from '../../../components/FeedSkeleton';
-import { CategoryRail } from '../../../components/explore/CategoryRail';
+import { AllPlansRail } from '../../../components/explore/AllPlansRail';
 import { HeroCarousel } from '../../../components/explore/HeroCarousel';
 import { PlanRail } from '../../../components/explore/PlanRail';
 import { SegmentedTabs } from '../../../components/SegmentedTabs';
@@ -29,7 +28,6 @@ import {
   IconButton,
   OfflineState,
   Screen,
-  staggerDelay,
   Text,
 } from '../../../components/ui';
 import { useMe } from '../../../src/features/me/api';
@@ -130,8 +128,9 @@ export default function DiscoverScreen() {
       />
     );
   else {
-    // District-style browsing (D-155) when no filter narrows the feed: carousel, themed rails, then all plans.
-    const sections = nFilters === 0 ? buildSections(items) : { hero: [], rails: [] };
+    // Everything scrolls sideways (D-160): carousel, themed rows, then all plans as one row of cards.
+    // Filters narrow what goes into the rows; the layout stays the same.
+    const sections = buildSections(items);
     const positionOf = (id: string): number => items.findIndex((i) => i.id === id);
     body = (
       <>
@@ -156,33 +155,17 @@ export default function DiscoverScreen() {
             }}
           />
         ))}
-        {sections.hero.length > 0 ? (
-          <Text variant="heading" accessibilityRole="header" testID="all-plans">
-            {t('explore.allPlans')}
-          </Text>
-        ) : null}
-        <View style={styles.cards}>
-          {items.map((item, position) => (
-            <FadeIn key={item.id} delay={staggerDelay(position)}>
-              <EventCard
-                event={item}
-                feed={item}
-                onOpen={() => {
-                  openEvent(item.id, position);
-                }}
-              />
-            </FadeIn>
-          ))}
-        </View>
-        {feed.hasNextPage ? (
-          <Button
-            label={t('common.seeAll')}
-            variant="ghost"
-            loading={feed.isFetchingNextPage}
-            onPress={() => void feed.fetchNextPage()}
-            testID="feed-more"
-          />
-        ) : null}
+        <AllPlansRail
+          items={items}
+          gutter={GUTTER}
+          onOpen={(item, position) => {
+            openEvent(item.id, position);
+          }}
+          onEnd={() => {
+            if (feed.hasNextPage && !feed.isFetchingNextPage) void feed.fetchNextPage();
+          }}
+          loadingMore={feed.isFetchingNextPage}
+        />
       </>
     );
   }
@@ -272,15 +255,6 @@ export default function DiscoverScreen() {
       </View>
       {searchRow}
       <StoryTray />
-      {interests.data ? (
-        <CategoryRail
-          interests={interests.data.items}
-          selected={filters.categoryId}
-          onSelect={(id) => {
-            set('categoryId', id);
-          }}
-        />
-      ) : null}
       <FreeNowStrip />
       {weather ? (
         <Text variant="caption" tone="muted" testID="weather-chip">
@@ -448,6 +422,5 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 12 },
   grow: { flexGrow: 1, flexShrink: 1 },
   panel: { gap: 16 },
-  cards: { gap: 18 },
   full: { flex: 1 },
 });

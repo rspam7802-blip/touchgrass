@@ -988,8 +988,6 @@ export const hi: Translation = {
     closed: 'इस प्लान पर कमेंट बंद हैं।',
   },
   explore: {
-    categories: 'कैटेगरी',
-    all: 'सब',
     featured: 'फ़ीचर्ड',
     going: '{{count}} जा रहे हैं',
     going_other: '{{count}} जा रहे हैं',
@@ -999,6 +997,13 @@ export const hi: Translation = {
       tonight: 'आज रात',
       weekend: 'इस वीकेंड',
       solo: 'अकेले जाने के लिए बढ़िया',
+      near: 'तुम्हारे पास',
+      fof: 'दोस्तों के दोस्तों से',
+      small: 'छोटे ग्रुप',
+      free: 'फ़्री प्लान',
+      mystery: 'मिस्ट्री प्लान',
+      popular: 'अभी पॉपुलर',
+      forYou: 'तुम्हारे लिए चुने गए',
     },
   },
   discover: {

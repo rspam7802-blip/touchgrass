@@ -1,7 +1,7 @@
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { EventCard } from '../../components/EventCard';
+import { AllPlansRail } from '../../components/explore/AllPlansRail';
 import { PersonRow } from '../../components/PersonRow';
 import { SegmentedTabs } from '../../components/SegmentedTabs';
 import {
@@ -80,19 +80,16 @@ export default function SearchScreen() {
       ) : (
         <>
           {data && data.events.length > 0 ? (
-            <Text variant="heading" accessibilityRole="header">
-              {t('discover.resultsEvents')}
-            </Text>
-          ) : null}
-          {data?.events.map((e) => (
-            <EventCard
-              key={e.id}
-              event={e}
-              onOpen={() => {
+            <AllPlansRail
+              items={data.events}
+              gutter={20}
+              title={t('discover.resultsEvents')}
+              testID="search-plans"
+              onOpen={(e) => {
                 router.push({ pathname: '/events/[id]', params: { id: e.id } });
               }}
             />
-          ))}
+          ) : null}
           {data && data.people.length > 0 ? (
             <Text variant="heading" accessibilityRole="header">
               {t('discover.resultsPeople')}

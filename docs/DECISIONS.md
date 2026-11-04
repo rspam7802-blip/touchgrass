@@ -643,3 +643,7 @@ Following the founder's references (District, BookMyShow, Ripple), browsing is s
 ## D-159 Profile layout
 
 My profile was a profile card followed by ten full-width buttons. Now: the profile card, then one primary "Edit profile" with Share and Settings as icon buttons beside it, the streak card, your upcoming plans as a sideways row, and the rest (invites, host plans, badges, challenges, recaps, referrals, safety) as a two-column grid of icon tiles. Flags still hide challenges, recaps and referrals.
+
+## D-160 No category tiles; every plan scrolls sideways
+
+The founder did not want category tiles (D-158's Explore row is removed; Plot keeps its category picker because every plan needs one). Instead Explore is made only of themed sideways rows, each shown with at least two plans and never when it would hold every plan: Your squad is going, Tonight, This weekend, Good to go solo, Near you (within 3 km), Through friends of friends, Small groups, Free plans, Mystery plans, Popular right now and Picked for you. Plan cards never stack vertically: "All plans" on Explore and plan results in Search are one sideways row of full plan cards (next card peeking, loading more at the end). Filters narrow what goes into the rows; the layout stays the same.

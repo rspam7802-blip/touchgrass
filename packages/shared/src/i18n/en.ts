@@ -989,8 +989,6 @@ export const en = {
     closed: 'Comments are closed for this plan.',
   },
   explore: {
-    categories: 'Categories',
-    all: 'All',
     featured: 'Featured',
     going: '{{count}} going',
     going_other: '{{count}} going',
@@ -1000,6 +998,13 @@ export const en = {
       tonight: 'Tonight',
       weekend: 'This weekend',
       solo: 'Good to go solo',
+      near: 'Near you',
+      fof: 'Through friends of friends',
+      small: 'Small groups',
+      free: 'Free plans',
+      mystery: 'Mystery plans',
+      popular: 'Popular right now',
+      forYou: 'Picked for you',
     },
   },
   discover: {
