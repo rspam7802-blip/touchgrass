@@ -748,6 +748,7 @@ export const en = {
     paidNeedsHost: 'Selling tickets needs an approved host account (Profile, Host plans).',
     changePlace: 'Change place',
     searchPlaceHint: 'Cafe, park, area…',
+    nextUp: 'Next up',
     searchingPlaces: 'Searching places…',
     noPlaces: 'No places match "{{q}}". Try another name, or drop a pin on the map.',
     searchFailed: 'Search is not working right now. Try again, or drop a pin on the map.',
@@ -988,6 +989,8 @@ export const en = {
     closed: 'Comments are closed for this plan.',
   },
   explore: {
+    categories: 'Categories',
+    all: 'All',
     featured: 'Featured',
     going: '{{count}} going',
     going_other: '{{count}} going',

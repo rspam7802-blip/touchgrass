@@ -746,6 +746,7 @@ export const hi: Translation = {
     paidNeedsHost: 'टिकट बेचने के लिए मंज़ूर होस्ट अकाउंट चाहिए (प्रोफ़ाइल, प्लान होस्ट करो)।',
     changePlace: 'जगह बदलो',
     searchPlaceHint: 'कैफ़े, पार्क, इलाका…',
+    nextUp: 'अगला प्लान',
     searchingPlaces: 'जगहें ढूँढ रहे हैं…',
     noPlaces: '"{{q}}" से कोई जगह नहीं मिली। कोई और नाम आज़माओ, या मैप पर पिन लगाओ।',
     searchFailed: 'अभी खोज काम नहीं कर रही। फिर कोशिश करो, या मैप पर पिन लगाओ।',
@@ -987,6 +988,8 @@ export const hi: Translation = {
     closed: 'इस प्लान पर कमेंट बंद हैं।',
   },
   explore: {
+    categories: 'कैटेगरी',
+    all: 'सब',
     featured: 'फ़ीचर्ड',
     going: '{{count}} जा रहे हैं',
     going_other: '{{count}} जा रहे हैं',

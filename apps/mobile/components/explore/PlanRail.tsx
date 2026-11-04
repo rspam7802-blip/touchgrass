@@ -1,4 +1,4 @@
-import type { FeedItem } from '@touchgrass/shared';
+import type { EventSummary } from '@touchgrass/shared';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTranslation } from 'react-i18next';
@@ -20,7 +20,7 @@ const TILE = 152;
 const GAP = 12;
 
 /**
- * A themed sideways row of plans on Explore (D-155): a heading, then poster tiles that snap one by one as
+ * A themed sideways row of plans (Explore D-155, Plans D-158): a heading, then poster tiles that snap one by one as
  * you swipe. Runs edge to edge; each tile is a labelled button.
  */
 export function PlanRail({
@@ -32,9 +32,9 @@ export function PlanRail({
 }: {
   railKey: string;
   title: string;
-  items: FeedItem[];
+  items: EventSummary[];
   gutter: number;
-  onOpen: (item: FeedItem) => void;
+  onOpen: (item: EventSummary) => void;
 }) {
   return (
     <View style={styles.wrap} testID={`rail-${railKey}`}>
@@ -71,7 +71,7 @@ function PlanTile({
   railKey,
   onOpen,
 }: {
-  item: FeedItem;
+  item: EventSummary;
   railKey: string;
   onOpen: () => void;
 }) {

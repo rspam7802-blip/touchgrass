@@ -161,10 +161,13 @@ describe('Plans tab', () => {
     });
     await fireEvent.press(screen.getByTestId('plot-cta'));
     expect(mockRouter.push).toHaveBeenCalledWith('/plot');
-    await fireEvent.press(screen.getByRole('tab', { name: 'Past' }));
-    await waitFor(() =>
-      expect(api.calls.filter((c) => c.path === '/v1/events/mine')).toHaveLength(2),
-    );
+    // Upcoming, hosting and past load together and show as sideways rows (D-158).
+    const scopes = api.calls
+      .filter((c) => c.path === '/v1/events/mine')
+      .map((c) => new URL(c.url).searchParams.get('scope'));
+    expect(scopes.sort()).toEqual(['hosting', 'past', 'upcoming']);
+    expect(screen.getByTestId('rail-mine-hosting')).toBeOnTheScreen();
+    expect(screen.getByTestId('rail-mine-past')).toBeOnTheScreen();
   });
 
   it('shows the empty state', async () => {

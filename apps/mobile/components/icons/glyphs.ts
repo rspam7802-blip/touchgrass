@@ -87,6 +87,11 @@ export const GLYPHS = {
   pause:
     '<rect x="6.5" y="5" width="3.5" height="14" rx="1.25"/><rect x="14" y="5" width="3.5" height="14" rx="1.25"/>',
   play: '<path d="M7.5 4.75v14.5c0 .6.66.97 1.17.65l11.4-7.25a.77.77 0 0 0 0-1.3L8.67 4.1a.77.77 0 0 0-1.17.65Z"/>',
+  // Categories
+  bowl: '<path d="M3.5 11.5h17a8.5 8.5 0 0 1-17 0Z"/><path d="M8 20.25h8M9 7.5c0-1.5 1.5-1.5 1.5-3M13.5 7.5c0-1.5 1.5-1.5 1.5-3"/>',
+  dice: '<rect x="4" y="4" width="16" height="16" rx="4"/><circle cx="9" cy="9" r="1.2" fill="CURRENT" stroke="none"/><circle cx="15" cy="15" r="1.2" fill="CURRENT" stroke="none"/><circle cx="12" cy="12" r="1.4" fill="ACCENT" stroke="none"/>',
+  book: '<path d="M12 6.5c-2-1.5-4.75-2-8-1.75v13.5c3.25-.25 6 .25 8 1.75 2-1.5 4.75-2 8-1.75V4.75c-3.25-.25-6 .25-8 1.75Z"/><path d="M12 6.5v13.5"/>',
+  grid: '<rect x="4" y="4" width="6.5" height="6.5" rx="2"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="2"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="2"/><circle cx="16.75" cy="16.75" r="3.25" fill="ACCENT" stroke="none"/>',
 } as const;
 
 export type GlyphName = keyof typeof GLYPHS;

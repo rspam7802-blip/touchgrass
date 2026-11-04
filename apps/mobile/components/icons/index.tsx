@@ -85,3 +85,7 @@ export const Trash = glyph('trash');
 export const Flag = glyph('flag');
 export const Pause = glyph('pause');
 export const Play = glyph('play');
+export const Bowl = glyph('bowl');
+export const Dice = glyph('dice');
+export const Book = glyph('book');
+export const Grid = glyph('grid');

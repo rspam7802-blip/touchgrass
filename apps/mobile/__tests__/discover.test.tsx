@@ -257,6 +257,25 @@ describe('Discover tab (F-DSC-01..08)', () => {
     await waitFor(() => expect(screen.queryByTestId('hero-carousel')).toBeNull());
   });
 
+  it('category tiles filter the feed and tapping again clears it (D-158)', async () => {
+    await renderWithProviders(<DiscoverScreen />, { fetchFn: api.fetch });
+    const tile = await screen.findByTestId('category-i1');
+    expect(screen.getByRole('radio', { name: 'All' })).toBeChecked();
+    await fireEvent.press(tile);
+    await waitFor(() =>
+      expect(
+        api.calls.some(
+          (c) =>
+            c.path === '/v1/discover/feed' &&
+            new URL(c.url).searchParams.get('categoryId') === interestsFixture[1]?.id,
+        ),
+      ).toBe(true),
+    );
+    expect(screen.getByTestId('category-i1')).toBeChecked();
+    await fireEvent.press(screen.getByTestId('category-i1'));
+    expect(screen.getByRole('radio', { name: 'All' })).toBeChecked();
+  });
+
   it('quick chips and the filter panel change the query; clear resets it', async () => {
     const urls: string[] = [];
     api.on('GET', '/v1/discover/feed', (c) => {

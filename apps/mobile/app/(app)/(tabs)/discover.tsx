@@ -14,6 +14,7 @@ import { ChipGroup } from '../../../components/ChipGroup';
 import { DiscoverMap } from '../../../components/DiscoverMap';
 import { EventCard } from '../../../components/EventCard';
 import { FeedSkeleton } from '../../../components/FeedSkeleton';
+import { CategoryRail } from '../../../components/explore/CategoryRail';
 import { HeroCarousel } from '../../../components/explore/HeroCarousel';
 import { PlanRail } from '../../../components/explore/PlanRail';
 import { SegmentedTabs } from '../../../components/SegmentedTabs';
@@ -271,6 +272,15 @@ export default function DiscoverScreen() {
       </View>
       {searchRow}
       <StoryTray />
+      {interests.data ? (
+        <CategoryRail
+          interests={interests.data.items}
+          selected={filters.categoryId}
+          onSelect={(id) => {
+            set('categoryId', id);
+          }}
+        />
+      ) : null}
       <FreeNowStrip />
       {weather ? (
         <Text variant="caption" tone="muted" testID="weather-chip">

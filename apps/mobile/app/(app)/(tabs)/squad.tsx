@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { PersonRow } from '../../../components/PersonRow';
 import { SegmentedTabs } from '../../../components/SegmentedTabs';
 import { SquadActions } from '../../../components/SquadActions';
+import { SuggestionStrip } from '../../../components/SuggestionStrip';
 import {
   Button,
   EmptyState,
@@ -206,6 +207,13 @@ export default function SquadScreen() {
         }}
         testID="open-crews"
       />
+      {section !== 'suggestions' && (suggestions.data?.items.length ?? 0) > 0 ? (
+        <SuggestionStrip
+          items={suggestions.data?.items.slice(0, 10) ?? []}
+          gutter={20}
+          onOpen={open}
+        />
+      ) : null}
       <SegmentedTabs<Section>
         value={section}
         onChange={setSection}

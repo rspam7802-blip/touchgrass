@@ -84,6 +84,17 @@ beforeEach(async () => {
 });
 
 describe('Squad tab (F-SOC-02..04)', () => {
+  it('shows people you might know as a sideways strip above the lists (D-158)', async () => {
+    await renderWithProviders(<SquadScreen />, { fetchFn: api.fetch });
+    const card = await screen.findByTestId('suggestion-card-0192f3a4-5b6c-7d8e-9f01-00000000bbbb');
+    expect(card).toBeOnTheScreen();
+    await fireEvent.press(screen.getByRole('button', { name: /^Kavya N\., / }));
+    expect(mockRouter.push).toHaveBeenCalledWith({
+      pathname: '/users/[id]',
+      params: { id: '0192f3a4-5b6c-7d8e-9f01-00000000bbbb' },
+    });
+  });
+
   it('lists the squad and opens profiles', async () => {
     await renderWithProviders(<SquadScreen />, { fetchFn: api.fetch });
     await fireEvent.press(await screen.findByRole('button', { name: 'Rohan K., 2 mutuals' }));
