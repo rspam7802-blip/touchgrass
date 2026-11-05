@@ -14,10 +14,26 @@ export const DB_REPLICA = Symbol('DB_REPLICA');
 export const PG_POOL = Symbol('PG_POOL');
 export const PG_REPLICA_POOL = Symbol('PG_REPLICA_POOL');
 
-export function createPool(connectionString: string, max: number): pg.Pool {
+/** TLS settings for a database whose certificates come from a private CA (DATABASE_CA_CERT). */
+export function sslFor(caCert: string | undefined): pg.PoolConfig['ssl'] {
+  if (!caCert) return undefined;
+  return { ca: caCert.replace(/\\n/g, '\n'), rejectUnauthorized: true };
+}
+
+/** Pools for the API, worker and command-line tools; give DATABASE_CA_CERT to verify a private CA. */
+export function poolFromEnv(env: Pick<Env, 'DATABASE_CA_CERT'>, url: string, max: number): pg.Pool {
+  return createPool(url, max, sslFor(env.DATABASE_CA_CERT));
+}
+
+export function createPool(
+  connectionString: string,
+  max: number,
+  ssl?: pg.PoolConfig['ssl'],
+): pg.Pool {
   const pool = new pg.Pool({
     connectionString,
     max,
+    ...(ssl ? { ssl } : {}),
     idleTimeoutMillis: 30_000,
     statement_timeout: 10_000,
   });
@@ -31,14 +47,14 @@ export function createPool(connectionString: string, max: number): pg.Pool {
     {
       provide: PG_POOL,
       inject: [ENV],
-      useFactory: (env: Env) => createPool(env.DATABASE_URL, env.DATABASE_POOL_MAX),
+      useFactory: (env: Env) => poolFromEnv(env, env.DATABASE_URL, env.DATABASE_POOL_MAX),
     },
     {
       provide: PG_REPLICA_POOL,
       inject: [ENV, PG_POOL],
       useFactory: (env: Env, primary: pg.Pool) =>
         env.DATABASE_REPLICA_URL
-          ? createPool(env.DATABASE_REPLICA_URL, env.DATABASE_POOL_MAX)
+          ? poolFromEnv(env, env.DATABASE_REPLICA_URL, env.DATABASE_POOL_MAX)
           : primary,
     },
     {

@@ -32,6 +32,15 @@ export const EnvSchema = z
     DATABASE_URL: z.string().min(1),
     DATABASE_REPLICA_URL: z.string().min(1).optional(),
     DATABASE_POOL_MAX: z.coerce.number().int().min(1).default(20),
+    /**
+     * PEM certificate of the database's certificate authority, for hosted Postgres whose certificates are
+     * signed by a private CA (Supabase). Connections then require TLS and verify the server against it.
+     * Escaped newlines (\\n) are accepted so it fits in one environment variable.
+     */
+    DATABASE_CA_CERT: z
+      .string()
+      .refine((v) => v.includes('BEGIN CERTIFICATE'), 'must be a PEM certificate')
+      .optional(),
     REDIS_URL: z.string().min(1),
 
     JWT_ACCESS_SECRET: z.string().min(32),
@@ -113,7 +122,7 @@ export const EnvSchema = z
     POSTHOG_API_KEY: z.string().optional(),
     POSTHOG_HOST: z.url().default('https://eu.i.posthog.com'),
 
-    EMAIL_PROVIDER: z.enum(['smtp', 'ses']).default('smtp'),
+    EMAIL_PROVIDER: z.enum(['smtp', 'ses', 'fake']).default('smtp'),
     SMTP_URL: z.string().default('smtp://localhost:1025'),
     EMAIL_FROM: z.string().default('TouchGrass <hello@touchgrass.app>'),
 
@@ -171,6 +180,7 @@ export const EnvSchema = z
         ['MAPS_PROVIDER', 'fake'],
         ['WEATHER_PROVIDER', 'fake'],
         ['MODERATION_PROVIDER', 'fake'],
+        ['EMAIL_PROVIDER', 'fake'],
       ];
       for (const [key, fake] of fakes) {
         if (env[key] === fake)

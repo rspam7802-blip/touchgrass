@@ -1,9 +1,9 @@
 import { normalizeE164 } from '@touchgrass/shared';
 import { drizzle } from 'drizzle-orm/node-postgres';
-import pg from 'pg';
 import { loadEnv } from '../config/env.js';
 import * as schema from '../infra/database/schema/index.js';
 import { grantSuperAdmin, seedReference } from './reference.js';
+import { poolFromEnv } from '../infra/database/database.module.js';
 
 /**
  * Production bootstrap (safe to re-run): reference data only, plus optionally the first super admin.
@@ -19,7 +19,7 @@ if (flag >= 0 && !phone) {
 }
 
 const env = loadEnv();
-const pool = new pg.Pool({ connectionString: env.DATABASE_URL, max: 2 });
+const pool = poolFromEnv(env, env.DATABASE_URL, 2);
 try {
   const db = drizzle(pool, { schema });
   const summary = await db.transaction(async (tx) => {

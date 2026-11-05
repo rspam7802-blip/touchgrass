@@ -4,6 +4,7 @@ import { AnalyticsSink, NoopAnalyticsSink } from './analytics/analytics.port.js'
 import { PostHogAnalyticsSink } from './analytics/posthog.js';
 import { EmailSender } from './email/email.port.js';
 import { SesEmailSender } from './email/ses.email.js';
+import { FakeEmailSender } from './email/fake.email.js';
 import { SmtpEmailSender } from './email/smtp.email.js';
 import { FakeMapsProvider } from './maps/fake.maps.js';
 import { GoogleMapsProvider } from './maps/google.maps.js';
@@ -107,7 +108,9 @@ export function buildAdapters(env: Env): AdapterInstances {
     email:
       env.EMAIL_PROVIDER === 'ses'
         ? new SesEmailSender(env.AWS_REGION, env.EMAIL_FROM)
-        : new SmtpEmailSender(env.SMTP_URL, env.EMAIL_FROM),
+        : env.EMAIL_PROVIDER === 'fake'
+          ? new FakeEmailSender()
+          : new SmtpEmailSender(env.SMTP_URL, env.EMAIL_FROM),
   };
 }
 

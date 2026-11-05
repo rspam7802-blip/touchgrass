@@ -54,6 +54,7 @@ describe('env', () => {
       expect((err as EnvValidationError).issues.join('\n')).toMatch(
         /SMS_PROVIDER=fake is not allowed in production/,
       );
+      expect(loadEnv({ ...base, EMAIL_PROVIDER: 'fake' }).EMAIL_PROVIDER).toBe('fake');
     }
   });
   it('rejects short secrets', () => {

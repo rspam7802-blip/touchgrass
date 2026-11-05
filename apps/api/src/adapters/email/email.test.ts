@@ -1,5 +1,6 @@
 import { SendEmailCommand, type SESv2Client } from '@aws-sdk/client-sesv2';
 import { describe, expect, it, vi } from 'vitest';
+import { FakeEmailSender } from './fake.email.js';
 import { SesEmailSender } from './ses.email.js';
 import { SmtpEmailSender } from './smtp.email.js';
 
@@ -11,6 +12,12 @@ const message = {
 };
 
 describe('email senders', () => {
+  it('the fake sender keeps emails without sending them', async () => {
+    const fake = new FakeEmailSender();
+    await fake.send(message);
+    expect(fake.sent).toEqual([message]);
+  });
+
   it('SES sends a UTF-8 simple message', async () => {
     const client = { send: vi.fn().mockResolvedValue({}) } as unknown as SESv2Client;
     await new SesEmailSender('ap-south-1', 'TouchGrass <hello@touchgrass.app>', client).send(
