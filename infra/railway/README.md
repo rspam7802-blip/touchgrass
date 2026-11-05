@@ -51,7 +51,16 @@ All four use this repository. For each, open the service → **Settings**:
 | `web`        | `infra/railway/web.json`      | `PORT=3000`, `API_URL=https://<api-domain>`, `MEDIA_PUBLIC_BASE_URL=https://<storage-domain>/touchgrass-media` | Generate (port 3000) |
 
 The first service from step 2 becomes `api`. Add the others with **+ Create → GitHub Repo → touchgrass**, then
-rename them. For each, set **Settings → Config-as-code → Railway config file** to the path in the table.
+rename them. If Railway imported the monorepo by itself (services named `@touchgrass/...`), delete
+`@touchgrass/mobile` (the app is built with EAS, not hosted) and fix the others the same way. For each:
+
+- **Settings → Source → Root Directory**: empty (the Dockerfiles build from the repository root).
+- **Settings → Build**: builder **Dockerfile**, **Dockerfile Path** `apps/api/Dockerfile` (`apps/web/Dockerfile`
+  for `web`), no custom build command. **Settings → Deploy**: no custom start command, region **Southeast Asia
+  (Singapore)** (close to the Mumbai database).
+- **Settings → Config-as-code → Railway config file**: `/` + the path in the table.
+- Variable `RAILWAY_DOCKERFILE_PATH` = the same Dockerfile path.
+- Press **Deploy** in the "Apply changes" bar; Railway applies nothing until you do.
 
 ## 4. Shared variables
 
@@ -64,7 +73,8 @@ Project → **Settings → Shared Variables**: paste `infra/railway/shared-varia
 - Three secrets from `openssl rand -hex 32` (run it three times).
 - The domains Railway generated for `api`, `web` and `storage`, and the storage keys from step 2.
 
-Then on each of the four app services: **Variables → Shared Variable** → add all of them.
+Then on `api`, `realtime` and `worker`: **Variables → Shared Variable** → add all of them. `web` doesn't get them; it
+only needs the variables in the table above.
 
 ## 5. Deploy, then add demo data
 
