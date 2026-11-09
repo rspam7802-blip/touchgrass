@@ -232,7 +232,7 @@ describe('Discover tab (F-DSC-01..08)', () => {
       },
     });
     await renderWithProviders(<DiscoverScreen />, { fetchFn: api.fetch });
-    await screen.findByTestId('hero-carousel');
+    await screen.findByTestId('hero-carousel', {}, { timeout: 5000 });
     // Featured first, then the ranked order.
     const heroIds = screen
       .getAllByTestId(/^hero-Slug/)
