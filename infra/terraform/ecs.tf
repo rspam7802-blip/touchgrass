@@ -100,8 +100,9 @@ locals {
       image   = local.api_image
       command = ["node", "dist/worker.js"]
       port    = null
-      cpu     = 1024
-      memory  = 2048
+      # Two vCPUs for re-encoding video stories (D-164); a 15 s clip takes a few seconds.
+      cpu     = 2048
+      memory  = 4096
       env     = local.app_environment
       secrets = local.task_secrets
       tg      = null

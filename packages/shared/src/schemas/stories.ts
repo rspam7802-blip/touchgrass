@@ -18,7 +18,13 @@ export type PostStoryBody = z.infer<typeof PostStoryBody>;
 
 export const Story = z.object({
   id: z.uuid(),
+  /** For a video story, the poster frame. */
   image: MediaVariants,
+  /** A video story's playable file (H.264/AAC MP4, re-encoded on our servers) and its length. */
+  video: z
+    .object({ url: z.url(), durationMs: z.number().int().positive() })
+    .nullable()
+    .default(null),
   caption: z.string(),
   createdAt: z.iso.datetime(),
   expiresAt: z.iso.datetime(),

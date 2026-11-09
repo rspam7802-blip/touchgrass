@@ -1,5 +1,5 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { LIMITS } from '@touchgrass/shared';
+import { isVideoContentType, LIMITS } from '@touchgrass/shared';
 import { eq } from 'drizzle-orm';
 import sharp from 'sharp';
 import { uuidv7 } from 'uuidv7';
@@ -8,6 +8,7 @@ import { ObjectStorage } from '../../adapters/storage/storage.port.js';
 import { DB, type Database } from '../../infra/database/database.module.js';
 import { mediaAssets, type VariantKeys } from '../../infra/database/schema/index.js';
 import { ModerationService } from '../moderation/moderation.service.js';
+import { VideoRejected, VideoTranscoder } from './video.js';
 
 /** Refuse decompression bombs: 40 megapixels is far above any phone camera output. */
 const MAX_INPUT_PIXELS = 40_000_000;
@@ -41,6 +42,7 @@ export class MediaProcessor {
     private readonly storage: ObjectStorage,
     private readonly moderationProvider: ModerationProvider,
     private readonly moderation: ModerationService,
+    private readonly videos: VideoTranscoder,
   ) {}
 
   /**
@@ -91,6 +93,7 @@ export class MediaProcessor {
       .where(eq(mediaAssets.id, assetId))
       .limit(1);
     if (!asset || asset.status !== 'processing') return 'skipped';
+    if (isVideoContentType(asset.contentType)) return this.processVideo(asset);
 
     let original: Buffer;
     try {
@@ -154,6 +157,80 @@ export class MediaProcessor {
       }
     });
     // The original may carry EXIF GPS; it is never kept once variants exist.
+    await this.storage.delete(asset.originalKey);
+    return status;
+  }
+
+  /**
+   * Video stories (D-164): re-encode (drops metadata, caps length and size), poster frame into the usual
+   * image variants, and image moderation on three frames across the clip; any flagged frame holds the video.
+   */
+  private async processVideo(
+    asset: typeof mediaAssets.$inferSelect,
+  ): Promise<'ready' | 'flagged' | 'rejected'> {
+    const reject = async (reason: string): Promise<'rejected'> => {
+      this.logger.warn(`Rejecting video ${asset.id}: ${reason}`);
+      await this.db
+        .update(mediaAssets)
+        .set({ status: 'rejected', processedAt: new Date() })
+        .where(eq(mediaAssets.id, asset.id));
+      await this.storage.delete(asset.originalKey);
+      return 'rejected';
+    };
+    let done;
+    try {
+      done = await this.videos.transcode(await this.storage.get(asset.originalKey));
+    } catch (err) {
+      if (err instanceof VideoRejected) return reject(err.message);
+      throw err;
+    }
+    const [sm, md, lg] = await Promise.all(
+      [SM, MD, LG].map((size) => renderVariant(done.poster, size)),
+    );
+    if (!sm || !md || !lg) throw new Error('Poster rendering failed');
+    const keys: VariantKeys = {
+      sm: `media/${asset.id}/sm.webp`,
+      md: `media/${asset.id}/md.webp`,
+      lg: `media/${asset.id}/lg.webp`,
+      video: `media/${asset.id}/video.mp4`,
+    };
+    await Promise.all([
+      this.storage.put(keys.sm, sm.buffer, 'image/webp'),
+      this.storage.put(keys.md, md.buffer, 'image/webp'),
+      this.storage.put(keys.lg, lg.buffer, 'image/webp'),
+      this.storage.put(keys.video ?? '', done.video, 'video/mp4'),
+    ]);
+    const verdicts = await Promise.all(
+      done.samples.map((frame) => this.moderationProvider.moderateImage(frame)),
+    );
+    const labels = verdicts.flatMap((v) => v.labels);
+    const status = verdicts.some((v) => v.verdict === 'flagged') ? 'flagged' : 'ready';
+    await this.db.transaction(async (tx) => {
+      await tx
+        .update(mediaAssets)
+        .set({
+          status,
+          width: done.width,
+          height: done.height,
+          durationMs: done.durationMs,
+          variantKeys: keys,
+          moderationLabels: labels,
+          processedAt: new Date(),
+        })
+        .where(eq(mediaAssets.id, asset.id));
+      if (status === 'flagged')
+        await this.moderation.flag(
+          {
+            targetType: 'media_asset',
+            targetId: asset.id,
+            source: 'auto_image',
+            severity: 'high',
+            details: { purpose: asset.purpose, labels, video: true },
+          },
+          tx,
+        );
+    });
+    // The original may carry GPS in its container metadata; it is never kept once the re-encode exists.
     await this.storage.delete(asset.originalKey);
     return status;
   }

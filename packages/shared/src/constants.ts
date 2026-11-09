@@ -49,6 +49,10 @@ export const LIMITS = {
   upload: {
     maxImageBytes: 10 * 1024 * 1024,
     allowedImageTypes: ['image/jpeg', 'image/png', 'image/webp'],
+    /** Video is for stories only (D-164): re-encoded on our servers, so phone formats are accepted. */
+    maxVideoBytes: 30 * 1024 * 1024,
+    allowedVideoTypes: ['video/mp4', 'video/quicktime'],
+    maxVideoSeconds: 15,
   },
   imageSizes: [160, 480, 1080] as const,
   event: {

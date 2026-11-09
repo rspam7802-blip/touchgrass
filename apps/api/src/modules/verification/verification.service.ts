@@ -369,18 +369,18 @@ export class VerificationService {
    * after a day. Submitted selfies are deleted once reviewed, so no selfie outlives its purpose.
    */
   async purgeUnsubmittedSelfies(now: Date = new Date()): Promise<number> {
-    const candidates = await this.media.idsOfPurposeBefore(
+    return this.media.purgeUnused(
       'verification_selfie',
       new Date(now.getTime() - 24 * 3_600_000),
+      async (ids) =>
+        new Set(
+          (
+            await this.db
+              .select({ id: verifications.mediaAssetId })
+              .from(verifications)
+              .where(inArray(verifications.mediaAssetId, ids))
+          ).flatMap((r) => (r.id ? [r.id] : [])),
+        ),
     );
-    if (candidates.length === 0) return 0;
-    const used = await this.db
-      .select({ id: verifications.mediaAssetId })
-      .from(verifications)
-      .where(inArray(verifications.mediaAssetId, candidates));
-    const keep = new Set(used.map((r) => r.id));
-    const orphans = candidates.filter((id) => !keep.has(id));
-    await this.media.destroy(orphans);
-    return orphans.length;
   }
 }

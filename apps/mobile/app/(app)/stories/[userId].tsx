@@ -1,6 +1,7 @@
 import { useQueryClient } from '@tanstack/react-query';
 import type { Story } from '@touchgrass/shared';
 import { Image } from 'expo-image';
+import { StoryVideo } from '../../../components/stories/StoryVideo';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -91,9 +92,11 @@ export default function StoryViewerScreen() {
   }, [storyId]);
 
   const moving = storyId !== undefined && !paused && !screenReader && !viewersOpen;
+  // A video story stays up for its own length (D-164); photos for the fixed time.
+  const durationMs = story?.video?.durationMs ?? STORY_DURATION_MS;
   useEffect(() => {
     if (!moving) return undefined;
-    const timer = setTimeout(next, STORY_DURATION_MS);
+    const timer = setTimeout(next, durationMs);
     return () => {
       clearTimeout(timer);
     };
@@ -147,6 +150,7 @@ export default function StoryViewerScreen() {
           <ProgressBar
             key={s.id}
             state={i < current ? 'done' : i > current ? 'todo' : moving ? 'playing' : 'held'}
+            durationMs={s.video?.durationMs ?? STORY_DURATION_MS}
           />
         ))}
       </View>
@@ -179,14 +183,25 @@ export default function StoryViewerScreen() {
 
       <View style={styles.stage}>
         <FadeIn key={story.id} distance={0} style={styles.image}>
-          <Image
-            source={{ uri: story.image.lg }}
-            style={[styles.image, { borderRadius: theme.radii.md }]}
-            contentFit="contain"
-            accessibilityIgnoresInvertColors
-            accessibilityLabel={t('stories.personSeen', { name: person.displayName })}
-            testID="story-image"
-          />
+          {story.video ? (
+            <StoryVideo
+              uri={story.video.url}
+              // Plays with sound; screen-reader users can still play it (it just doesn't move on by itself).
+              playing={!paused && !viewersOpen}
+              label={t('stories.videoStory', { name: person.displayName })}
+              style={[styles.image, { borderRadius: theme.radii.md, overflow: 'hidden' }]}
+              testID="story-video"
+            />
+          ) : (
+            <Image
+              source={{ uri: story.image.lg }}
+              style={[styles.image, { borderRadius: theme.radii.md }]}
+              contentFit="contain"
+              accessibilityIgnoresInvertColors
+              accessibilityLabel={t('stories.personSeen', { name: person.displayName })}
+              testID="story-image"
+            />
+          )}
         </FadeIn>
         <View style={styles.taps}>
           <Pressable
@@ -312,7 +327,13 @@ export default function StoryViewerScreen() {
  * One segment of the progress bar: the current story fills over its duration while playing and holds
  * when paused; seen ones are full, later ones empty. No fill animation with Reduce Motion.
  */
-function ProgressBar({ state }: { state: 'done' | 'todo' | 'playing' | 'held' }) {
+function ProgressBar({
+  state,
+  durationMs,
+}: {
+  state: 'done' | 'todo' | 'playing' | 'held';
+  durationMs: number;
+}) {
   const theme = useTheme();
   const fill = useRef(new Animated.Value(state === 'done' ? 1 : 0)).current;
   useEffect(() => {
@@ -328,7 +349,7 @@ function ProgressBar({ state }: { state: 'done' | 'todo' | 'playing' | 'held' })
     fill.setValue(0);
     const anim = Animated.timing(fill, {
       toValue: 1,
-      duration: STORY_DURATION_MS,
+      duration: durationMs,
       easing: (x: number) => x,
       useNativeDriver: false,
     });
@@ -336,7 +357,7 @@ function ProgressBar({ state }: { state: 'done' | 'todo' | 'playing' | 'held' })
     return () => {
       anim.stop();
     };
-  }, [state, fill, theme.reduceMotion]);
+  }, [state, fill, theme.reduceMotion, durationMs]);
   return (
     <View style={[styles.bar, { backgroundColor: theme.colors.border }]}>
       <Animated.View

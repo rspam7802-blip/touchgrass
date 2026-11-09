@@ -51,6 +51,8 @@ type StoryRow = typeof stories.$inferSelect;
 interface StoryWithMedia {
   story: StoryRow;
   keys: VariantKeys;
+  /** Video stories only. */
+  durationMs: number | null;
 }
 
 const facts = (s: StoryRow): StoryFacts => ({
@@ -182,7 +184,7 @@ export class StoriesService {
   ): Promise<StoryWithMedia[]> {
     if ('authorIds' in where && where.authorIds.length === 0) return [];
     const rows = await this.db
-      .select({ story: stories, keys: mediaAssets.variantKeys })
+      .select({ story: stories, keys: mediaAssets.variantKeys, durationMs: mediaAssets.durationMs })
       .from(stories)
       .innerJoin(mediaAssets, eq(mediaAssets.id, stories.mediaId))
       .where(
@@ -196,7 +198,9 @@ export class StoriesService {
         ),
       )
       .orderBy(asc(stories.createdAt), asc(stories.id));
-    return rows.flatMap((r) => (r.keys ? [{ story: r.story, keys: r.keys }] : []));
+    return rows.flatMap((r) =>
+      r.keys ? [{ story: r.story, keys: r.keys, durationMs: r.durationMs }] : [],
+    );
   }
 
   private async seenSet(viewerId: string, storyIds: string[]): Promise<Set<string>> {
@@ -304,6 +308,7 @@ export class StoriesService {
       items.push({
         id: r.story.id,
         image,
+        video: await this.media.videoFor(r.keys, r.durationMs, now),
         caption: r.story.caption,
         createdAt: r.story.createdAt.toISOString(),
         expiresAt: r.story.expiresAt.toISOString(),
@@ -528,19 +533,19 @@ export class StoriesService {
 
   /** Worker, hourly: story photos uploaded but never posted are deleted after a day. */
   async purgeUnpostedMedia(now: Date = new Date()): Promise<number> {
-    const candidates = await this.media.idsOfPurposeBefore(
+    return this.media.purgeUnused(
       'story',
       new Date(now.getTime() - 24 * HOUR_MS),
+      async (ids) =>
+        new Set(
+          (
+            await this.db
+              .select({ id: stories.mediaId })
+              .from(stories)
+              .where(inArray(stories.mediaId, ids))
+          ).map((r) => r.id),
+        ),
     );
-    if (candidates.length === 0) return 0;
-    const used = await this.db
-      .select({ id: stories.mediaId })
-      .from(stories)
-      .where(inArray(stories.mediaId, candidates));
-    const keep = new Set(used.map((r) => r.id));
-    const orphans = candidates.filter((id) => !keep.has(id));
-    await this.media.destroy(orphans);
-    return orphans.length;
   }
 
   // ---------- account data ----------

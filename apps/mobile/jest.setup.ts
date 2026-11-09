@@ -118,6 +118,18 @@ jest.mock('expo-image-picker', () => ({
     Promise.resolve({ canceled: false, assets: [{ uri: 'file:///picked.heic' }] }),
   ),
 }));
+jest.mock('expo-video', () => {
+  const { createElement } = jest.requireActual<typeof import('react')>('react');
+  const { View } = jest.requireActual<typeof import('react-native')>('react-native');
+  return {
+    useVideoPlayer: jest.fn((_source: unknown, setup?: (p: object) => void) => {
+      const player = { play: jest.fn(), pause: jest.fn(), loop: false, muted: false };
+      setup?.(player);
+      return player;
+    }),
+    VideoView: (props: object) => createElement(View, { ...props, testID: 'video-view' }),
+  };
+});
 jest.mock('expo-image-manipulator', () => ({
   SaveFormat: { JPEG: 'jpeg' },
   ImageManipulator: {

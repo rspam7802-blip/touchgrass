@@ -4,11 +4,29 @@ import { MediaPurpose, MediaStatus } from '../enums';
 
 export const ImageContentType = z.enum(LIMITS.upload.allowedImageTypes);
 
-export const CreateUploadBody = z.object({
-  purpose: MediaPurpose,
-  contentType: ImageContentType,
-  sizeBytes: z.number().int().min(1).max(LIMITS.upload.maxImageBytes),
-});
+export const VideoContentType = z.enum(LIMITS.upload.allowedVideoTypes);
+
+export const isVideoContentType = (contentType: string): boolean =>
+  (LIMITS.upload.allowedVideoTypes as readonly string[]).includes(contentType);
+
+export const CreateUploadBody = z
+  .object({
+    purpose: MediaPurpose,
+    contentType: z.union([ImageContentType, VideoContentType]),
+    sizeBytes: z.number().int().min(1).max(LIMITS.upload.maxVideoBytes),
+  })
+  .superRefine((b, ctx) => {
+    if (isVideoContentType(b.contentType)) {
+      if (b.purpose !== 'story')
+        ctx.addIssue({
+          code: 'custom',
+          path: ['contentType'],
+          message: 'Video is only for stories',
+        });
+    } else if (b.sizeBytes > LIMITS.upload.maxImageBytes) {
+      ctx.addIssue({ code: 'custom', path: ['sizeBytes'], message: 'Image too large' });
+    }
+  });
 export type CreateUploadBody = z.infer<typeof CreateUploadBody>;
 
 export const CreateUploadResponse = z.object({

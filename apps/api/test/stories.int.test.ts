@@ -4,10 +4,16 @@ import type {
   StoryTray,
   StoryViewersPage,
 } from '@touchgrass/shared';
+import { execFile } from 'node:child_process';
+import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { promisify } from 'node:util';
 import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { AccountService } from '../src/modules/account/account.service.js';
 import { MediaProcessor } from '../src/modules/media/media.processor.js';
+import { VideoRejected, VideoTranscoder } from '../src/modules/media/video.js';
 import { FeatureFlagsService } from '../src/modules/platform/feature-flags.service.js';
 import { StoriesService } from '../src/modules/stories/stories.service.js';
 import { UsersService } from '../src/modules/users/users.service.js';
@@ -504,5 +510,153 @@ describe('reports, moderation and data', () => {
     expect(
       (await h.pool.query('SELECT 1 FROM story_views WHERE viewer_id = $1', [author.id])).rows,
     ).toHaveLength(0);
+  });
+});
+
+// ---------- video stories (D-164) ----------
+
+const sh = promisify(execFile);
+
+/** A test clip made by ffmpeg itself: colour bars + a tone, with a GPS tag in its container. */
+async function makeClip(seconds: number, size = '1280x720'): Promise<Buffer> {
+  const dir = await mkdtemp(join(tmpdir(), 'tg-clip-'));
+  try {
+    const out = join(dir, 'clip.mp4');
+    await sh('ffmpeg', [
+      '-nostdin',
+      '-loglevel',
+      'error',
+      '-y',
+      '-f',
+      'lavfi',
+      '-i',
+      `testsrc=size=${size}:rate=25:duration=${String(seconds)}`,
+      '-f',
+      'lavfi',
+      '-i',
+      `sine=frequency=440:duration=${String(seconds)}`,
+      '-c:v',
+      'libx264',
+      '-pix_fmt',
+      'yuv420p',
+      '-c:a',
+      'aac',
+      '-shortest',
+      '-metadata',
+      'location=+17.4239+078.4738/',
+      '-metadata',
+      'title=secret home video',
+      out,
+    ]);
+    return await readFile(out);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+}
+
+async function probeTags(
+  video: Buffer,
+): Promise<{ tags: Record<string, string>; seconds: number }> {
+  const dir = await mkdtemp(join(tmpdir(), 'tg-probe-'));
+  try {
+    const file = join(dir, 'v.mp4');
+    await writeFile(file, video);
+    const { stdout } = await sh('ffprobe', [
+      '-v',
+      'error',
+      '-show_entries',
+      'format=duration:format_tags',
+      '-of',
+      'json',
+      file,
+    ]);
+    const parsed = JSON.parse(stdout) as {
+      format: { duration: string; tags?: Record<string, string> };
+    };
+    return { tags: parsed.format.tags ?? {}, seconds: Number(parsed.format.duration) };
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+}
+
+const uploadVideo = (m: Member, body: Buffer, purpose = 'story') =>
+  request(h.http)
+    .post('/v1/media/uploads')
+    .set(...bearer(m.token))
+    .send({ purpose, contentType: 'video/mp4', sizeBytes: body.length });
+
+async function processedVideo(m: Member, body: Buffer): Promise<{ id: string; result: string }> {
+  const created = (await uploadVideo(m, body)).body as {
+    assetId: string;
+    upload: { fields: { key: string } };
+  };
+  h.storage.simulateUpload(created.upload.fields.key, body, 'video/mp4');
+  await request(h.http)
+    .post(`/v1/media/${created.assetId}/complete`)
+    .set(...bearer(m.token))
+    .expect(200);
+  const result = await h.app.get(MediaProcessor).process(created.assetId);
+  return { id: created.assetId, result };
+}
+
+describe('video stories (D-164)', () => {
+  it('re-encodes a clip without its metadata, keeps a poster, and plays for the squad', async () => {
+    const { author, squad, stranger } = await circle();
+    const original = await makeClip(3, '1080x1920');
+    expect((await probeTags(original)).tags).toHaveProperty('location');
+
+    const { id, result } = await processedVideo(author, original);
+    expect(result).toBe('ready');
+    const { rows } = await h.pool.query<{
+      duration_ms: number;
+      width: number;
+      height: number;
+      variant_keys: { video: string; lg: string };
+      original_key: string;
+    }>(
+      'SELECT duration_ms, width, height, variant_keys, original_key FROM media_assets WHERE id = $1',
+      [id],
+    );
+    const row = rows[0];
+    if (!row) throw new Error('asset missing');
+    expect(row.duration_ms).toBeGreaterThan(2500);
+    expect(row.duration_ms).toBeLessThan(3500);
+    // Portrait phone video: short side capped at 720 px.
+    expect([row.width, row.height]).toEqual([720, 1280]);
+    const stored = await h.storage.get(row.variant_keys.video);
+    const out = await probeTags(stored);
+    expect(out.tags).not.toHaveProperty('location');
+    expect(out.tags).not.toHaveProperty('title');
+    expect(await h.storage.head(row.variant_keys.lg)).not.toBeNull();
+    // The original (with its GPS tag) is gone.
+    expect(await h.storage.head(row.original_key)).toBeNull();
+
+    const posted = await postStory(author, { mediaId: id, audience: 'squad', caption: '' }).expect(
+      201,
+    );
+    const seen = (await storiesOf(squad, author).expect(200)).body as PersonStories;
+    const mine = seen.items.find((i) => i.id === (posted.body as { id: string }).id);
+    expect(mine?.video).toMatchObject({ durationMs: row.duration_ms });
+    expect(mine?.video?.url).toContain('video.mp4');
+    expect(mine?.image.lg).toBeTruthy();
+    await storiesOf(stranger, author).expect(404);
+  });
+
+  it('refuses clips over 15 seconds, files that are not video, and video anywhere but stories', async () => {
+    const { author } = await circle();
+    expect((await processedVideo(author, await makeClip(17))).result).toBe('rejected');
+    expect((await processedVideo(author, Buffer.from('definitely not a video'))).result).toBe(
+      'rejected',
+    );
+    await uploadVideo(author, await makeClip(1), 'profile_photo').expect(400);
+  });
+
+  it('never follows a playlist hidden in an upload (no network or local file reads)', async () => {
+    const playlist = Buffer.from(
+      '#EXTM3U\n#EXT-X-MEDIA-SEQUENCE:0\n#EXTINF:10.0,\nfile:///etc/passwd\n#EXT-X-ENDLIST\n',
+    );
+    await expect(h.app.get(VideoTranscoder).transcode(playlist)).rejects.toBeInstanceOf(
+      VideoRejected,
+    );
   });
 });

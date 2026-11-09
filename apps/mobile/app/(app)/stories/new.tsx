@@ -6,11 +6,12 @@ import { useTranslation } from 'react-i18next';
 import { StyleSheet } from 'react-native';
 import { ChipGroup } from '../../../components/ChipGroup';
 import { Button, Screen, Text, TextField } from '../../../components/ui';
+import { StoryVideo } from '../../../components/stories/StoryVideo';
 import {
-  compressImage,
-  type LocalImage,
-  pickImage,
+  pickStoryMedia,
+  type StoryMedia,
   uploadImage,
+  uploadVideo,
   waitUntilReady,
 } from '../../../src/features/media/upload';
 import { usePostStory } from '../../../src/features/stories/api';
@@ -20,11 +21,13 @@ import { useTheme } from '../../../src/theme/theme';
 
 /** Moderation usually takes a few seconds; give it ~30 s before telling the person it is still being checked. */
 const STORY_READY_POLLS = 36;
+/** A video is re-encoded first, so it gets about a minute. */
+const VIDEO_READY_POLLS = 75;
 
 /**
- * New story (Phase 13): one photo from the library, an optional caption and who can see it. The photo is
- * re-encoded on the phone (no location data) and again on the server, which also checks it before anyone
- * else can see it.
+ * New story (Phase 13, D-164): one photo or a video of up to 15 s from the library, an optional caption and
+ * who can see it. Photos are re-encoded on the phone and again on the server; videos are re-encoded on the
+ * server. Either way location data is removed and the server checks it before anyone else can see it.
  */
 export default function NewStoryScreen() {
   const { t } = useTranslation();
@@ -32,7 +35,7 @@ export default function NewStoryScreen() {
   const theme = useTheme();
   const { client } = useApi();
   const post = usePostStory();
-  const [image, setImage] = useState<LocalImage | null>(null);
+  const [media, setMedia] = useState<StoryMedia | null>(null);
   const [caption, setCaption] = useState('');
   const [audience, setAudience] = useState<StoryAudience>('squad');
   const [busy, setBusy] = useState<'uploading' | 'checking' | null>(null);
@@ -42,23 +45,26 @@ export default function NewStoryScreen() {
   const choose = async (): Promise<void> => {
     setError(null);
     try {
-      const uri = await pickImage();
-      if (!uri) return;
-      setImage(await compressImage(uri));
+      const picked = await pickStoryMedia();
+      if (picked) setMedia(picked);
     } catch (err) {
       setError(errorMessage(t, err));
     }
   };
 
   const share = async (): Promise<void> => {
-    if (!image) return;
+    if (!media) return;
     setError(null);
     setNotice(null);
     setBusy('uploading');
     try {
-      const asset = await uploadImage(client, 'story', image);
+      const asset =
+        media.kind === 'video'
+          ? await uploadVideo(client, media)
+          : await uploadImage(client, 'story', media.image);
       setBusy('checking');
-      if (!(await waitUntilReady(client, asset, STORY_READY_POLLS))) {
+      const polls = media.kind === 'video' ? VIDEO_READY_POLLS : STORY_READY_POLLS;
+      if (!(await waitUntilReady(client, asset, polls))) {
         setNotice(t('stories.pending'));
         return;
       }
@@ -76,9 +82,9 @@ export default function NewStoryScreen() {
       <Text variant="title" accessibilityRole="header">
         {t('stories.composerTitle')}
       </Text>
-      {image ? (
+      {media?.kind === 'photo' ? (
         <Image
-          source={{ uri: image.uri }}
+          source={{ uri: media.image.uri }}
           style={[styles.preview, { borderRadius: theme.radii.lg }]}
           contentFit="cover"
           accessibilityIgnoresInvertColors
@@ -87,9 +93,20 @@ export default function NewStoryScreen() {
           testID="story-preview"
         />
       ) : null}
+      {media?.kind === 'video' ? (
+        <StoryVideo
+          uri={media.uri}
+          playing={busy === null}
+          loop
+          muted
+          label={t('stories.videoPreview', { seconds: Math.round(media.durationMs / 1000) })}
+          style={[styles.preview, { borderRadius: theme.radii.lg, overflow: 'hidden' }]}
+          testID="story-video-preview"
+        />
+      ) : null}
       <Button
-        label={image ? t('stories.changePhoto') : t('stories.pickPhoto')}
-        variant={image ? 'ghost' : 'primary'}
+        label={media ? t('stories.changeMedia') : t('stories.pickMedia')}
+        variant={media ? 'ghost' : 'primary'}
         disabled={busy !== null}
         onPress={() => void choose()}
         testID="story-pick"
@@ -134,7 +151,7 @@ export default function NewStoryScreen() {
               ? t('stories.checking')
               : t('stories.share')
         }
-        disabled={!image}
+        disabled={!media}
         loading={busy !== null}
         onPress={() => void share()}
         testID="story-share"

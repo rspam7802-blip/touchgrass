@@ -4,11 +4,12 @@ import { ModerationTargetRegistry } from '../moderation/moderation-targets.js';
 import { MediaController } from './media.controller.js';
 import { MediaProcessor } from './media.processor.js';
 import { MediaService } from './media.service.js';
+import { VideoTranscoder } from './video.js';
 
 @Module({
   imports: [ModerationModule],
   controllers: [MediaController],
-  providers: [MediaService, MediaProcessor],
+  providers: [MediaService, MediaProcessor, VideoTranscoder],
   exports: [MediaService, MediaProcessor],
 })
 export class MediaModule implements OnModuleInit {

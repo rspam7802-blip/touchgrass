@@ -126,6 +126,10 @@ export const EnvSchema = z
     SMTP_URL: z.string().default('smtp://localhost:1025'),
     EMAIL_FROM: z.string().default('TouchGrass <hello@touchgrass.app>'),
 
+    /** Video stories are re-encoded by the worker (D-164); the image ships these binaries. */
+    FFMPEG_PATH: z.string().default('ffmpeg'),
+    FFPROBE_PATH: z.string().default('ffprobe'),
+
     SENTRY_DSN: z.string().optional(),
     OTEL_EXPORTER_OTLP_ENDPOINT: z.url().optional(),
   })

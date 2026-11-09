@@ -181,6 +181,8 @@ export interface VariantKeys {
   sm: string;
   md: string;
   lg: string;
+  /** Video assets only: the re-encoded MP4. sm/md/lg are its poster frame. */
+  video?: string;
 }
 
 export const mediaAssets = pgTable('media_assets', {
@@ -207,6 +209,8 @@ export const mediaAssets = pgTable('media_assets', {
   height: integer('height'),
   variantKeys: jsonb('variant_keys').$type<VariantKeys>(),
   moderationLabels: jsonb('moderation_labels').$type<{ name: string; confidence: number }[]>(),
+  /** Video assets only. */
+  durationMs: integer('duration_ms'),
   processedAt: ts('processed_at'),
   deletedAt: ts('deleted_at'),
   ...timestamps,

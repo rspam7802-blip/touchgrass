@@ -14,6 +14,10 @@ RUN pnpm install --frozen-lockfile --filter @touchgrass/api... \
 
 FROM public.ecr.aws/docker/library/node:22.21.1-bookworm-slim
 ENV NODE_ENV=production
+# The worker re-encodes video stories with ffmpeg (D-164).
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends ffmpeg \
+ && rm -rf /var/lib/apt/lists/*
 # RDS presents certificates from the Amazon RDS CA, which Node doesn't trust by default.
 ADD --chmod=0644 https://truststore.pki.rds.amazonaws.com/global/global-bundle.pem /etc/ssl/certs/rds-global-bundle.pem
 ENV NODE_EXTRA_CA_CERTS=/etc/ssl/certs/rds-global-bundle.pem

@@ -83,3 +83,68 @@ export async function waitUntilReady(
   }
   return status === 'ready';
 }
+
+/** A picked story: a photo (compressed like any other) or a video clip, sent as recorded (D-164). */
+export type StoryMedia =
+  | { kind: 'photo'; image: LocalImage }
+  | { kind: 'video'; uri: string; sizeBytes: number; durationMs: number; contentType: string };
+
+/** Video is longer than stories allow (15 s), or bigger than the upload limit. */
+export class VideoTooLongError extends Error {
+  constructor() {
+    super('Video too long');
+    this.name = 'VideoTooLongError';
+  }
+}
+export class VideoTooLargeError extends Error {
+  constructor() {
+    super('Video too large');
+    this.name = 'VideoTooLargeError';
+  }
+}
+
+/**
+ * Opens the library for a story: a photo, or a video up to 15 s (trimmed in the picker where the phone
+ * offers it). Picking from the library needs no microphone access. The server re-encodes every video, which
+ * removes its location and device details.
+ */
+export async function pickStoryMedia(): Promise<StoryMedia | null> {
+  const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+  if (!permission.granted) throw new PhotoAccessDeniedError();
+  const res = await ImagePicker.launchImageLibraryAsync({
+    mediaTypes: ['images', 'videos'],
+    quality: 1,
+    videoMaxDuration: LIMITS.upload.maxVideoSeconds,
+    allowsEditing: true,
+    exif: false,
+  });
+  const asset = res.canceled ? undefined : res.assets[0];
+  if (!asset) return null;
+  if (asset.type !== 'video') return { kind: 'photo', image: await compressImage(asset.uri) };
+  const durationMs = asset.duration ?? 0;
+  if (durationMs > (LIMITS.upload.maxVideoSeconds + 0.5) * 1000) throw new VideoTooLongError();
+  const sizeBytes = asset.fileSize ?? (await (await fetch(asset.uri)).blob()).size;
+  if (sizeBytes > LIMITS.upload.maxVideoBytes) throw new VideoTooLargeError();
+  const contentType = asset.mimeType === 'video/quicktime' ? 'video/quicktime' : 'video/mp4';
+  return { kind: 'video', uri: asset.uri, sizeBytes, durationMs, contentType };
+}
+
+/** Uploads a story video the same way as images: presigned POST, then `complete`. */
+export async function uploadVideo(
+  client: ApiClient,
+  video: Extract<StoryMedia, { kind: 'video' }>,
+  fetchFn: typeof fetch = fetch,
+): Promise<MediaAsset> {
+  if (video.sizeBytes > LIMITS.upload.maxVideoBytes) throw new VideoTooLargeError();
+  const created = await client.request('/v1/media/uploads', CreateUploadResponse, {
+    method: 'POST',
+    body: { purpose: 'story', contentType: video.contentType, sizeBytes: video.sizeBytes },
+  });
+  const form = new FormData();
+  for (const [k, v] of Object.entries(created.upload.fields)) form.append(k, v);
+  const name = video.contentType === 'video/quicktime' ? 'clip.mov' : 'clip.mp4';
+  form.append('file', { uri: video.uri, name, type: video.contentType } as unknown as Blob);
+  const res = await fetchFn(created.upload.url, { method: 'POST', body: form });
+  if (!res.ok) throw new Error(`Upload failed with ${res.status}`);
+  return client.request(`/v1/media/${created.assetId}/complete`, MediaAsset, { method: 'POST' });
+}

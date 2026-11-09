@@ -75,6 +75,23 @@ describe('media, settings and admin schemas', () => {
       }).success,
     ).toBe(false);
   });
+  it('accepts video only for stories, up to 30 MB (D-164)', () => {
+    const video = { contentType: 'video/mp4', sizeBytes: 25 * 1024 * 1024 };
+    expect(CreateUploadBody.safeParse({ purpose: 'story', ...video }).success).toBe(true);
+    expect(
+      CreateUploadBody.safeParse({ purpose: 'story', contentType: 'video/quicktime', sizeBytes: 9 })
+        .success,
+    ).toBe(true);
+    expect(CreateUploadBody.safeParse({ purpose: 'profile_photo', ...video }).success).toBe(false);
+    expect(
+      CreateUploadBody.safeParse({ purpose: 'story', ...video, sizeBytes: 30 * 1024 * 1024 + 1 })
+        .success,
+    ).toBe(false);
+    expect(
+      CreateUploadBody.safeParse({ purpose: 'story', contentType: 'video/webm', sizeBytes: 9 })
+        .success,
+    ).toBe(false);
+  });
   it('validates settings payloads', () => {
     expect(UpdatePrivacyBody.safeParse({}).success).toBe(false);
     expect(UpdatePrivacyBody.parse({ readReceipts: false })).toEqual({ readReceipts: false });

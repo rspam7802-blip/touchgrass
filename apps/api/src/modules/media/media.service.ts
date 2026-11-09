@@ -1,5 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import {
+  isVideoContentType,
   type CreateUploadBody,
   type CreateUploadResponse,
   LIMITS,
@@ -7,7 +8,7 @@ import {
   type MediaVariants,
   type ModerationPreview,
 } from '@touchgrass/shared';
-import { and, eq, inArray, isNull, lt } from 'drizzle-orm';
+import { and, asc, eq, gt, inArray, isNull, lt } from 'drizzle-orm';
 import { uuidv7 } from 'uuidv7';
 import { ObjectStorage } from '../../adapters/storage/storage.port.js';
 import { AppError } from '../../common/errors/app-error.js';
@@ -28,6 +29,13 @@ export const MEDIA_UPLOADED_EVENT = 'media.uploaded';
  * Direct-to-S3 uploads (F-ACC-06): presigned POST → client upload → `complete` → worker resizes to webp,
  * strips EXIF and moderates. Only the owner can see an asset before it is `ready`.
  */
+/** Videos (stories only) may be larger than images; the schema already tied each type to its purpose. */
+export function maxBytesFor(contentType: string): number {
+  return isVideoContentType(contentType)
+    ? LIMITS.upload.maxVideoBytes
+    : LIMITS.upload.maxImageBytes;
+}
+
 @Injectable()
 export class MediaService {
   constructor(
@@ -42,7 +50,7 @@ export class MediaService {
     const upload = await this.storage.createPresignedUpload(
       originalKey,
       body.contentType,
-      LIMITS.upload.maxImageBytes,
+      maxBytesFor(body.contentType),
       UPLOAD_TTL_SECONDS,
     );
     await this.db.insert(mediaAssets).values({
@@ -66,7 +74,7 @@ export class MediaService {
     if (asset.status !== 'pending_upload') return this.toDto(asset, true);
     const head = await this.storage.head(asset.originalKey);
     if (!head) throw new AppError('CONFLICT', 'Upload not found in storage yet');
-    if (head.size > LIMITS.upload.maxImageBytes)
+    if (head.size > maxBytesFor(asset.contentType))
       throw new AppError('PAYLOAD_TOO_LARGE', 'Upload exceeds the size limit');
     const updated = await this.db.transaction(async (tx) => {
       const [row] = await tx
@@ -127,13 +135,25 @@ export class MediaService {
     return { sm: sm ?? '', md: md ?? '', lg: lg ?? '' };
   }
 
+  /** A video asset's playable file, signed like the image variants (same hour bucket, same lifetime). */
+  async videoFor(
+    keys: VariantKeys | null,
+    durationMs: number | null,
+    now: Date = new Date(),
+  ): Promise<{ url: string; durationMs: number } | null> {
+    if (!keys?.video || !durationMs) return null;
+    const signingDate = new Date(Math.floor(now.getTime() / HOUR) * HOUR);
+    const url = await this.storage.signedDownloadUrl(keys.video, URL_TTL_SECONDS, signingDate);
+    return { url, durationMs };
+  }
+
   /** A full-size link that lives `ttlSeconds` (downloads, F-AFT-04). */
   async downloadUrl(keys: VariantKeys, ttlSeconds: number): Promise<string> {
     return this.storage.signedDownloadUrl(keys.lg, ttlSeconds);
   }
 
   /** Reads a stored variant (server-side image composition). */
-  async readVariant(keys: VariantKeys, size: keyof VariantKeys): Promise<Buffer> {
+  async readVariant(keys: VariantKeys, size: 'sm' | 'md' | 'lg'): Promise<Buffer> {
     return this.storage.get(keys[size]);
   }
 
@@ -157,6 +177,7 @@ export class MediaService {
       const keys = [
         row.originalKey,
         ...(row.variantKeys ? [row.variantKeys.sm, row.variantKeys.md, row.variantKeys.lg] : []),
+        ...(row.variantKeys?.video ? [row.variantKeys.video] : []),
       ];
       await Promise.all(keys.map((k) => this.storage.delete(k)));
     }
@@ -210,6 +231,7 @@ export class MediaService {
   async idsOfPurposeBefore(
     purpose: MediaRow['purpose'],
     before: Date,
+    afterId: string | null = null,
     limit = 500,
   ): Promise<string[]> {
     const rows = await this.db
@@ -220,10 +242,34 @@ export class MediaService {
           eq(mediaAssets.purpose, purpose),
           isNull(mediaAssets.deletedAt),
           lt(mediaAssets.createdAt, before),
+          afterId ? gt(mediaAssets.id, afterId) : undefined,
         ),
       )
+      .orderBy(asc(mediaAssets.id))
       .limit(limit);
     return rows.map((r) => r.id);
+  }
+
+  /**
+   * Destroys the assets of one purpose, older than `before`, that `inUse` does not claim. Pages through
+   * every candidate, so assets still in use never crowd orphans out of a run.
+   */
+  async purgeUnused(
+    purpose: MediaRow['purpose'],
+    before: Date,
+    inUse: (ids: string[]) => Promise<Set<string>>,
+  ): Promise<number> {
+    let afterId: string | null = null;
+    let removed = 0;
+    for (;;) {
+      const page = await this.idsOfPurposeBefore(purpose, before, afterId);
+      if (page.length === 0) return removed;
+      const used = await inUse(page);
+      const orphans = page.filter((id) => !used.has(id));
+      await this.destroy(orphans);
+      removed += orphans.length;
+      afterId = page[page.length - 1] ?? null;
+    }
   }
 
   /** Housekeeping: uploads never completed within a day are removed (worker, hourly). */

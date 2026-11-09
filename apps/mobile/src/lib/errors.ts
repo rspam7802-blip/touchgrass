@@ -1,5 +1,9 @@
 import type { TFunction } from 'i18next';
-import { PhotoAccessDeniedError } from '../features/media/upload';
+import {
+  PhotoAccessDeniedError,
+  VideoTooLargeError,
+  VideoTooLongError,
+} from '../features/media/upload';
 import { ApiError } from './api-client';
 
 /** Translated copy for a stable reason code, with the dates some reasons carry (e.g. a cooldown's end). */
@@ -17,6 +21,8 @@ export function reasonText(
 export function errorMessage(t: TFunction, err: unknown): string | null {
   if (!err) return null;
   if (err instanceof PhotoAccessDeniedError) return t('states.photoAccessDenied');
+  if (err instanceof VideoTooLongError) return t('stories.videoTooLong');
+  if (err instanceof VideoTooLargeError) return t('stories.videoTooLarge');
   if (err instanceof ApiError) {
     if (err.code === 'NETWORK') return t('states.offlineBody');
     const reason = reasonOf(err.details);
