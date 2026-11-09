@@ -1,3 +1,4 @@
+import { normalizeE164 } from '@touchgrass/shared';
 import type { ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { describe, expect, it, vi } from 'vitest';
@@ -32,6 +33,14 @@ describe('bucketKey', () => {
     expect(key).toMatch(/^r:b:[0-9a-f]{32}$/);
     expect(key).not.toContain('9848022338');
     expect(bucketKey(rule('body', 'phone'), req())).toBeNull();
+  });
+
+  it('keys a normalised body field the same however it is formatted', () => {
+    const phoneRule = { ...rule('body', 'phone'), normalize: normalizeE164 };
+    const keys = ['+919848022338', '+91 98480 22338', '98480-22338', '+91a9848022338'].map(
+      (phone) => bucketKey(phoneRule, req({ body: { phone } })),
+    );
+    expect(new Set(keys).size).toBe(1);
   });
 });
 

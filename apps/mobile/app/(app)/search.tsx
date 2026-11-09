@@ -1,6 +1,7 @@
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { VenueRowWithSave } from '../../components/SaveVenueToggle';
 import { AllPlansRail } from '../../components/explore/AllPlansRail';
 import { PersonRow } from '../../components/PersonRow';
 import { SegmentedTabs } from '../../components/SegmentedTabs';
@@ -110,15 +111,16 @@ export default function SearchScreen() {
             </Text>
           ) : null}
           {data?.venues.map((v) => (
-            <ListRow
-              key={v.id}
-              label={v.name}
-              detail={[v.neighbourhoodName, v.address].filter(Boolean).join(' · ')}
-              testID={`venue-${v.id}`}
-              onPress={() => {
-                router.push({ pathname: '/plot', params: { venueId: v.id, venueName: v.name } });
-              }}
-            />
+            <VenueRowWithSave key={v.id} venueId={v.id} name={v.name}>
+              <ListRow
+                label={v.name}
+                detail={[v.neighbourhoodName, v.address].filter(Boolean).join(' · ')}
+                testID={`venue-${v.id}`}
+                onPress={() => {
+                  router.push({ pathname: '/plot', params: { venueId: v.id, venueName: v.name } });
+                }}
+              />
+            </VenueRowWithSave>
           ))}
           {data && data.crews.length > 0 ? (
             <Text variant="heading" accessibilityRole="header">

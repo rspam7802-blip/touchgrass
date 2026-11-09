@@ -1,8 +1,10 @@
 import { LIMITS } from '@touchgrass/shared';
+import * as Linking from 'expo-linking';
 import { useTranslation } from 'react-i18next';
 import { OnboardingStep } from '../../components/OnboardingStep';
 import { PhotoGrid } from '../../components/PhotoGrid';
-import { LoadingState } from '../../components/ui';
+import { Button, LoadingState } from '../../components/ui';
+import { PhotoAccessDeniedError } from '../../src/features/media/upload';
 import { usePhotoEditor } from '../../src/features/media/use-photo-editor';
 import { useStepNav } from '../../src/features/me/use-step-nav';
 import { errorMessage } from '../../src/lib/errors';
@@ -35,6 +37,14 @@ export default function PhotosStep() {
           onRemove={(id) => void editor.remove(id).catch(() => undefined)}
         />
       )}
+      {editor.error instanceof PhotoAccessDeniedError ? (
+        <Button
+          label={t('states.openSettings')}
+          variant="secondary"
+          onPress={() => void Linking.openSettings()}
+          testID="photos-open-settings"
+        />
+      ) : null}
     </OnboardingStep>
   );
 }

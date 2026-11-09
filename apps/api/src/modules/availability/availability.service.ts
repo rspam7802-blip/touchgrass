@@ -7,6 +7,8 @@ import { DB, type Database, type Tx } from '../../infra/database/database.module
 import { REDIS } from '../../infra/redis/redis.module.js';
 import { availabilityStatus } from '../../infra/database/schema/index.js';
 import { OutboxService } from '../../infra/outbox/outbox.service.js';
+import { ModerationService } from '../moderation/moderation.service.js';
+import { SanctionsReader } from '../moderation/sanctions-reader.js';
 import { PeopleService } from '../profiles/people.service.js';
 import { SocialGraphService } from '../social/graph/social-graph.service.js';
 import { PING_PAIR_WINDOW_SECONDS, pingRefusal, pingThrottleKey } from './availability.policy.js';
@@ -24,6 +26,8 @@ export class AvailabilityService {
     private readonly graph: SocialGraphService,
     private readonly people: PeopleService,
     @Inject(REDIS) private readonly redis: Redis,
+    private readonly moderation: ModerationService,
+    private readonly sanctions: SanctionsReader,
   ) {}
 
   async mine(userId: string, now: Date = new Date()): Promise<MyAvailability> {
@@ -43,6 +47,12 @@ export class AvailabilityService {
     body: SetAvailabilityBody,
     now: Date = new Date(),
   ): Promise<MyAvailability> {
+    await this.sanctions.assertCanPost(userId, now);
+    // The note is pushed straight to the squad, so flagged words are refused rather than held.
+    if (body.note && this.moderation.screen(body.note).flagged)
+      throw new AppError('VALIDATION_FAILED', 'Pick different words', [
+        { path: 'note', message: 'Pick different words', code: 'custom' },
+      ]);
     const until = new Date(now.getTime() + body.hours * HOUR_MS);
     await this.db.transaction(async (tx) => {
       const [prev] = await tx

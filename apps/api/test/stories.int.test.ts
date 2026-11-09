@@ -451,6 +451,28 @@ describe('reports, moderation and data', () => {
     );
   });
 
+  it('story photos never posted are deleted after a day; posted ones stay (D-163)', async () => {
+    const { author } = await circle();
+    const posted = await story(author);
+    const orphan = await storyPhoto(author);
+    const recent = await storyPhoto(author);
+    await h.pool.query(
+      `UPDATE media_assets SET created_at = now() - interval '25 hours'
+        WHERE id = $1 OR id = (SELECT media_id FROM stories WHERE id = $2)`,
+      [orphan, posted],
+    );
+    expect(await h.app.get(StoriesService).purgeUnpostedMedia()).toBeGreaterThanOrEqual(1);
+    const { rows } = await h.pool.query<{ id: string; deleted: boolean }>(
+      `SELECT id, deleted_at IS NOT NULL AS deleted FROM media_assets
+        WHERE id = ANY($1) OR id = (SELECT media_id FROM stories WHERE id = $2)`,
+      [[orphan, recent], posted],
+    );
+    const deleted = new Map(rows.map((r) => [r.id, r.deleted]));
+    expect(deleted.get(orphan)).toBe(true);
+    expect(deleted.get(recent)).toBe(false);
+    expect([...deleted.entries()].filter(([id, d]) => id !== orphan && d)).toEqual([]);
+  });
+
   it('export includes stories, likes and views; account deletion erases them', async () => {
     const { author, squad } = await circle();
     const id = await story(author);

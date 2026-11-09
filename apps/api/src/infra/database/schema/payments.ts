@@ -65,6 +65,7 @@ export const payments = pgTable('payments', {
   capturedAt: ts('captured_at'),
   receiptNumber: text('receipt_number').unique(),
   receiptEmailedAt: ts('receipt_emailed_at'),
+  ticketReleasedAt: ts('ticket_released_at'),
   ...timestamps,
 });
 

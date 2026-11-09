@@ -1015,7 +1015,12 @@ export class ChatService {
     await this.access(userId, conversationId);
     const msg = await this.messageInConversation(conversationId, messageId);
     const blocked = await this.graph.blockedSet(userId);
-    if (!msg || (msg.senderId && blocked.has(msg.senderId))) throw AppError.notFound('Message');
+    if (
+      !msg ||
+      (msg.senderId && blocked.has(msg.senderId)) ||
+      (msg.heldAt && msg.senderId !== userId)
+    )
+      throw AppError.notFound('Message');
     const [dto] = await this.hydrate(userId, [msg]);
     if (!dto) throw AppError.notFound('Message');
     return dto;

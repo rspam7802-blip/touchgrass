@@ -1,6 +1,7 @@
 import { Module, type OnModuleInit } from '@nestjs/common';
 import { AccountDataRegistry } from '../account/account-data.registry.js';
 import { AccountModule } from '../account/account.module.js';
+import { CitiesModule } from '../cities/cities.module.js';
 import { EventsModule } from '../events/events.module.js';
 import { FeedbackModule } from '../feedback/feedback.module.js';
 import { LoreModule } from '../lore/lore.module.js';
@@ -15,6 +16,7 @@ import { BadgesReader } from './badges-reader.js';
 @Module({
   imports: [
     AccountModule,
+    CitiesModule,
     EventsModule,
     FeedbackModule,
     LoreModule,

@@ -64,7 +64,7 @@ export default function PaymentStatusScreen() {
       <Text variant="title" accessibilityRole="header">
         {p.eventTitle}
       </Text>
-      <Text>{formatWhen(p.eventStartsAt, i18n.language)}</Text>
+      <Text>{formatWhen(p.eventStartsAt, i18n.language, p.eventTimezone)}</Text>
       <Text variant="heading">{money(p.amountPaise, i18n.language)}</Text>
       <Text
         tone={p.status === 'failed' || p.status === 'expired' ? 'danger' : 'primary'}
@@ -89,9 +89,13 @@ export default function PaymentStatusScreen() {
             variant="ghost"
             loading={cancel.isPending}
             onPress={() => {
+              setError(null);
               cancel.mutate(undefined, {
                 onSuccess: () => {
                   router.back();
+                },
+                onError: (err) => {
+                  setError(errorMessage(t, err));
                 },
               });
             }}

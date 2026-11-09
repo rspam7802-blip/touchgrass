@@ -1,4 +1,6 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/react-native';
+import * as ImagePicker from 'expo-image-picker';
+import * as Linking from 'expo-linking';
 import * as Location from 'expo-location';
 import * as Notifications from 'expo-notifications';
 import BirthdayStep from '../app/(onboarding)/birthday';
@@ -223,6 +225,26 @@ describe('steps', () => {
     } finally {
       global.fetch = realFetch;
     }
+  });
+
+  it('photos: declined photo access explains itself and offers the phone settings', async () => {
+    (ImagePicker.requestMediaLibraryPermissionsAsync as jest.Mock).mockResolvedValueOnce({
+      granted: false,
+    });
+    const openSettings = jest.spyOn(Linking, 'openSettings').mockResolvedValue(undefined);
+    await renderWithProviders(<PhotosStep />, { fetchFn: api.fetch });
+    await fireEvent.press(await screen.findByRole('button', { name: 'Add photo' }));
+    expect(await screen.findByText(/Photo access is off/)).toBeOnTheScreen();
+    await fireEvent.press(screen.getByTestId('photos-open-settings'));
+    expect(openSettings).toHaveBeenCalled();
+    openSettings.mockRestore();
+    expect(api.callsTo('POST', '/v1/media/uploads')).toHaveLength(0);
+  });
+
+  it('every step has a way out: sign out', async () => {
+    await renderWithProviders(<PhotosStep />, { fetchFn: api.fetch });
+    await fireEvent.press(await screen.findByTestId('onboarding-sign-out'));
+    await waitFor(() => expect(useAuthStore.getState().status).toBe('signedOut'));
   });
 
   it('birthday: rejects impossible dates, then saves a valid one', async () => {

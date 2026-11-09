@@ -1,6 +1,11 @@
 environment         = "production"
 domain              = "touchgrass.app"
 support_email       = "support@touchgrass.app"
+# Published on /privacy, /terms, /refunds and /contact.
+legal_entity_name       = "TouchGrass Technologies Private Limited"
+legal_address           = "Registered office address, Hyderabad, Telangana"
+grievance_officer_name  = "Name of the Grievance Officer"
+grievance_officer_email = "grievance@touchgrass.app"
 route53_zone_id     = "Z0123456789EXAMPLE"
 image_tag           = "git-sha"
 alarm_email         = "oncall@touchgrass.app"

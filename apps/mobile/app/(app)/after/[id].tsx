@@ -99,7 +99,9 @@ function AfterEventView({ card }: { card: PostEventCard }) {
       </Text>
       <View>
         <Text variant="heading">{card.event.title}</Text>
-        <Text tone="muted">{formatWhen(card.event.startsAt, i18n.language)}</Text>
+        <Text tone="muted">
+          {formatWhen(card.event.startsAt, i18n.language, card.event.timezone)}
+        </Text>
       </View>
 
       {!feedbackOpen ? (

@@ -142,13 +142,14 @@ export function useRsvp(id: string) {
   });
 }
 
-export function useCreateEvent() {
+/** Pass one key per form so a retried submit returns the same plan instead of creating a second one. */
+export function useCreateEvent(idempotencyKey?: string) {
   const { client } = useApi();
   return useEventMutation((body: CreateEventBody) =>
     client.request('/v1/events', EventDetail, {
       method: 'POST',
       body,
-      idempotencyKey: idem('plot'),
+      idempotencyKey: idempotencyKey ?? idem('plot'),
     }),
   );
 }

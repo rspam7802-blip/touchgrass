@@ -4,6 +4,7 @@ import { EventDetailView } from '../../components/EventDetailView';
 import { Button, ErrorState, LoadingState, Screen, Text } from '../../components/ui';
 import { useEventBySlug } from '../../src/features/events/api';
 import { errorMessage } from '../../src/lib/errors';
+import { useAuthFlowStore } from '../../src/stores/auth-flow-store';
 import { appArea, useAuthStore } from '../../src/stores/auth-store';
 
 /** Share / invite links (F-EVT-17): `https://…/e/{slug}?i={token}` or `touchgrass://e/{slug}`. */
@@ -22,6 +23,10 @@ export default function SharedEventRoute() {
         <Button
           label={t('welcome.getStarted')}
           onPress={() => {
+            // Keep the link (and its invite token) so the plan opens after sign-up.
+            useAuthFlowStore
+              .getState()
+              .setPendingLink(`/e/${slug}${i ? `?i=${encodeURIComponent(i)}` : ''}`);
             router.replace(area === 'onboarding' ? '/start' : '/');
           }}
         />

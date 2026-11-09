@@ -130,25 +130,30 @@ export default function UserProfileScreen() {
           }
           testID="share-profile"
         />
-        <Button
-          label={t('report.reportUser')}
-          variant="ghost"
-          onPress={() => {
-            router.push({
-              pathname: '/report',
-              params: { targetType: 'user', targetId: p.id, name: p.displayName },
-            });
-          }}
-          testID="report-user"
-        />
-        <Button
-          label={t('report.block')}
-          variant="ghost"
-          onPress={() => {
-            setConfirmBlock(true);
-          }}
-          testID="block-user"
-        />
+        {/* Reporting or blocking yourself makes no sense (and the API refuses it). */}
+        {p.relationship === 'self' ? null : (
+          <>
+            <Button
+              label={t('report.reportUser')}
+              variant="ghost"
+              onPress={() => {
+                router.push({
+                  pathname: '/report',
+                  params: { targetType: 'user', targetId: p.id, name: p.displayName },
+                });
+              }}
+              testID="report-user"
+            />
+            <Button
+              label={t('report.block')}
+              variant="ghost"
+              onPress={() => {
+                setConfirmBlock(true);
+              }}
+              testID="block-user"
+            />
+          </>
+        )}
       </View>
       {confirmBlock ? (
         <View accessibilityRole="alert" style={styles.confirm}>
@@ -178,6 +183,11 @@ export default function UserProfileScreen() {
               }}
             />
           </View>
+          {block.isError ? (
+            <Text tone="danger" accessibilityLiveRegion="assertive" testID="block-error">
+              {errorMessage(t, block.error)}
+            </Text>
+          ) : null}
         </View>
       ) : null}
     </Screen>

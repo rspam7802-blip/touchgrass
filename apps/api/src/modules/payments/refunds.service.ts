@@ -84,6 +84,11 @@ export class RefundsService {
     return this.db.transaction(async (tx) => {
       const paid = await this.payments.capturedFor(userId, eventId, tx);
       if (!paid) return null;
+      // The ticket is gone whatever the refund: this payment never backs a seat again.
+      await tx
+        .update(payments)
+        .set({ ticketReleasedAt: cancelledAt })
+        .where(eq(payments.id, paid.id));
       const left = paid.amountPaise - (await this.committed(paid.id, tx));
       const quote = refundFor(
         core.refundPolicy ?? DEFAULT_REFUND_POLICY,

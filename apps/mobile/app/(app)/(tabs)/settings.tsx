@@ -1,8 +1,11 @@
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
+import { Alert, StyleSheet, View } from 'react-native';
+import { BackButton } from '../../../components/BackButton';
 import { ListRow, Screen, Text } from '../../../components/ui';
 import { readAppEnvironment } from '../../../src/config';
 import { useLogout } from '../../../src/features/auth/api';
+import { openLegal } from '../../../src/features/legal/links';
 import { useTutorial } from '../../../src/features/me/api';
 import { useSettingsStore } from '../../../src/stores/settings-store';
 
@@ -14,7 +17,12 @@ export default function SettingsScreen() {
   const appearance = useSettingsStore((s) => s.appearance);
   return (
     <Screen testID="settings-screen">
-      <Text variant="title">{t('settings.title')}</Text>
+      <View style={styles.header}>
+        <BackButton testID="settings-back" />
+        <Text variant="title" accessibilityRole="header">
+          {t('settings.title')}
+        </Text>
+      </View>
       <ListRow
         label={t('settings.notifications')}
         onPress={() => {
@@ -92,11 +100,52 @@ export default function SettingsScreen() {
         }}
         testID="row-account"
       />
+      <Text variant="label" accessibilityRole="header">
+        {t('settings.legalTitle')}
+      </Text>
       <ListRow
-        label={t('settings.logout')}
+        label={t('settings.terms')}
+        onPress={() => {
+          openLegal('terms');
+        }}
+        testID="row-terms"
+      />
+      <ListRow
+        label={t('settings.privacyPolicy')}
+        onPress={() => {
+          openLegal('privacy');
+        }}
+        testID="row-privacy-policy"
+      />
+      <ListRow
+        label={t('settings.refunds')}
+        onPress={() => {
+          openLegal('refunds');
+        }}
+        testID="row-refunds"
+      />
+      <ListRow
+        label={t('settings.contact')}
+        onPress={() => {
+          openLegal('contact');
+        }}
+        testID="row-contact"
+      />
+      <ListRow
+        label={logout.isPending ? t('states.loading') : t('settings.logout')}
         tone="danger"
         onPress={() => {
-          logout.mutate();
+          if (logout.isPending) return;
+          Alert.alert(t('settings.logoutConfirm'), undefined, [
+            { text: t('common.cancel'), style: 'cancel' },
+            {
+              text: t('settings.logout'),
+              style: 'destructive',
+              onPress: () => {
+                logout.mutate();
+              },
+            },
+          ]);
         }}
         testID="row-logout"
       />
@@ -106,3 +155,7 @@ export default function SettingsScreen() {
     </Screen>
   );
 }
+
+const styles = StyleSheet.create({
+  header: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+});

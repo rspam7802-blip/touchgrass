@@ -526,6 +526,23 @@ export class StoriesService {
     return due.length;
   }
 
+  /** Worker, hourly: story photos uploaded but never posted are deleted after a day. */
+  async purgeUnpostedMedia(now: Date = new Date()): Promise<number> {
+    const candidates = await this.media.idsOfPurposeBefore(
+      'story',
+      new Date(now.getTime() - 24 * HOUR_MS),
+    );
+    if (candidates.length === 0) return 0;
+    const used = await this.db
+      .select({ id: stories.mediaId })
+      .from(stories)
+      .where(inArray(stories.mediaId, candidates));
+    const keep = new Set(used.map((r) => r.id));
+    const orphans = candidates.filter((id) => !keep.has(id));
+    await this.media.destroy(orphans);
+    return orphans.length;
+  }
+
   // ---------- account data ----------
 
   async exportFor(userId: string): Promise<Record<string, unknown>> {

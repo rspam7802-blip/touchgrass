@@ -14,6 +14,26 @@ variable "support_email" {
   type        = string
 }
 
+variable "legal_entity_name" {
+  description = "Registered company name shown on /privacy, /terms, /refunds and /contact."
+  type        = string
+}
+
+variable "legal_address" {
+  description = "Registered office address shown on /contact (Razorpay and the stores require one)."
+  type        = string
+}
+
+variable "grievance_officer_name" {
+  description = "Grievance Officer's name, published on /contact (IT Rules 2021, DPDP Act 2023)."
+  type        = string
+}
+
+variable "grievance_officer_email" {
+  description = "Grievance Officer's email, published on /contact and in the privacy policy."
+  type        = string
+}
+
 variable "apple_team_id" {
   description = "Apple Developer Team ID (developer.apple.com → Membership) for iOS universal links. Empty = no app associated."
   type        = string

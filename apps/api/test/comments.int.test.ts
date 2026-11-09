@@ -91,6 +91,16 @@ describe('comments on plans (D-156)', () => {
     expect(inbox.items.find((i) => i.kind === 'event_comment')?.title).toMatch(
       /commented on Sunset frisbee/,
     );
+
+    // When the comment goes, so does the notification quoting it (D-163).
+    await remove(a, mine.id).expect(204);
+    const after = (
+      await request(h.http)
+        .get('/v1/notifications')
+        .set(...bearer(host.token))
+        .expect(200)
+    ).body as { items: { kind: string }[] };
+    expect(after.items.filter((i) => i.kind === 'event_comment')).toEqual([]);
   });
 
   it('never leaks: invisible plans 404, blocks hide both ways, held comments stay with the author', async () => {

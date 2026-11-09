@@ -143,7 +143,7 @@ export const EnvSchema = z
     };
     requireKeys(
       env.SMS_PROVIDER === 'msg91',
-      ['MSG91_AUTH_KEY', 'MSG91_OTP_TEMPLATE_ID'],
+      ['MSG91_AUTH_KEY', 'MSG91_OTP_TEMPLATE_ID', 'MSG91_SMS_FLOW_ID'],
       'SMS_PROVIDER=msg91',
     );
     requireKeys(Boolean(env.STORE_REVIEW_PHONE), ['STORE_REVIEW_OTP'], 'STORE_REVIEW_PHONE is set');
@@ -182,6 +182,12 @@ export const EnvSchema = z
         ['MODERATION_PROVIDER', 'fake'],
         ['EMAIL_PROVIDER', 'fake'],
       ];
+      if (env.EMAIL_PROVIDER === 'smtp' && /localhost|127\.0\.0\.1/.test(env.SMTP_URL))
+        ctx.addIssue({
+          code: 'custom',
+          path: ['SMTP_URL'],
+          message: 'SMTP_URL must point at a real mail server in production',
+        });
       for (const [key, fake] of fakes) {
         if (env[key] === fake)
           ctx.addIssue({

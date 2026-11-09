@@ -503,6 +503,36 @@ describe('ticketing (F-PAY-01)', () => {
     ]);
     expect(((await detail(h, buyer, plan.id)).body as EventDetail).viewer.rsvp).toBe('going');
   });
+
+  it('paying again after cancelling is a new ticket, not a duplicate (D-163)', async () => {
+    const host = await approvedHost();
+    const plan = await paidPlan(host);
+    const buyer = await member(h);
+    const firstPay = await buy(buyer, plan.id);
+    await request(h.http)
+      .delete(`/v1/events/${plan.id}/rsvp`)
+      .set(...bearer(buyer.token))
+      .expect(204);
+    // Re-buy before the cancellation's refund job has run: the new payment must still not be a "duplicate".
+    const secondPay = await buy(buyer, plan.id);
+    await drain();
+    expect((await payment(buyer, secondPay)).refunds).toEqual([]);
+    expect((await payment(buyer, firstPay)).refunds).toEqual([
+      expect.objectContaining({ reason: 'BEFORE_CUTOFF', amountPaise: PRICE }),
+    ]);
+    expect(((await detail(h, buyer, plan.id)).body as EventDetail).viewer.rsvp).toBe('going');
+
+    // Cancelling the new ticket refunds the new payment, never the old one again.
+    await request(h.http)
+      .delete(`/v1/events/${plan.id}/rsvp`)
+      .set(...bearer(buyer.token))
+      .expect(204);
+    await drain();
+    expect((await payment(buyer, secondPay)).refunds).toEqual([
+      expect.objectContaining({ reason: 'BEFORE_CUTOFF', amountPaise: PRICE }),
+    ]);
+    expect((await payment(buyer, firstPay)).refunds).toHaveLength(1);
+  });
 });
 
 // ---------- F-PAY-02 ----------

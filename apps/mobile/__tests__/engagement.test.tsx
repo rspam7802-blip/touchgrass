@@ -12,7 +12,7 @@ import type {
   StreakView,
 } from '@touchgrass/shared';
 import * as Sharing from 'expo-sharing';
-import { Share } from 'react-native';
+import { Alert, type AlertButton, Share } from 'react-native';
 import { captureRef } from 'react-native-view-shot';
 import BadgesScreen from '../app/(app)/badges';
 import CheckoutScreen from '../app/(app)/events/[id]/checkout';
@@ -483,8 +483,22 @@ describe('crews (F-ENG-02)', () => {
         status: 403,
         body: { error: { code: 'NOT_ELIGIBLE', message: 'x', details: { reason: 'LAST_ADMIN' } } },
       });
+    const alertSpy = jest.spyOn(Alert, 'alert').mockImplementation(() => undefined);
     await renderWithProviders(<CrewScreen />, { fetchFn: api.fetch });
     await fireEvent.press(await screen.findByTestId('crew-leave'));
+    // Leaving asks first; nothing is sent until the person confirms.
+    expect(alertSpy).toHaveBeenCalledWith(
+      'Leave this crew?',
+      expect.any(String),
+      expect.any(Array),
+    );
+    expect(api.callsTo('POST', `/v1/crews/${CREW}/membership`)).toHaveLength(0);
+    const buttons: AlertButton[] = alertSpy.mock.calls.at(-1)?.[2] ?? [];
+    await act(async () => {
+      buttons.find((b) => b.text === 'Leave crew')?.onPress?.();
+      await Promise.resolve();
+    });
+    alertSpy.mockRestore();
     expect(await screen.findByTestId('crew-error')).toHaveTextContent(
       'Make someone else an admin before you leave.',
     );
@@ -1077,7 +1091,8 @@ describe('rewards and crews on the plan page (F-GRW-01, F-ENG-02)', () => {
     await waitFor(() =>
       expect(mockRouter.replace).toHaveBeenCalledWith({
         pathname: '/events/[id]',
-        params: { id: EV1 },
+        // The plan screen says the free entry was used (this screen is gone after the replace).
+        params: { id: EV1, notice: 'creditUsed' },
       }),
     );
     expect(api.callsTo('POST', `/v1/events/${EV1}/checkout`)[0]?.body).toMatchObject({

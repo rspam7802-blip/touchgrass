@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { Button, Screen, Text } from './ui';
+import { useLogout } from '../src/features/auth/api';
 import { useTheme } from '../src/theme/theme';
 
 export const ONBOARDING_STEPS = [
@@ -37,6 +38,7 @@ export interface OnboardingStepProps {
 export function OnboardingStep(props: OnboardingStepProps) {
   const { t } = useTranslation();
   const theme = useTheme();
+  const logout = useLogout();
   const index = ONBOARDING_STEPS.indexOf(props.step) + 1;
   return (
     <Screen testID={`onboarding-${props.step}`}>
@@ -90,6 +92,16 @@ export function OnboardingStep(props: OnboardingStepProps) {
           testID="onboarding-secondary"
         />
       ) : null}
+      {/* A way out at every step (wrong number, someone else's phone, stuck on a permission). */}
+      <Button
+        label={t('states.signOut')}
+        variant="ghost"
+        loading={logout.isPending}
+        onPress={() => {
+          logout.mutate();
+        }}
+        testID="onboarding-sign-out"
+      />
     </Screen>
   );
 }

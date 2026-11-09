@@ -20,8 +20,9 @@ export function bucketKey(rule: RateLimitRule, req: AppRequest): string | null {
       const body = req.body as Record<string, unknown> | undefined;
       const value = rule.bodyField ? body?.[rule.bodyField] : undefined;
       if (typeof value !== 'string' || value.length === 0) return null;
+      const canonical = rule.normalize?.(value) ?? value;
       // Hash so raw identifiers (phone numbers) never appear in Redis keys.
-      return `${rule.name}:b:${createHash('sha256').update(value).digest('hex').slice(0, 32)}`;
+      return `${rule.name}:b:${createHash('sha256').update(canonical).digest('hex').slice(0, 32)}`;
     }
   }
 }

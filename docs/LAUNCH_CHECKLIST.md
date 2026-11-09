@@ -6,11 +6,9 @@ The code, infrastructure-as-code, tests and docs are complete (see `FEATURES.md`
 
 - [ ] ⏱ Company incorporated, PAN/TAN, current account. Needed by Razorpay, Apple, Google and DLT.
 - [ ] ⏱ GST registration; then set `seller_gstin` in Terraform (receipts print it, D-069).
-- [ ] ⏱ **Privacy policy** reviewed by a lawyer for the DPDP Act 2023: what we collect (`STORE_LISTING.md` → Privacy answers), purposes, processors (AWS, MSG91, Razorpay, Expo, Google Maps, OpenWeather, PostHog, Sentry), retention (14-day deletion grace, live-location 24 h purge, selfies deleted after review, tax records kept), rights and how to use them (in-app export and deletion). Publish it at `https://<domain>/privacy`.
-- [ ] ⏱ **Terms of use** reviewed by a lawyer: 18+ only, community rules, host responsibilities, paid plans and the refund policy (D-068), platform fee (D-069), limitation of liability for meet-ups. Publish at `https://<domain>/terms`.
-- [ ] Refund and cancellation policy page (Razorpay requires it on the website).
-- [ ] Contact page or address on the website (Razorpay and the stores require it).
-- [ ] Appoint a **Grievance Officer** and publish the name and contact (IT Rules 2021, and DPDP consent/grievance handling). Decide the response SLA the moderation queue will meet.
+- [ ] ⏱ **Lawyer review of the legal pages.** `/privacy`, `/terms`, `/refunds` and `/contact` are built and linked from the website footer, the app's sign-up screen and Settings → Legal (D-163). Their wording lives in `apps/web/lib/legal.ts` and describes what the app really does (data collected, processors, retention, DPDP rights, 18+, community rules, host duties, platform fee, refund rules). Have a lawyer review and edit that file for the DPDP Act 2023, consumer law and your company's facts.
+- [ ] Fill the company details in Terraform (`legal_entity_name`, `legal_address`, `grievance_officer_name`, `grievance_officer_email`); they appear on the legal pages.
+- [ ] Appoint the **Grievance Officer** (IT Rules 2021, DPDP Act) and make sure someone answers within 24 hours and resolves within 15 days, as `/contact` promises.
 - [ ] Choose the support address; set `support_email` in Terraform (shown on `/delete-account` and used as the DMARC report address).
 - [ ] Third-party penetration test before public launch (`SECURITY.md` → remaining risks).
 

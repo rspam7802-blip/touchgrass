@@ -25,6 +25,7 @@ export const GLYPHS = {
   close: '<path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/>',
   check: '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
   arrowRight: '<path d="M5 12h13.5M13 6.5l5.5 5.5-5.5 5.5"/>',
+  arrowLeft: '<path d="M19 12H5.5M11 6.5 5.5 12l5.5 5.5"/>',
 
   // Plans
   pin: '<path d="M12 21s-7-6.2-7-11.5a7 7 0 1 1 14 0C19 14.8 12 21 12 21Z"/><circle cx="12" cy="9.5" r="2.25" fill="ACCENT" stroke="none"/>',

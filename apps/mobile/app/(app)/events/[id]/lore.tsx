@@ -71,10 +71,10 @@ export default function LoreScreen() {
   const addPhoto = async (): Promise<void> => {
     setError(null);
     setNotice(null);
-    const uri = await pickImage();
-    if (!uri) return;
-    setBusy('uploading');
     try {
+      const uri = await pickImage();
+      if (!uri) return;
+      setBusy('uploading');
       const asset = await uploadImage(client, 'lore', await compressImage(uri));
       setBusy('checking');
       if (!(await waitUntilReady(client, asset, LORE_READY_POLLS))) {

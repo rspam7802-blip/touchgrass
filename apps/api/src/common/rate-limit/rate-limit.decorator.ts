@@ -12,6 +12,8 @@ export interface RateLimitRule {
   by: 'ip' | 'anon-ip' | 'user' | 'body';
   /** For by="body": the request body field to key on (e.g. the phone number for OTP). */
   bodyField?: string;
+  /** For by="body": canonical form of the value, so re-formatting it (spaces, dashes) can't open a new bucket. */
+  normalize?: (value: string) => string | null;
 }
 
 export const RATE_LIMIT_RULES = 'tg:rate-limit-rules';

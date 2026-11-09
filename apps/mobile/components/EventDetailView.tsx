@@ -342,7 +342,8 @@ export function EventDetailView({
               {reasonText(t, v.blockedReason, { until: v.cooldownUntil })}
             </Text>
           ) : null}
-          {open && event.allowPlusOnes && (v.canRsvp || (holdsSeat && !v.plusOne)) && !v.isHost ? (
+          {/* A +1 is chosen when pulling up; the API refuses adding one to a seat you already hold. */}
+          {open && event.allowPlusOnes && v.canRsvp && !v.isHost ? (
             <Button
               label={t('events.plusOneLabel')}
               variant="secondary"

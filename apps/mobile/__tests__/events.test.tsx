@@ -214,6 +214,21 @@ describe('Event detail', () => {
     expect(await screen.findByTestId('rsvp-status')).toHaveTextContent("You're pulling up");
   });
 
+  it('offers a +1 only while pulling up, never on a seat you already hold', async () => {
+    await renderWithProviders(<EventScreen />, { fetchFn: api.fetch });
+    expect(await screen.findByTestId('plus-one')).toBeOnTheScreen();
+  });
+
+  it('hides the +1 once you are going (the API refuses adding one to a held seat)', async () => {
+    api.on('GET', `/v1/events/${EVENT_ID}`, {
+      status: 200,
+      body: eventFixture({}, { rsvp: 'going', canRsvp: false }),
+    });
+    await renderWithProviders(<EventScreen />, { fetchFn: api.fetch });
+    expect(await screen.findByTestId('rsvp-status')).toBeOnTheScreen();
+    expect(screen.queryByTestId('plus-one')).toBeNull();
+  });
+
   it('mystery plans show only the area until the reveal', async () => {
     api.on('GET', `/v1/events/${EVENT_ID}`, {
       status: 200,
@@ -455,6 +470,57 @@ describe('Plot flow (F-EVT-01/02)', () => {
       pathname: '/events/[id]',
       params: { id: EVENT_ID },
     });
+  });
+
+  it('a failed squad invite still opens the new plan, once, with a notice', async () => {
+    mockRouteParams.current = { inviteUserId: ids.other };
+    api.on('POST', `/v1/events/${EVENT_ID}/invites`, {
+      status: 500,
+      body: { error: { code: 'INTERNAL', message: 'x' } },
+    });
+    await renderWithProviders(<PlotScreen />, { fetchFn: api.fetch });
+    await fireEvent.changeText(screen.getByTestId('plot-title'), 'Sunset frisbee');
+    await fireEvent.press(
+      await screen.findByTestId(`plot-category-${interestsFixture[0]?.id ?? ''}`),
+    );
+    await fireEvent.changeText(screen.getByTestId('plot-date'), '03/11/2026');
+    await fireEvent.changeText(screen.getByTestId('plot-time'), '18:00');
+    await fireEvent.changeText(screen.getByTestId('plot-place-search'), 'lake');
+    await fireEvent.press(await screen.findByTestId('place-fx_lake'));
+    await screen.findByTestId('plot-picked');
+    await fireEvent.press(screen.getByTestId('plot-submit'));
+    await waitFor(() =>
+      expect(mockRouter.replace).toHaveBeenCalledWith({
+        pathname: '/events/[id]',
+        params: { id: EVENT_ID, notice: 'inviteFailed' },
+      }),
+    );
+    expect(api.callsTo('POST', '/v1/events')).toHaveLength(1);
+    expect(api.callsTo('POST', `/v1/events/${EVENT_ID}/invites`)).toHaveLength(1);
+  });
+
+  it('a retried submit reuses the same idempotency key, so it cannot create a second plan', async () => {
+    api.on('POST', '/v1/events', {
+      status: 500,
+      body: { error: { code: 'INTERNAL', message: 'x' } },
+    });
+    await renderWithProviders(<PlotScreen />, { fetchFn: api.fetch });
+    await fireEvent.changeText(screen.getByTestId('plot-title'), 'Sunset frisbee');
+    await fireEvent.press(
+      await screen.findByTestId(`plot-category-${interestsFixture[0]?.id ?? ''}`),
+    );
+    await fireEvent.changeText(screen.getByTestId('plot-date'), '03/11/2026');
+    await fireEvent.changeText(screen.getByTestId('plot-time'), '18:00');
+    await fireEvent.changeText(screen.getByTestId('plot-place-search'), 'lake');
+    await fireEvent.press(await screen.findByTestId('place-fx_lake'));
+    await screen.findByTestId('plot-picked');
+    await fireEvent.press(screen.getByTestId('plot-submit'));
+    await waitFor(() => expect(api.callsTo('POST', '/v1/events')).toHaveLength(1));
+    await waitFor(() => expect(screen.getByTestId('plot-submit')).toBeEnabled());
+    await fireEvent.press(screen.getByTestId('plot-submit'));
+    await waitFor(() => expect(api.callsTo('POST', '/v1/events')).toHaveLength(2));
+    const [first, second] = api.callsTo('POST', '/v1/events');
+    expect(second?.headers['idempotency-key']).toBe(first?.headers['idempotency-key']);
   });
 
   it('shows server errors in plain words', async () => {
@@ -711,6 +777,15 @@ describe('Deep links (F-EVT-17, F-EVT-07)', () => {
         params: { id: EVENT_ID },
       }),
     );
+  });
+
+  it('a signed-out visitor keeps the shared plan (and its invite) through sign-up', async () => {
+    await useAuthStore.getState().signOut();
+    mockRouteParams.current = { slug: 'AbCd2345', i: 'tok123456789012345' };
+    await renderWithProviders(<SharedEventRoute />, { fetchFn: api.fetch });
+    await fireEvent.press(await screen.findByRole('button', { name: 'Get started' }));
+    expect(mockRouter.replace).toHaveBeenCalledWith('/');
+    expect(useAuthFlowStore.getState().pendingLink).toBe('/e/AbCd2345?i=tok123456789012345');
   });
 
   it('a signed-out friend carries the claim token into sign-up', async () => {

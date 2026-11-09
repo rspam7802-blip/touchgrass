@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { LIMITS } from '../constants';
+import { LIMITS, LOCALE_DEFAULTS } from '../constants';
 import { ReliabilityTier } from '../enums';
 import { MediaVariants } from './media';
 import { PersonCard } from './social';
@@ -96,6 +96,7 @@ export const PostEventCard = z.object({
     title: z.string(),
     startsAt: z.iso.datetime(),
     endsAt: z.iso.datetime(),
+    timezone: z.string().default(LOCALE_DEFAULTS.timezone),
     cover: MediaVariants.nullable(),
   }),
   host: PersonCard.nullable(),

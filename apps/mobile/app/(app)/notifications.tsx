@@ -8,6 +8,7 @@ import {
   ErrorState,
   FadeIn,
   LoadingState,
+  OfflineBanner,
   staggerDelay,
   Text,
 } from '../../components/ui';
@@ -49,6 +50,7 @@ export default function NotificationsScreen() {
       style={[styles.root, { backgroundColor: theme.colors.background }]}
       testID="notifications-screen"
     >
+      <OfflineBanner />
       <View style={styles.header}>
         <Text tone="muted" testID="notifications-unread">
           {t('notifications.unread', { count: unread })}

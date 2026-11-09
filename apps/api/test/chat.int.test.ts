@@ -551,6 +551,8 @@ describe('event group chat (F-CHT-02) and polls (F-CHT-05)', () => {
         .send(body);
     await create(a, { question: 'Pizza or biryani?', options: ['Pizza', 'Biryani'] }).expect(403);
     await create(host, { question: 'Pizza or biryani?', options: ['Pizza', 'pizza'] }).expect(400);
+    // Poll wording goes to everyone, so flagged words are refused (D-163).
+    await create(host, { question: 'Who is the lanja here?', options: ['Me', 'You'] }).expect(400);
     const msg = (
       await create(host, { question: 'Pizza or biryani?', options: ['Pizza', 'Biryani'] }).expect(
         201,

@@ -4,7 +4,7 @@ import type { TFunction } from 'i18next';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { StyleSheet, View } from 'react-native';
+import { Alert, StyleSheet, View } from 'react-native';
 import { PersonRow } from '../../../../components/PersonRow';
 import { Button, ErrorState, ListRow, LoadingState, Screen, Text } from '../../../../components/ui';
 import {
@@ -122,12 +122,14 @@ function CrewView({ crew }: { crew: CrewDetail }) {
           <Text>{t('crews.invited')}</Text>
           <Button
             label={t('crews.accept')}
+            loading={membership.isPending}
             onPress={() => void run(() => membership.mutateAsync({ action: 'accept' }))}
             testID="crew-accept"
           />
           <Button
             label={t('crews.decline')}
             variant="ghost"
+            disabled={membership.isPending}
             onPress={() =>
               void run(async () => {
                 await membership.mutateAsync({ action: 'decline' });
@@ -325,12 +327,21 @@ function CrewView({ crew }: { crew: CrewDetail }) {
         <Button
           label={t('crews.leave')}
           variant="danger"
-          onPress={() =>
-            void run(async () => {
-              await membership.mutateAsync({ action: 'leave' });
-              router.back();
-            })
-          }
+          loading={membership.isPending}
+          onPress={() => {
+            Alert.alert(t('crews.leaveConfirmTitle'), t('crews.leaveConfirmBody'), [
+              { text: t('common.cancel'), style: 'cancel' },
+              {
+                text: t('crews.leave'),
+                style: 'destructive',
+                onPress: () =>
+                  void run(async () => {
+                    await membership.mutateAsync({ action: 'leave' });
+                    router.back();
+                  }),
+              },
+            ]);
+          }}
           testID="crew-leave"
         />
       ) : null}

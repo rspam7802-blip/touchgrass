@@ -16,8 +16,10 @@ import {
   refundFor,
   DEFAULT_REFUND_POLICY,
   TimeIdCursor,
+  LOCALE_DEFAULTS,
 } from '@touchgrass/shared';
-import { and, desc, eq, inArray, lt, or, sql } from 'drizzle-orm';
+import { and, desc, eq, inArray, isNull, lt, or, sql } from 'drizzle-orm';
+import { CitiesService } from '../cities/cities.service.js';
 import { uuidv7 } from 'uuidv7';
 import { PaymentsGateway } from '../../adapters/payments/payments.port.js';
 import { pepperedHash, randomToken } from '../../common/auth/hashing.js';
@@ -82,6 +84,7 @@ export class PaymentsService {
     private readonly users: UsersService,
     private readonly outbox: OutboxService,
     private readonly credits: PaymentCredits,
+    private readonly cities: CitiesService,
   ) {}
 
   private hashToken(token: string): string {
@@ -420,6 +423,7 @@ export class PaymentsService {
         .orderBy(refunds.createdAt),
     ]);
     const byId = new Map(cores.map((c) => [c.id, c]));
+    const zones = await this.cities.timezones([...new Set(cores.map((c) => c.cityId))]);
     return rows.map((p) => {
       const core = byId.get(p.eventId);
       return {
@@ -427,6 +431,7 @@ export class PaymentsService {
         eventId: p.eventId,
         eventTitle: core?.title ?? '',
         eventStartsAt: (core?.startsAt ?? p.createdAt).toISOString(),
+        eventTimezone: (core && zones.get(core.cityId)) ?? LOCALE_DEFAULTS.timezone,
         status: p.status,
         amountPaise: p.amountPaise,
         refundedPaise: p.refundedPaise,
@@ -520,6 +525,7 @@ export class PaymentsService {
           eq(payments.userId, userId),
           eq(payments.eventId, eventId),
           inArray(payments.status, ['captured', 'partially_refunded']),
+          isNull(payments.ticketReleasedAt),
         ),
       )
       .orderBy(payments.capturedAt)

@@ -110,6 +110,7 @@ function paymentView(over: Partial<PaymentView> = {}): PaymentView {
     eventId: EVENT_ID,
     eventTitle: 'Pottery wheel night',
     eventStartsAt: '2026-11-07T12:30:00.000Z',
+    eventTimezone: 'Asia/Kolkata',
     status: 'created',
     amountPaise: 50_000,
     refundedPaise: 0,

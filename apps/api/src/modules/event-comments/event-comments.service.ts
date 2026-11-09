@@ -19,11 +19,15 @@ import { canViewEvent } from '../events/event.policy.js';
 import { EventStore } from '../events/event-store.service.js';
 import { type AfterCommit, GONE } from '../moderation/moderation-targets.js';
 import { ModerationService } from '../moderation/moderation.service.js';
+import { NotificationsService } from '../notifications/notifications.service.js';
 import { SanctionsReader } from '../moderation/sanctions-reader.js';
 import { PeopleService } from '../profiles/people.service.js';
 import { ProfilesService } from '../profiles/profiles.service.js';
 import { SocialGraphService } from '../social/graph/social-graph.service.js';
 import { canComment, canDeleteComment, commentVisibleTo } from './event-comments.policy.js';
+
+/** The host notification for a new comment; it quotes the comment, so it goes when the comment does. */
+export const COMMENT_NOTIFICATION = 'event_comment';
 
 export const EVENT_COMMENTED_EVENT = 'event.commented';
 
@@ -47,6 +51,7 @@ export class EventCommentsService {
     private readonly moderation: ModerationService,
     private readonly sanctions: SanctionsReader,
     private readonly outbox: OutboxService,
+    private readonly notifications: NotificationsService,
   ) {}
 
   async list(viewerId: string, eventId: string, q: EventCommentsQuery): Promise<EventCommentPage> {
@@ -170,10 +175,13 @@ export class EventCommentsService {
       hosts = facts.hostRole !== null;
     }
     if (!canDeleteComment(row, userId, hosts)) throw AppError.notFound('Comment');
-    await this.db
-      .update(eventComments)
-      .set({ status: 'removed' })
-      .where(eq(eventComments.id, commentId));
+    await this.db.transaction(async (tx) => {
+      await tx
+        .update(eventComments)
+        .set({ status: 'removed' })
+        .where(eq(eventComments.id, commentId));
+      await this.notifications.withdraw(COMMENT_NOTIFICATION, 'commentId', [commentId], tx);
+    });
   }
 
   /** Worker: tells the plan's hosts about a new comment (never the author, never across a block). */
@@ -244,6 +252,7 @@ export class EventCommentsService {
       .update(eventComments)
       .set({ status: 'removed', heldAt: null })
       .where(eq(eventComments.id, commentId));
+    await this.notifications.withdraw(COMMENT_NOTIFICATION, 'commentId', [commentId], tx);
     return undefined;
   }
 
@@ -266,6 +275,15 @@ export class EventCommentsService {
   }
 
   async eraseFor(userId: string, tx: Tx): Promise<void> {
-    await tx.delete(eventComments).where(eq(eventComments.authorId, userId));
+    const gone = await tx
+      .delete(eventComments)
+      .where(eq(eventComments.authorId, userId))
+      .returning({ id: eventComments.id });
+    await this.notifications.withdraw(
+      COMMENT_NOTIFICATION,
+      'commentId',
+      gone.map((r) => r.id),
+      tx,
+    );
   }
 }

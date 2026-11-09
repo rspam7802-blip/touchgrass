@@ -26,6 +26,7 @@ import { SafetyService } from '../modules/safety/safety.service.js';
 import { NotificationsService } from '../modules/notifications/notifications.service.js';
 import { RemindersService } from '../modules/reminders/reminders.service.js';
 import { AnalyticsCountersService } from '../modules/analytics/analytics-counters.service.js';
+import { VerificationService } from '../modules/verification/verification.service.js';
 
 export interface ScheduledJob {
   id: string;
@@ -67,6 +68,7 @@ export class ScheduledJobs {
     private readonly reminders: RemindersService,
     private readonly analyticsCounters: AnalyticsCountersService,
     private readonly stories: StoriesService,
+    private readonly verification: VerificationService,
   ) {}
 
   definitions(): ScheduledJob[] {
@@ -77,6 +79,16 @@ export class ScheduledJobs {
         id: 'media.purge-stale-uploads',
         pattern: '37 * * * *',
         run: () => this.media.purgeStaleUploads(),
+      },
+      {
+        id: 'stories.purge-unposted-media',
+        pattern: '43 * * * *',
+        run: () => this.stories.purgeUnpostedMedia(),
+      },
+      {
+        id: 'verification.purge-unsubmitted-selfies',
+        pattern: '47 * * * *',
+        run: () => this.verification.purgeUnsubmittedSelfies(),
       },
       {
         id: 'stories.purge-expired',

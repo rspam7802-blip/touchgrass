@@ -24,6 +24,8 @@ export const TRACKED_EVENTS: Record<string, string> = {
   'friendship.accepted': 'squad_accepted',
   'payment.captured': 'payment_captured',
   'lore.added': 'lore_added',
+  'story.posted': 'story_posted',
+  'event.commented': 'plan_commented',
   'availability.set': 'free_now_set',
   'crew.approved': 'crew_joined',
   'proposal.locked': 'vote_locked',
@@ -43,6 +45,7 @@ const ACTOR_FIELDS = [
   'reporterId',
   'referrerId',
   'byUserId',
+  'authorId',
 ];
 /** Only ids and small enums travel: never names, text, places or contact details. */
 const SAFE_FIELDS = [

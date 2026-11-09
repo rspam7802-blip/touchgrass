@@ -41,9 +41,9 @@ export default function NewStoryScreen() {
 
   const choose = async (): Promise<void> => {
     setError(null);
-    const uri = await pickImage();
-    if (!uri) return;
     try {
+      const uri = await pickImage();
+      if (!uri) return;
       setImage(await compressImage(uri));
     } catch (err) {
       setError(errorMessage(t, err));

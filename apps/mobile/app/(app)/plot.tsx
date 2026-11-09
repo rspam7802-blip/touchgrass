@@ -204,7 +204,10 @@ function PlotForm({
   const interests = useInterests();
   const vibes = useVibeTags();
   const saved = useSavedVenues();
-  const create = useCreateEvent();
+  // One key for this form: a second tap (or a retry after a lost response) returns the same plan.
+  const [createKey] = useState(() => `plot-${Crypto.randomUUID()}`);
+  const create = useCreateEvent(createKey);
+  const [leaving, setLeaving] = useState(false);
   const { client } = useApi();
   const update = useUpdateEvent(existing?.id ?? '');
   const fromPlace = useVenueFromPlace();
@@ -330,15 +333,28 @@ function PlotForm({
           showIssues(parsed.error.issues);
           return;
         }
+        setLeaving(true);
         const created = await create.mutateAsync(parsed.data);
-        if (inviteUserId)
-          await client.request(`/v1/events/${created.id}/invites`, InviteUsersResult, {
-            method: 'POST',
-            body: { userIds: [inviteUserId] },
-          });
-        router.replace({ pathname: '/events/[id]', params: { id: created.id } });
+        // The plan exists now; a failed squad invite must not keep the person on the form (a second tap
+        // would look like it creates another plan), so it becomes a notice on the plan instead.
+        const inviteFailed = inviteUserId
+          ? await client
+              .request(`/v1/events/${created.id}/invites`, InviteUsersResult, {
+                method: 'POST',
+                body: { userIds: [inviteUserId] },
+              })
+              .then(
+                () => false,
+                () => true,
+              )
+          : false;
+        router.replace({
+          pathname: '/events/[id]',
+          params: inviteFailed ? { id: created.id, notice: 'inviteFailed' } : { id: created.id },
+        });
       }
     } catch (err) {
+      setLeaving(false);
       setFormError(errorMessage(t, err));
     }
   };
@@ -888,7 +904,7 @@ function PlotForm({
       ) : null}
       <Button
         label={existing ? t('events.save') : t('events.publish')}
-        loading={create.isPending || update.isPending}
+        loading={leaving || create.isPending || update.isPending}
         onPress={() => void submit()}
         testID="plot-submit"
       />

@@ -10,6 +10,7 @@ import {
   ErrorState,
   FadeIn,
   LoadingState,
+  OfflineBanner,
   Text,
   TextField,
 } from '../../../../components/ui';
@@ -122,6 +123,10 @@ export default function ThreadScreen() {
       />
     );
   const c = conv.data;
+  // Every action on this screen reports failures in the same error line instead of failing silently.
+  const fail = (err: unknown): void => {
+    setError(errorMessage(t, err));
+  };
   const group = c.kind !== 'direct';
   const canWrite = !c.readOnly;
   const names = Object.values(typing ?? {}).filter((n) => n.length > 0);
@@ -151,10 +156,16 @@ export default function ThreadScreen() {
   };
 
   const attach = async (): Promise<void> => {
-    const uri = await pickImage();
+    setError(null);
+    let uri: string | null;
+    try {
+      uri = await pickImage();
+    } catch (err) {
+      setError(errorMessage(t, err));
+      return;
+    }
     if (!uri) return;
     setUploading(true);
-    setError(null);
     try {
       const asset = await uploadImage(client, 'chat', await compressImage(uri));
       // Images are scanned before anyone else sees them; wait (briefly) for that to finish.
@@ -183,16 +194,22 @@ export default function ThreadScreen() {
         <View style={styles.row}>
           <Button
             label={t('chat.accept')}
-            onPress={() => void respond.mutateAsync(true)}
+            loading={respond.isPending}
+            onPress={() => {
+              setError(null);
+              respond.mutateAsync(true).catch(fail);
+            }}
             testID="accept-request"
           />
           <Button
             label={t('chat.decline')}
             variant="secondary"
+            loading={respond.isPending}
             onPress={() => {
-              void respond.mutateAsync(false).then(() => {
+              setError(null);
+              respond.mutateAsync(false).then(() => {
                 router.back();
-              });
+              }, fail);
             }}
             testID="decline-request"
           />
@@ -216,6 +233,7 @@ export default function ThreadScreen() {
       edges={['bottom']}
       testID="thread-screen"
     >
+      <OfflineBanner />
       <View style={[styles.header, { borderBottomColor: theme.colors.border }]}>
         <Text variant="heading" accessibilityRole="header" style={styles.grow} numberOfLines={1}>
           {c.title}
@@ -223,8 +241,9 @@ export default function ThreadScreen() {
         <Button
           label={c.muted ? t('chat.unmute') : t('chat.mute')}
           variant="ghost"
+          loading={mute.isPending}
           onPress={() => {
-            if (c.muted) void mute.mutateAsync('off');
+            if (c.muted) mute.mutateAsync('off').catch(fail);
             else setMuteOpen(true);
           }}
           testID="mute"
@@ -384,7 +403,11 @@ export default function ThreadScreen() {
                     variant={on ? 'primary' : 'ghost'}
                     selected={on}
                     onPress={() => {
-                      if (selected) react.mutate({ messageId: selected.id, emoji, add: !on });
+                      if (selected)
+                        react.mutate(
+                          { messageId: selected.id, emoji, add: !on },
+                          { onError: fail },
+                        );
                       setSelected(null);
                     }}
                     testID={`react-${emoji}`}
@@ -407,7 +430,8 @@ export default function ThreadScreen() {
               label={t('chat.deleteForMe')}
               variant="secondary"
               onPress={() => {
-                if (selected) del.mutate({ messageId: selected.id, scope: 'me' });
+                if (selected)
+                  del.mutate({ messageId: selected.id, scope: 'me' }, { onError: fail });
                 setSelected(null);
               }}
               testID="delete-me"
@@ -419,7 +443,7 @@ export default function ThreadScreen() {
                 label={t('chat.deleteForEveryone')}
                 variant="danger"
                 onPress={() => {
-                  del.mutate({ messageId: selected.id, scope: 'everyone' });
+                  del.mutate({ messageId: selected.id, scope: 'everyone' }, { onError: fail });
                   setSelected(null);
                 }}
                 testID="delete-everyone"
@@ -475,7 +499,7 @@ export default function ThreadScreen() {
                 label={t(`chat.mute_${d}`)}
                 variant="secondary"
                 onPress={() => {
-                  void mute.mutateAsync(d);
+                  mute.mutateAsync(d).catch(fail);
                   setMuteOpen(false);
                 }}
                 testID={`mute-${d}`}

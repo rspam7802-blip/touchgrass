@@ -89,9 +89,10 @@ export class MediaService {
   async get(viewerUserId: string, assetId: string): Promise<MediaAsset> {
     const asset = await this.byId(assetId);
     if (!asset || asset.status === 'deleted') throw AppError.notFound('Media');
-    const isOwner = asset.ownerUserId === viewerUserId;
-    if (!isOwner && asset.status !== 'ready') throw AppError.notFound('Media');
-    return this.toDto(asset, isOwner);
+    // Only the uploader reads an asset directly (upload progress). Everyone else sees media through the
+    // content that holds it (profile, story, chat, Lore), which applies blocks, audiences and expiry.
+    if (asset.ownerUserId !== viewerUserId) throw AppError.notFound('Media');
+    return this.toDto(asset, true);
   }
 
   async byId(assetId: string, db: DbOrTx = this.db): Promise<MediaRow | null> {
@@ -199,6 +200,29 @@ export class MediaService {
       .select({ id: mediaAssets.id })
       .from(mediaAssets)
       .where(and(eq(mediaAssets.ownerUserId, ownerUserId), isNull(mediaAssets.deletedAt)));
+    return rows.map((r) => r.id);
+  }
+
+  /**
+   * Housekeeping helper: finished uploads of one purpose older than `before`. The module that uses that
+   * purpose decides which of them nothing points at and hands those back to `destroy`.
+   */
+  async idsOfPurposeBefore(
+    purpose: MediaRow['purpose'],
+    before: Date,
+    limit = 500,
+  ): Promise<string[]> {
+    const rows = await this.db
+      .select({ id: mediaAssets.id })
+      .from(mediaAssets)
+      .where(
+        and(
+          eq(mediaAssets.purpose, purpose),
+          isNull(mediaAssets.deletedAt),
+          lt(mediaAssets.createdAt, before),
+        ),
+      )
+      .limit(limit);
     return rows.map((r) => r.id);
   }
 

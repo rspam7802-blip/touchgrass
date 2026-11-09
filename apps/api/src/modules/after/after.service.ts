@@ -4,8 +4,10 @@ import {
   type PostEventCard,
   type ReconnectCandidate,
   type ReconnectState,
+  LOCALE_DEFAULTS,
 } from '@touchgrass/shared';
 import { and, eq, inArray, or } from 'drizzle-orm';
+import { CitiesService } from '../cities/cities.service.js';
 import { AppError } from '../../common/errors/app-error.js';
 import { DB, type Database, type Tx } from '../../infra/database/database.module.js';
 import { OutboxService } from '../../infra/outbox/outbox.service.js';
@@ -55,6 +57,7 @@ export class AfterService {
     private readonly media: MediaService,
     private readonly badges: BadgesReader,
     private readonly outbox: OutboxService,
+    private readonly cities: CitiesService,
   ) {}
 
   /** Who attended (checked in or hosted), visible to the viewer only if they attended too. */
@@ -172,6 +175,8 @@ export class AfterService {
         title: core.title,
         startsAt: core.startsAt.toISOString(),
         endsAt: core.endsAt.toISOString(),
+        timezone:
+          (await this.cities.timezones([core.cityId])).get(core.cityId) ?? LOCALE_DEFAULTS.timezone,
         cover:
           coverAsset?.status === 'ready' ? await this.media.urlsFor(coverAsset.variantKeys) : null,
       },

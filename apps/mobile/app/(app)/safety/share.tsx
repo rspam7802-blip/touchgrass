@@ -6,18 +6,18 @@ import { useTranslation } from 'react-i18next';
 import * as Linking from 'expo-linking';
 import { Share, StyleSheet, View } from 'react-native';
 import { ChipGroup } from '../../../components/ChipGroup';
+import { SosButton } from '../../../components/SosButton';
 import { Button, EmptyState, ErrorState, LoadingState, Screen, Text } from '../../../components/ui';
 import { useMyEvents } from '../../../src/features/events/api';
 import { formatTime } from '../../../src/features/events/format';
 import {
   useLiveShare,
   useSendPoint,
-  useSos,
   useStartShare,
   useStopShare,
   useTrustedContacts,
 } from '../../../src/features/safety/api';
-import { confirmSos, toPoint } from '../../../src/features/safety/sos';
+import { toPoint } from '../../../src/features/safety/sos';
 import { errorMessage } from '../../../src/lib/errors';
 
 const NO_PLAN = 'none';
@@ -82,7 +82,6 @@ export default function ShareLocationScreen() {
   const start = useStartShare();
   const stop = useStopShare();
   const point = useSendPoint();
-  const sos = useSos();
   const [minutes, setMinutes] = useState<number>(60);
   const [eventId, setEventId] = useState<string>(params.eventId ?? NO_PLAN);
   const [error, setError] = useState<string | null>(null);
@@ -104,19 +103,7 @@ export default function ShareLocationScreen() {
       />
     );
 
-  const sosButton = (
-    <Button
-      label={t('safety.sos')}
-      variant="danger"
-      accessibilityHint={t('safety.sosHint')}
-      onPress={() => {
-        confirmSos(t, (p) => {
-          sos.mutate({ point: p });
-        });
-      }}
-      testID="share-sos"
-    />
-  );
+  const sosButton = <SosButton testID="share-sos" />;
 
   if (contacts.data.items.length === 0)
     return (
@@ -178,11 +165,6 @@ export default function ShareLocationScreen() {
           testID="share-stop"
         />
         {sosButton}
-        {sos.isSuccess ? (
-          <Text tone="primary" accessibilityLiveRegion="polite">
-            {t('safety.sosSent')}
-          </Text>
-        ) : null}
       </Screen>
     );
   }

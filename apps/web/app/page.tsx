@@ -2,6 +2,7 @@ import { BRAND, isReferralCode, SUPPORTED_LANGUAGES } from '@touchgrass/shared';
 import { headers } from 'next/headers';
 import Link from 'next/link';
 import { resolveLanguage, strings } from '../lib/i18n';
+import { LegalFooter } from '../lib/legal-page';
 
 interface PageProps {
   searchParams: Promise<{ lang?: string; ref?: string }>;
@@ -73,8 +74,11 @@ export default async function Home({ searchParams }: PageProps) {
         </div>
       </section>
 
-      <footer className="text-sm text-muted">
-        © {new Date().getFullYear()} {BRAND.name} · Hyderabad
+      <footer className="flex flex-col gap-3 text-sm text-muted">
+        <LegalFooter />
+        <span>
+          © {new Date().getFullYear()} {BRAND.name} · Hyderabad
+        </span>
       </footer>
     </main>
   );

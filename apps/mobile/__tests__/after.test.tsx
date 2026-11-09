@@ -44,6 +44,7 @@ function card(over: Partial<PostEventCard> = {}): PostEventCard {
       title: 'Sunset run at KBR',
       startsAt: '2026-10-30T12:30:00.000Z',
       endsAt: '2026-10-30T14:30:00.000Z',
+      timezone: 'Asia/Kolkata',
       cover: null,
     },
     host,

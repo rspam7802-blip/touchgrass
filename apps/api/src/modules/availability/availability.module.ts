@@ -1,6 +1,7 @@
 import { Module, type OnModuleInit } from '@nestjs/common';
 import { AccountDataRegistry } from '../account/account-data.registry.js';
 import { AccountModule } from '../account/account.module.js';
+import { ModerationModule } from '../moderation/moderation.module.js';
 import { NotificationsModule } from '../notifications/notifications.module.js';
 import { ProfilesModule } from '../profiles/profiles.module.js';
 import { SocialGraphModule } from '../social/graph/social-graph.module.js';
@@ -10,7 +11,13 @@ import { AvailabilityService } from './availability.service.js';
 
 /** "I'm free now" (Phase 8, F-ENG-01). */
 @Module({
-  imports: [AccountModule, NotificationsModule, ProfilesModule, SocialGraphModule],
+  imports: [
+    AccountModule,
+    ModerationModule,
+    NotificationsModule,
+    ProfilesModule,
+    SocialGraphModule,
+  ],
   controllers: [AvailabilityController, AvailabilityPingController],
   providers: [AvailabilityService, AvailabilityHandlers],
   exports: [AvailabilityService, AvailabilityHandlers],

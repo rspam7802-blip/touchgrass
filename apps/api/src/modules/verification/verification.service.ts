@@ -363,4 +363,24 @@ export class VerificationService {
       .returning({ mediaAssetId: verifications.mediaAssetId });
     return rows.flatMap((r) => (r.mediaAssetId ? [r.mediaAssetId] : []));
   }
+
+  /**
+   * Worker, hourly: selfies uploaded but never submitted (the pose lapsed or the person gave up) are deleted
+   * after a day. Submitted selfies are deleted once reviewed, so no selfie outlives its purpose.
+   */
+  async purgeUnsubmittedSelfies(now: Date = new Date()): Promise<number> {
+    const candidates = await this.media.idsOfPurposeBefore(
+      'verification_selfie',
+      new Date(now.getTime() - 24 * 3_600_000),
+    );
+    if (candidates.length === 0) return 0;
+    const used = await this.db
+      .select({ id: verifications.mediaAssetId })
+      .from(verifications)
+      .where(inArray(verifications.mediaAssetId, candidates));
+    const keep = new Set(used.map((r) => r.id));
+    const orphans = candidates.filter((id) => !keep.has(id));
+    await this.media.destroy(orphans);
+    return orphans.length;
+  }
 }

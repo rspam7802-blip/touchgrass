@@ -366,6 +366,27 @@ export class NotificationsService {
     return rows.length;
   }
 
+  /**
+   * Takes back notifications that quote content which is now gone (removed, taken down or erased), from the
+   * inbox and from pushes still waiting for quiet hours to end.
+   */
+  async withdraw(
+    kind: string,
+    paramKey: string,
+    values: string[],
+    db: Database | Tx = this.db,
+  ): Promise<void> {
+    if (values.length === 0) return;
+    const matches = (col: typeof notifications.params | typeof pendingPushes.params) =>
+      inArray(sql<string>`${col}->>${paramKey}`, values);
+    await db
+      .delete(pendingPushes)
+      .where(and(eq(pendingPushes.kind, kind), matches(pendingPushes.params)));
+    await db
+      .delete(notifications)
+      .where(and(eq(notifications.kind, kind), matches(notifications.params)));
+  }
+
   // ---------- account data ----------
 
   async exportFor(userId: string): Promise<Record<string, unknown>> {

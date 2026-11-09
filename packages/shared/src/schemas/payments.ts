@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { LIMITS } from '../constants';
+import { LIMITS, LOCALE_DEFAULTS } from '../constants';
 import { type Paise, percentOfPaise } from '../money';
 import { PersonCard } from './social';
 
@@ -129,6 +129,8 @@ export const PaymentView = z.object({
   eventId: z.uuid(),
   eventTitle: z.string(),
   eventStartsAt: z.iso.datetime(),
+  /** The plan's city zone, so its time shows as the host set it (D-133). */
+  eventTimezone: z.string().default(LOCALE_DEFAULTS.timezone),
   status: PaymentStatus,
   amountPaise: Paise,
   refundedPaise: Paise,

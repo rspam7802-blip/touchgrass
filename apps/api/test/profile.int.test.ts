@@ -211,6 +211,11 @@ describe('media pipeline (F-ACC-06)', () => {
       .get(`/v1/media/${assetId}`)
       .set(...bearer(a.accessToken))
       .expect(200);
+    // Only the uploader reads an asset directly; others get it through the content that holds it (D-163).
+    await request(h.http)
+      .get(`/v1/media/${assetId}`)
+      .set(...bearer(b.accessToken))
+      .expect(404);
     await request(h.http)
       .put('/v1/me/photos')
       .set(...bearer(b.accessToken))

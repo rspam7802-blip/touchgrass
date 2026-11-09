@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { and, eq, inArray, lt, sql } from 'drizzle-orm';
+import { and, eq, inArray, isNull, lt, sql } from 'drizzle-orm';
 import {
   PaymentsGateway,
   type PaymentWebhookEvent,
@@ -157,6 +157,7 @@ export class WebhooksService {
     const finish = async (
       tx: Parameters<Parameters<RsvpService['confirmPaid']>[2]>[0],
       seated: boolean,
+      alreadySeated = false,
     ) => {
       const [locked] = await tx.select().from(payments).where(eq(payments.id, p.id)).for('update');
       if (!locked || !['created', 'failed', 'expired'].includes(locked.status)) return;
@@ -181,10 +182,13 @@ export class WebhooksService {
             eq(payments.eventId, p.eventId),
             p.userId ? eq(payments.userId, p.userId) : sql`false`,
             inArray(payments.status, ['captured', 'partially_refunded']),
+            isNull(payments.ticketReleasedAt),
             sql`${payments.id} <> ${p.id}`,
           ),
         );
-      if (others.length > 0)
+      // Only a second payment for a seat the person already held is a duplicate. Paying again after
+      // cancelling is a new ticket, even if the old payment's release hasn't been recorded yet.
+      if (alreadySeated && others.length > 0)
         await this.refunds.request(tx, captured, captured.amountPaise, 'DUPLICATE');
       else if (!seated)
         await this.refunds.request(tx, captured, captured.amountPaise, 'HOLD_EXPIRED');

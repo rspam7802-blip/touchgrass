@@ -525,7 +525,7 @@ export class RsvpService {
   async confirmPaid(
     eventId: string,
     userId: string,
-    onSettled: (tx: Tx, seated: boolean) => Promise<void>,
+    onSettled: (tx: Tx, seated: boolean, alreadySeated: boolean) => Promise<void>,
     now: Date = new Date(),
   ): Promise<boolean> {
     return withRedisLock(this.redis, eventLockKey(eventId), () =>
@@ -537,7 +537,8 @@ export class RsvpService {
           .from(rsvps)
           .where(and(eq(rsvps.eventId, eventId), eq(rsvps.userId, userId)))
           .limit(1);
-        let seated = mine !== undefined && holdsSeat(mine.status);
+        const alreadySeated = mine !== undefined && holdsSeat(mine.status);
+        let seated = alreadySeated;
         if (!seated && mine?.status === 'held') {
           seated = true;
         } else if (!seated && locked.status === 'published' && now < locked.endsAt) {
@@ -556,7 +557,7 @@ export class RsvpService {
             payload: { eventId, userId, plusOneUserId: null, guest: false, via: 'paid' },
           });
         }
-        await onSettled(tx, seated);
+        await onSettled(tx, seated, alreadySeated);
         return seated;
       }),
     );

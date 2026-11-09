@@ -655,3 +655,19 @@ Before launch, testers use a single-machine test server (`infra/staging`: Docker
 ## D-162 Supabase + Railway test server
 
 At the founder's choice, the test server can also run on managed services: Supabase holds only the database (PostgreSQL + PostGIS, in its own free organisation, separate from other projects), and Railway runs the API, realtime, worker, website, Redis and RustFS photo storage (`infra/railway`). Supabase's own Data API is switched off and every grant to its `anon`/`authenticated` roles is revoked (`supabase-lockdown.sql`), because TouchGrass never uses it and it would otherwise expose tables with a public key. Supabase signs database certificates with a private CA, so the API takes the CA from `DATABASE_CA_CERT` and verifies the server (TLS is never downgraded); every entry point (API, worker, migrations, seed, bootstrap) shares one pool factory. Supabase Storage is not used for photos because uploads rely on S3 presigned POST forms; RustFS supports them, as in local development. Email gets a fake adapter (`EMAIL_PROVIDER=fake`, refused in production) that keeps messages and logs only the subject and recipient domain.
+
+## D-163 Launch audit fixes
+
+A pre-launch audit (security, user flows, data lifecycle) led to these rules:
+
+- **A cancelled ticket's payment is released.** When an attendee cancels a paid seat, that payment gets `ticket_released_at` (migration `0016`) whatever the refund, and never backs a seat again: it is skipped for refund quotes, a later cancel and the duplicate-payment check. A payment is refunded as a duplicate only when the person already held a seat before it arrived, so paying again after cancelling is a new ticket even if the release is still on its way. Before this, re-buying could get the new payment refunded as a "duplicate" while keeping the seat.
+- **Per-number rate limits use the canonical number.** Rate-limit rules keyed on a body field can normalise it (`normalize`); OTP request and verify limits key on the E.164 number, so `+91 98480…` and `98480-…` share one bucket.
+- **Media is read through the content that holds it.** `GET /v1/media/:id` answers only the uploader (upload progress). Everyone else gets photos from profiles, stories, chat and Lore, which apply blocks, audiences and expiry; an old asset id no longer mints fresh links.
+- **Held messages stay hidden by id** (`GET …/messages/:id`), as in history.
+- **Notifications that quote removed content are withdrawn.** Comment notifications carry the comment id; removing, taking down or erasing the comment deletes them from inboxes and pending pushes (`NotificationsService.withdraw`).
+- **Short texts pushed to others are screened, and muted people can't send them.** The free-now note and poll wording go through `SanctionsReader.assertCanPost` and the text screen; flagged words are refused (like names and labels), not held.
+- **No orphaned sensitive photos.** Hourly jobs delete verification selfies never submitted and story photos never posted, a day after upload.
+- **Sanctions are exported but kept on erasure.** They are part of a person's data download (without the moderator's name) and are deliberately kept after account deletion so a banned person can't return by deleting their account.
+- **Production refuses incomplete providers:** MSG91 needs the flow template id (SOS, live location and invite texts), and SMTP can't point at localhost.
+- **Legal pages are part of the product.** `/privacy`, `/terms`, `/refunds` and `/contact` (with the Grievance Officer, IT Rules 2021) are rendered from `apps/web/lib/legal.ts`, written to match what the app does, with company details from settings (`LEGAL_ENTITY_NAME`, `LEGAL_ADDRESS`, `GRIEVANCE_OFFICER_NAME`, `GRIEVANCE_OFFICER_EMAIL`). English is the binding version; a lawyer reviews the wording before launch. The app links to them from sign-up and Settings.
+- Story posts and plan comments are counted in product analytics (ids only).

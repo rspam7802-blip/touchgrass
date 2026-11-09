@@ -1,6 +1,7 @@
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
+import { BackButton } from '../../../components/BackButton';
 import { ProfileCard } from '../../../components/ProfileCard';
 import { StreakCard } from '../../../components/engagement/StreakCard';
 import { PlanRail } from '../../../components/explore/PlanRail';
@@ -125,6 +126,7 @@ export default function MyProfileScreen() {
         />
       </FadeIn>
       <View style={styles.actions}>
+        <BackButton testID="profile-back" />
         <Button
           label={t('profile.edit')}
           onPress={() => {

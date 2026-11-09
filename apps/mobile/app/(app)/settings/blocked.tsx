@@ -38,6 +38,8 @@ export default function BlockedPeopleScreen() {
             <Button
               label={t('report.unblock')}
               variant="ghost"
+              loading={action.isPending && action.variables.userId === b.id}
+              disabled={action.isPending}
               onPress={() => {
                 action.mutate({ action: 'unblock', userId: b.id });
               }}
@@ -46,6 +48,11 @@ export default function BlockedPeopleScreen() {
           </View>
         ))
       )}
+      {action.isError ? (
+        <Text tone="danger" accessibilityLiveRegion="assertive" testID="unblock-error">
+          {errorMessage(t, action.error)}
+        </Text>
+      ) : null}
     </Screen>
   );
 }

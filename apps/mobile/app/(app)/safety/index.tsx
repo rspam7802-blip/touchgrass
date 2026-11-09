@@ -3,10 +3,10 @@ import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import * as Linking from 'expo-linking';
 import { StyleSheet, View } from 'react-native';
+import { SosButton } from '../../../components/SosButton';
 import { Button, Screen, Text } from '../../../components/ui';
 import { useMe } from '../../../src/features/me/api';
-import { useLiveShare, useMyVerification, useSos } from '../../../src/features/safety/api';
-import { confirmSos } from '../../../src/features/safety/sos';
+import { useLiveShare, useMyVerification } from '../../../src/features/safety/api';
 import { formatTime } from '../../../src/features/events/format';
 import { useTheme } from '../../../src/theme/theme';
 
@@ -21,7 +21,6 @@ export default function SafetyCentreScreen() {
   const me = useMe();
   const verification = useMyVerification();
   const live = useLiveShare();
-  const sos = useSos();
   const share = live.data?.share ?? null;
   const box = [
     styles.box,
@@ -35,22 +34,7 @@ export default function SafetyCentreScreen() {
       <Text variant="heading" accessibilityRole="header">
         {t('safety.emergencyTitle')}
       </Text>
-      <Button
-        label={t('safety.sos')}
-        variant="danger"
-        accessibilityHint={t('safety.sosHint')}
-        onPress={() => {
-          confirmSos(t, (point) => {
-            sos.mutate({ point });
-          });
-        }}
-        testID="safety-sos"
-      />
-      {sos.isSuccess ? (
-        <Text tone="primary" accessibilityLiveRegion="polite" testID="safety-sos-sent">
-          {t('safety.sosSent')}
-        </Text>
-      ) : null}
+      <SosButton testID="safety-sos" />
       <View style={box}>
         {LIMITS.safety.helplines.map((h) => (
           <Button

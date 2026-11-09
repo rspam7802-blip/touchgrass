@@ -51,6 +51,7 @@ export const Search = glyph('search');
 export const X = glyph('close');
 export const Check = glyph('check');
 export const ArrowRight = glyph('arrowRight');
+export const ArrowLeft = glyph('arrowLeft');
 export const MapPin = glyph('pin');
 export const Calendar = glyph('calendar');
 export const Lock = glyph('lock');

@@ -5,6 +5,8 @@ import { AppError } from '../../common/errors/app-error.js';
 import { DB, type Database } from '../../infra/database/database.module.js';
 import { RealtimePublisher } from '../../infra/realtime/realtime-publisher.js';
 import { EventStore } from '../events/event-store.service.js';
+import { ModerationService } from '../moderation/moderation.service.js';
+import { SanctionsReader } from '../moderation/sanctions-reader.js';
 import { ChatService } from './chat.service.js';
 import { PollsService, voteProblem } from './polls.service.js';
 
@@ -20,6 +22,8 @@ export class ChatPollsService {
     private readonly polls: PollsService,
     private readonly store: EventStore,
     private readonly realtime: RealtimePublisher,
+    private readonly moderation: ModerationService,
+    private readonly sanctions: SanctionsReader,
   ) {}
 
   async create(
@@ -37,6 +41,12 @@ export class ChatPollsService {
       throw new AppError('CHAT_UNAVAILABLE', 'This chat is read-only', {
         reason: a.reason ?? 'CHAT_CLOSED',
       });
+    await this.sanctions.assertCanPost(userId, now);
+    // Poll wording is short and shown to everyone in the chat, so flagged words are refused, not held.
+    if (this.moderation.screen(body.question, ...body.options).flagged)
+      throw new AppError('VALIDATION_FAILED', 'Pick different words', [
+        { path: 'question', message: 'Pick different words', code: 'custom' },
+      ]);
     const closesAt = body.closesAt ? new Date(body.closesAt) : null;
     if (closesAt && closesAt.getTime() <= now.getTime())
       throw new AppError('VALIDATION_FAILED', 'Deadline must be in the future', [

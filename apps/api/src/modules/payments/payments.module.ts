@@ -5,6 +5,7 @@ import { ENV } from '../../config/config.module.js';
 import type { Env } from '../../config/env.js';
 import { AccountDataRegistry } from '../account/account-data.registry.js';
 import { AccountModule } from '../account/account.module.js';
+import { CitiesModule } from '../cities/cities.module.js';
 import { EventHooks } from '../events/event-hooks.js';
 import { EventsModule } from '../events/events.module.js';
 import { PlatformModule } from '../platform/platform.module.js';
@@ -28,7 +29,7 @@ import { WebhooksService } from './webhooks.service.js';
 
 /** Ticketing, refunds, payouts, receipts and Razorpay webhooks (Phase 6, F-PAY-01..03, F-PAY-05). */
 @Module({
-  imports: [AccountModule, EventsModule, PlatformModule, ProfilesModule, UsersModule],
+  imports: [AccountModule, CitiesModule, EventsModule, PlatformModule, ProfilesModule, UsersModule],
   controllers: [
     PaymentsController,
     EventCheckoutController,

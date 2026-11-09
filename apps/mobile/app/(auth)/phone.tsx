@@ -2,8 +2,10 @@ import { normalizeE164 } from '@touchgrass/shared';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { StyleSheet, View } from 'react-native';
 import { Button, Screen, Text, TextField } from '../../components/ui';
 import { useRequestOtp } from '../../src/features/auth/api';
+import { openLegal } from '../../src/features/legal/links';
 import { errorMessage } from '../../src/lib/errors';
 import { useAuthFlowStore } from '../../src/stores/auth-flow-store';
 
@@ -57,6 +59,30 @@ export default function PhoneScreen() {
       <Text variant="caption" tone="muted">
         {t('auth.termsNotice')}
       </Text>
+      <View style={styles.legal}>
+        <Button
+          label={t('settings.terms')}
+          variant="ghost"
+          accessibilityRole="link"
+          onPress={() => {
+            openLegal('terms');
+          }}
+          testID="open-terms"
+        />
+        <Button
+          label={t('settings.privacyPolicy')}
+          variant="ghost"
+          accessibilityRole="link"
+          onPress={() => {
+            openLegal('privacy');
+          }}
+          testID="open-privacy"
+        />
+      </View>
     </Screen>
   );
 }
+
+const styles = StyleSheet.create({
+  legal: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+});

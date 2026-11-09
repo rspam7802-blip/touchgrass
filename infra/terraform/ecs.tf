@@ -117,6 +117,10 @@ locals {
         { name = "API_URL", value = "https://${local.api}" },
         { name = "MEDIA_PUBLIC_BASE_URL", value = "https://${local.media}" },
         { name = "SUPPORT_EMAIL", value = var.support_email },
+        { name = "LEGAL_ENTITY_NAME", value = var.legal_entity_name },
+        { name = "LEGAL_ADDRESS", value = var.legal_address },
+        { name = "GRIEVANCE_OFFICER_NAME", value = var.grievance_officer_name },
+        { name = "GRIEVANCE_OFFICER_EMAIL", value = var.grievance_officer_email },
         { name = "APPLE_TEAM_ID", value = var.apple_team_id },
         { name = "ANDROID_SHA256_CERT_FINGERPRINTS", value = join(",", var.android_sha256_cert_fingerprints) },
       ]

@@ -34,6 +34,8 @@ export default function CheckoutScreen() {
   const [email, setEmail] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  // Once the plan put you on the waitlist there is nothing to pay for here.
+  const [waitlisted, setWaitlisted] = useState(false);
 
   useEffect(() => {
     if (saved.data?.email) setEmail(saved.data.email);
@@ -65,12 +67,13 @@ export default function CheckoutScreen() {
         useCredit,
       });
       if (res.kind === 'waitlisted') {
+        setWaitlisted(true);
         setNotice(t('events.waitlisted'));
         return;
       }
       if (res.kind === 'confirmed') {
-        setNotice(t('referrals.creditUsed'));
-        router.replace({ pathname: '/events/[id]', params: { id } });
+        // Shown on the plan screen; this screen is gone after the replace.
+        router.replace({ pathname: '/events/[id]', params: { id, notice: 'creditUsed' } });
         return;
       }
       await Linking.openURL(res.session.checkoutUrl);
@@ -124,7 +127,7 @@ export default function CheckoutScreen() {
       <Button
         label={t('payments.pay', { amount: money(e.pricePaise, i18n.language) })}
         loading={checkout.isPending}
-        disabled={!emailOk}
+        disabled={!emailOk || waitlisted}
         onPress={() => void pay()}
         testID="pay"
       />
@@ -133,7 +136,7 @@ export default function CheckoutScreen() {
           label={t('referrals.useCredit')}
           variant="secondary"
           loading={checkout.isPending}
-          disabled={!emailOk}
+          disabled={!emailOk || waitlisted}
           onPress={() => void pay(true)}
           accessibilityHint={t('referrals.creditMax', {
             amount: money(balance.creditMaxPaise, i18n.language),

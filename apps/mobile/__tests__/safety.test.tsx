@@ -128,6 +128,34 @@ describe('safety centre (F-SAF-07)', () => {
     );
   });
 
+  it('a failed SOS alert says the contacts were not told and can be sent again', async () => {
+    (Location.getForegroundPermissionsAsync as jest.Mock).mockResolvedValue({ granted: true });
+    (Location.getLastKnownPositionAsync as jest.Mock).mockResolvedValue({
+      coords: { latitude: 17.41, longitude: 78.44, accuracy: 9000 },
+    });
+    api.on('POST', '/v1/safety/sos', {
+      status: 422,
+      body: { error: { code: 'VALIDATION_FAILED', message: 'x' } },
+    });
+    await renderWithProviders(<SafetyScreen />, { fetchFn: api.fetch });
+    await fireEvent.press(await screen.findByTestId('safety-sos'));
+    await act(async () => {
+      pressAlert('Send SOS and call 112');
+      await Promise.resolve();
+    });
+    expect(await screen.findByTestId('safety-sos-error')).toHaveTextContent(
+      /Your contacts were not alerted/,
+    );
+    expect(screen.queryByTestId('safety-sos-sent')).toBeNull();
+    api.on('POST', '/v1/safety/sos', {
+      status: 200,
+      body: { share: share({ sosAt: new Date().toISOString() }) },
+    });
+    await fireEvent.press(screen.getByTestId('safety-sos-retry'));
+    expect(await screen.findByTestId('safety-sos-sent')).toBeOnTheScreen();
+    expect(api.callsTo('POST', '/v1/safety/sos')).toHaveLength(2);
+  });
+
   it('SOS asks once, dials 112 straight away and alerts contacts with the location', async () => {
     (Location.getForegroundPermissionsAsync as jest.Mock).mockResolvedValue({ granted: true });
     (Location.getLastKnownPositionAsync as jest.Mock).mockResolvedValueOnce({

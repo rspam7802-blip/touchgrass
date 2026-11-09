@@ -83,6 +83,8 @@ describe("I'm free now (F-ENG-01)", () => {
     expect(new Date(set.body.until).getTime() - Date.now()).toBeGreaterThan(2.9 * H);
     // Only the first "free" tells the squad; editing the note doesn't re-notify.
     await api(a).put('/v1/me/availability', { hours: 4, note: 'actually biryani' }).expect(200);
+    // The note is pushed to the squad, so flagged words are refused (D-163).
+    await api(a).put('/v1/me/availability', { hours: 4, note: 'nee lanja' }).expect(400);
     expect(await outboxFor(h, a.id, 'availability.set')).toHaveLength(1);
 
     const seen = (await api(b).get('/v1/me/availability').expect(200)).body as FreeNowList;

@@ -27,6 +27,7 @@ import { SanctionsService } from '../src/modules/moderation-tools/sanctions.serv
 import { FeatureFlagsService } from '../src/modules/platform/feature-flags.service.js';
 import { SafetyService } from '../src/modules/safety/safety.service.js';
 import { UsersService } from '../src/modules/users/users.service.js';
+import { VerificationService } from '../src/modules/verification/verification.service.js';
 import {
   ADDRESS,
   idem,
@@ -208,6 +209,27 @@ describe('verified profiles (F-SAF-01)', () => {
       [m.id],
     );
     expect(audit.rowCount).toBe(1);
+  });
+
+  it('a selfie never submitted is deleted after a day; a submitted one waits for review (D-163)', async () => {
+    const m = await member(h);
+    const abandoned = await upload(m, 'verification_selfie');
+    const fresh = await upload(m, 'verification_selfie');
+    await h.pool.query(
+      `UPDATE media_assets SET created_at = now() - interval '25 hours' WHERE id = $1`,
+      [abandoned],
+    );
+    expect(await h.app.get(VerificationService).purgeUnsubmittedSelfies()).toBeGreaterThanOrEqual(
+      1,
+    );
+    const { rows } = await h.pool.query<{ id: string; status: string }>(
+      'SELECT id, status FROM media_assets WHERE id = ANY($1)',
+      [[abandoned, fresh]],
+    );
+    expect(Object.fromEntries(rows.map((r) => [r.id, r.status]))).toEqual({
+      [abandoned]: 'deleted',
+      [fresh]: 'ready',
+    });
   });
 
   it('rejections carry a reason; poses expire; three tries a day; a photo is needed first', async () => {
@@ -519,6 +541,9 @@ describe('text filter holds (F-SAF-06) and moderator actions (F-SAF-05)', () => 
     await say(a, conv, 'see you at 6').expect(201);
     expect((await messages(b, conv)).map((x) => x.body)).toEqual(['see you at 6']);
     expect((await messages(a, conv)).map((x) => x.held)).toEqual([false, true]);
+    // Not even by id (D-163).
+    await api(b).get(`/v1/chats/${conv}/messages/${held.id}`).expect(404);
+    await api(a).get(`/v1/chats/${conv}/messages/${held.id}`).expect(200);
 
     const itemId = await openItem('message', held.id);
     await api(a).get(`/v1/admin/moderation/items/${itemId}`).expect(403);

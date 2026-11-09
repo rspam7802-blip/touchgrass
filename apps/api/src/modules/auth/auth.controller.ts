@@ -1,4 +1,5 @@
 import type * as Dto from '@touchgrass/shared';
+import { normalizeE164 } from '@touchgrass/shared';
 import {
   Body,
   Controller,
@@ -48,7 +49,14 @@ export class AuthController {
   @Post('otp/request')
   @HttpCode(200)
   @RateLimit(
-    { name: 'otp-request-phone', limit: 5, windowSeconds: 3600, by: 'body', bodyField: 'phone' },
+    {
+      name: 'otp-request-phone',
+      limit: 5,
+      windowSeconds: 3600,
+      by: 'body',
+      bodyField: 'phone',
+      normalize: normalizeE164,
+    },
     { name: 'otp-request-ip', limit: 20, windowSeconds: 3600, by: 'ip' },
   )
   @ApiZodBody(OtpRequestBody)
@@ -64,7 +72,14 @@ export class AuthController {
   @Post('otp/verify')
   @HttpCode(200)
   @RateLimit(
-    { name: 'otp-verify-phone', limit: 10, windowSeconds: 900, by: 'body', bodyField: 'phone' },
+    {
+      name: 'otp-verify-phone',
+      limit: 10,
+      windowSeconds: 900,
+      by: 'body',
+      bodyField: 'phone',
+      normalize: normalizeE164,
+    },
     { name: 'otp-verify-ip', limit: 30, windowSeconds: 900, by: 'ip' },
   )
   @ApiZodBody(OtpVerifyBody)

@@ -1,6 +1,7 @@
-import { fireEvent, screen, waitFor } from '@testing-library/react-native';
+import { act, fireEvent, screen, waitFor } from '@testing-library/react-native';
+import * as Linking from 'expo-linking';
 import * as Sharing from 'expo-sharing';
-import { Share } from 'react-native';
+import { Alert, type AlertButton, Share } from 'react-native';
 import MyProfileScreen from '../app/(app)/(tabs)/profile';
 import SettingsScreen from '../app/(app)/(tabs)/settings';
 import InvitesScreen from '../app/(app)/invites';
@@ -256,7 +257,23 @@ describe('Settings (F-ACC-07)', () => {
     await fireEvent.press(screen.getByRole('button', { name: 'Replay tutorial' }));
     await waitFor(() => expect(mockRouter.push).toHaveBeenLastCalledWith('/tutorial'));
     expect(api.callsTo('DELETE', '/v1/me/tutorial')).toHaveLength(1);
+    // The legal pages open on the website.
+    const openURL = jest.spyOn(Linking, 'openURL').mockResolvedValue(true);
+    await fireEvent.press(screen.getByTestId('row-terms'));
+    expect(openURL).toHaveBeenLastCalledWith(expect.stringMatching(/\/terms$/));
+    await fireEvent.press(screen.getByTestId('row-contact'));
+    expect(openURL).toHaveBeenLastCalledWith(expect.stringMatching(/\/contact$/));
+    openURL.mockRestore();
+    // Logging out asks first.
+    const alertSpy = jest.spyOn(Alert, 'alert').mockImplementation(() => undefined);
     await fireEvent.press(screen.getByRole('button', { name: 'Log out' }));
+    expect(useAuthStore.getState().status).toBe('signedIn');
+    const buttons: AlertButton[] = alertSpy.mock.calls.at(-1)?.[2] ?? [];
+    await act(async () => {
+      buttons.find((b) => b.text === 'Log out')?.onPress?.();
+      await Promise.resolve();
+    });
+    alertSpy.mockRestore();
     await waitFor(() => expect(useAuthStore.getState().status).toBe('signedOut'));
     expect(screen.getByText('Version 0.1.0')).toBeOnTheScreen();
   });

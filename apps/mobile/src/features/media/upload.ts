@@ -19,10 +19,21 @@ export async function compressImage(uri: string): Promise<LocalImage> {
   return { uri: result.uri, sizeBytes: blob.size };
 }
 
-/** Opens the photo library. Returns null when the user cancels or declines access. */
+/** Photo access was declined; the person has to allow it in the phone's settings. */
+export class PhotoAccessDeniedError extends Error {
+  constructor() {
+    super('Photo access denied');
+    this.name = 'PhotoAccessDeniedError';
+  }
+}
+
+/**
+ * Opens the photo library. Returns null when the user cancels, and throws `PhotoAccessDeniedError` when
+ * access is declined, so screens can explain it instead of silently doing nothing.
+ */
 export async function pickImage(): Promise<string | null> {
   const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-  if (!permission.granted) return null;
+  if (!permission.granted) throw new PhotoAccessDeniedError();
   const res = await ImagePicker.launchImageLibraryAsync({
     mediaTypes: ['images'],
     quality: 1,

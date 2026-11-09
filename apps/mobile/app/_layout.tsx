@@ -1,5 +1,5 @@
 import { useFonts } from 'expo-font';
-import { Stack, useRouter } from 'expo-router';
+import { type Href, Stack, useRouter } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useMemo, useRef } from 'react';
@@ -8,6 +8,7 @@ import { createQueryClient } from '../src/lib/query-client';
 import { clearOfflineCache, persistOfflineCache } from '../src/lib/query-persist';
 import { createSessionClient } from '../src/lib/session-client';
 import { AppProviders } from '../src/providers/app-providers';
+import { useAuthFlowStore } from '../src/stores/auth-flow-store';
 import { type AppArea, appArea, useAuthStore } from '../src/stores/auth-store';
 import { useSettingsStore } from '../src/stores/settings-store';
 import { FONT_FILES } from '../src/theme/fonts';
@@ -49,6 +50,15 @@ function RootNavigator() {
     const target = landingRoute(area, user?.tutorialComplete ?? false);
     if (target) router.replace(target);
   }, [area, router, user?.tutorialComplete]);
+
+  // A shared plan/crew link opened while signed out opens once the person is in (after the tutorial).
+  const pendingLink = useAuthFlowStore((s) => s.pendingLink);
+  const ready = area === 'app' && (user?.tutorialComplete ?? false);
+  useEffect(() => {
+    if (!ready || !pendingLink) return;
+    useAuthFlowStore.getState().setPendingLink(null);
+    router.push(pendingLink as Href);
+  }, [ready, pendingLink, router]);
 
   return (
     <Stack screenOptions={{ headerShown: false }}>
