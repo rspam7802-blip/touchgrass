@@ -190,10 +190,13 @@ describe('crews in search (F-DSC-09)', () => {
     });
     const search = (m: Member) =>
       api(m).get(`/v1/discover/search?q=${encodeURIComponent(`lakeside ${tag}`)}&type=crews`);
+    // Other test files share the database, so check these two crews rather than the whole result.
+    const ours = (crews: { id: string }[]) =>
+      crews.map((c) => c.id).filter((id) => id === open.id || id === secret.id);
     const forOutsider = (await search(outsider).expect(200)).body as { crews: { id: string }[] };
-    expect(forOutsider.crews.map((c) => c.id)).toEqual([open.id]);
+    expect(ours(forOutsider.crews)).toEqual([open.id]);
     const forAdmin = (await search(admin).expect(200)).body as { crews: { id: string }[] };
-    expect(new Set(forAdmin.crews.map((c) => c.id))).toEqual(new Set([open.id, secret.id]));
+    expect(new Set(ours(forAdmin.crews))).toEqual(new Set([open.id, secret.id]));
     // A typo still finds it (trigram similarity), and "all" includes crews.
     const fuzzy = await api(outsider)
       .get(`/v1/discover/search?q=${encodeURIComponent(`Lakesid walkers ${tag}`)}`)
@@ -205,7 +208,9 @@ describe('crews in search (F-DSC-09)', () => {
       .set(...bearer(outsider.token))
       .send({ userId: admin.id })
       .expect((r) => expect([200, 201, 204]).toContain(r.status));
-    expect(((await search(outsider).expect(200)).body as { crews: unknown[] }).crews).toEqual([]);
+    expect(
+      ours(((await search(outsider).expect(200)).body as { crews: { id: string }[] }).crews),
+    ).toEqual([]);
   });
 });
 

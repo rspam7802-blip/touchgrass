@@ -106,6 +106,7 @@ describe('API app in production mode', () => {
         SMS_PROVIDER: 'msg91',
         MSG91_AUTH_KEY: 'k',
         MSG91_OTP_TEMPLATE_ID: 't',
+        MSG91_SMS_FLOW_ID: 'f',
         PAYMENTS_PROVIDER: 'razorpay',
         RAZORPAY_KEY_ID: 'k',
         RAZORPAY_KEY_SECRET: 's',
@@ -117,6 +118,7 @@ describe('API app in production mode', () => {
         WEATHER_PROVIDER: 'openweather',
         OPENWEATHER_API_KEY: 'o',
         MODERATION_PROVIDER: 'rekognition',
+        EMAIL_PROVIDER: 'ses',
       }),
       { logger: false },
     );
