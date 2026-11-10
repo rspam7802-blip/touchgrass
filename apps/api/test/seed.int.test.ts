@@ -80,6 +80,19 @@ describe('seed', () => {
     expect(summary.adminConsole.analyticsDays).toBe(30);
     // Phase 13: squad stories for member #2 (three from the squad, one friend of a friend).
     expect(summary.stories.live).toBeGreaterThanOrEqual(4);
+    // Pictures: every plan and crew has a cover and every seeded person a profile picture, as real files.
+    const { rows: missing } = await pool.query<{ plans: number; crews: number; people: number }>(
+      `SELECT (SELECT count(*)::int FROM events WHERE cover_media_id IS NULL) AS plans,
+              (SELECT count(*)::int FROM crews WHERE cover_media_id IS NULL) AS crews,
+              (SELECT count(*)::int FROM users u WHERE NOT EXISTS
+                 (SELECT 1 FROM profile_photos p WHERE p.user_id = u.id)) AS people`,
+    );
+    expect(missing[0]).toEqual({ plans: 0, crews: 0, people: 0 });
+    const { rows: cover } = await pool.query<{ k: { lg: string } }>(
+      `SELECT m.variant_keys AS k FROM events e JOIN media_assets m ON m.id = e.cover_media_id
+        WHERE e.slug LIKE 'seedev%' AND m.status = 'ready' LIMIT 1`,
+    );
+    expect((await storage.get(cover[0]?.k.lg ?? '')).length).toBeGreaterThan(0);
     const { rows: tiers } = await pool.query<{ tier: string }>(
       'SELECT DISTINCT tier FROM reliability_scores',
     );
