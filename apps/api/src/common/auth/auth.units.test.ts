@@ -132,6 +132,9 @@ describe('ActiveUserGuard', () => {
       code: 'ONBOARDING_INCOMPLETE',
     });
   });
+  it('never blocks public routes (e.g. requesting a code) for a half-finished sign-up', async () => {
+    await expect(guard('onboarding').canActivate(ctx('open', p))).resolves.toBe(true);
+  });
   it.each([
     [null, 'SESSION_REVOKED'],
     ['deleted', 'SESSION_REVOKED'],
