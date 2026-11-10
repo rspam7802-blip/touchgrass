@@ -19,9 +19,11 @@ sh(`cd apps/api && ${withEnv} dist/infra/database/migrate.cli.js up`);
 sh(`cd apps/api && ${withEnv} dist/adapters/storage/storage-init.cli.js`);
 sh(`cd apps/api && ${withEnv} dist/seed/seed.cli.js`);
 
+// On Windows `pnpm` is a .cmd shim, which only a shell can start.
 const dev = spawn('pnpm', ['turbo', 'run', 'dev', '--ui=stream', ...process.argv.slice(2)], {
   cwd: root,
   stdio: 'inherit',
+  shell: process.platform === 'win32',
 });
 dev.on('exit', (code) => process.exit(code ?? 0));
 process.on('SIGINT', () => dev.kill('SIGINT'));

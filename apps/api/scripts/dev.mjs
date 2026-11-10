@@ -18,7 +18,8 @@ const run = (cmd, args, name) => {
 const tsc = spawn(
   'pnpm',
   ['exec', 'tsc', '-p', 'tsconfig.build.json', '--watch', '--preserveWatchOutput'],
-  { stdio: ['ignore', 'pipe', 'inherit'] },
+  // On Windows `pnpm` is a .cmd shim, which only a shell can start.
+  { stdio: ['ignore', 'pipe', 'inherit'], shell: process.platform === 'win32' },
 );
 children.push(tsc);
 let started = false;
