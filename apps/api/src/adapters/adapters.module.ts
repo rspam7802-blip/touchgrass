@@ -10,6 +10,7 @@ import { FakeMapsProvider } from './maps/fake.maps.js';
 import { GoogleMapsProvider } from './maps/google.maps.js';
 import { MapsProvider } from './maps/maps.port.js';
 import { FakeModerationProvider } from './moderation/fake.moderation.js';
+import { GoogleVisionModerationProvider } from './moderation/google-vision.js';
 import { ModerationProvider } from './moderation/moderation.port.js';
 import { RekognitionModerationProvider } from './moderation/rekognition.js';
 import { DisabledPaymentsGateway } from './payments/disabled.payments.js';
@@ -106,7 +107,11 @@ export function buildAdapters(env: Env): AdapterInstances {
     moderation:
       env.MODERATION_PROVIDER === 'rekognition'
         ? new RekognitionModerationProvider(env.AWS_REGION)
-        : new FakeModerationProvider(),
+        : env.MODERATION_PROVIDER === 'google-vision'
+          ? new GoogleVisionModerationProvider(
+              required(env.GOOGLE_VISION_API_KEY, 'GOOGLE_VISION_API_KEY'),
+            )
+          : new FakeModerationProvider(),
     analytics:
       env.ANALYTICS_PROVIDER === 'posthog'
         ? new PostHogAnalyticsSink(

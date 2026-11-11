@@ -120,7 +120,9 @@ export const EnvSchema = z
     OPEN_METEO_API_KEY: z.string().optional(),
     OPENWEATHER_API_KEY: z.string().optional(),
 
-    MODERATION_PROVIDER: z.enum(['fake', 'rekognition']).default('fake'),
+    MODERATION_PROVIDER: z.enum(['fake', 'rekognition', 'google-vision']).default('fake'),
+    /** Google Cloud Vision API key (restrict it to the Vision API) for MODERATION_PROVIDER=google-vision. */
+    GOOGLE_VISION_API_KEY: z.string().optional(),
     AWS_REGION: z.string().default('ap-south-1'),
 
     ANALYTICS_PROVIDER: z.enum(['noop', 'posthog']).default('noop'),
@@ -163,6 +165,11 @@ export const EnvSchema = z
       'PAYMENTS_PROVIDER=razorpay',
     );
     requireKeys(env.MAPS_PROVIDER === 'google', ['GOOGLE_MAPS_API_KEY'], 'MAPS_PROVIDER=google');
+    requireKeys(
+      env.MODERATION_PROVIDER === 'google-vision',
+      ['GOOGLE_VISION_API_KEY'],
+      'MODERATION_PROVIDER=google-vision',
+    );
     requireKeys(
       env.WEATHER_PROVIDER === 'openweather',
       ['OPENWEATHER_API_KEY'],

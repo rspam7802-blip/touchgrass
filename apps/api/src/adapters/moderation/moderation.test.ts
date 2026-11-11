@@ -4,6 +4,8 @@ import {
   type RekognitionClient,
 } from '@aws-sdk/client-rekognition';
 import { describe, expect, it, vi } from 'vitest';
+import { fakeFetch } from '../../test-support/env.js';
+import { GoogleVisionModerationProvider } from './google-vision.js';
 import { FakeModerationProvider, FLAGGED_FIXTURE } from './fake.moderation.js';
 import { RekognitionModerationProvider } from './rekognition.js';
 
@@ -84,5 +86,44 @@ describe('RekognitionModerationProvider', () => {
     expect(new RekognitionModerationProvider('ap-south-1')).toBeInstanceOf(
       RekognitionModerationProvider,
     );
+  });
+});
+
+describe('Google Cloud Vision SafeSearch (D-165)', () => {
+  const annotate = (safeSearchAnnotation: Record<string, string>) => ({
+    body: { responses: [{ safeSearchAnnotation }] },
+  });
+  it('holds likely nudity or violence, and only very likely racy photos', async () => {
+    const f = fakeFetch([
+      annotate({ adult: 'VERY_UNLIKELY', violence: 'UNLIKELY', racy: 'POSSIBLE' }),
+      annotate({ adult: 'LIKELY', violence: 'VERY_UNLIKELY', racy: 'LIKELY' }),
+      annotate({ adult: 'UNLIKELY', violence: 'VERY_LIKELY', racy: 'UNLIKELY' }),
+      annotate({ adult: 'POSSIBLE', violence: 'UNLIKELY', racy: 'VERY_LIKELY' }),
+    ]);
+    const vision = new GoogleVisionModerationProvider('key-1', f.fetch);
+    const img = Buffer.from('jpeg');
+    expect(await vision.moderateImage(img)).toEqual({
+      verdict: 'safe',
+      labels: [{ name: 'racy', confidence: 50 }],
+    });
+    expect((await vision.moderateImage(img)).verdict).toBe('flagged');
+    expect((await vision.moderateImage(img)).verdict).toBe('flagged');
+    expect((await vision.moderateImage(img)).verdict).toBe('flagged');
+    const call = f.calls[0];
+    expect(new URL(call?.url ?? '').searchParams.get('key')).toBe('key-1');
+    expect(JSON.parse(call?.init?.body as string)).toEqual({
+      requests: [
+        {
+          image: { content: img.toString('base64') },
+          features: [{ type: 'SAFE_SEARCH_DETECTION' }],
+        },
+      ],
+    });
+  });
+  it('treats a per-image error as a failure (retried by the worker) and never compares faces', async () => {
+    const f = fakeFetch([{ body: { responses: [{ error: { message: 'Bad image' } }] } }]);
+    const vision = new GoogleVisionModerationProvider('k', f.fetch);
+    await expect(vision.moderateImage(Buffer.from('x'))).rejects.toThrow('Bad image');
+    expect(await vision.compareFaces(Buffer.from('a'), Buffer.from('b'))).toBeNull();
   });
 });
