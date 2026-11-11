@@ -26,5 +26,7 @@ if (env.API_WORKERS > 1 && cluster.isPrimary) {
 } else {
   initTelemetry('api');
   const app = await createApiApp(env);
-  await app.listen(env.API_PORT, '0.0.0.0');
+  // No host: Node listens on every IPv4 and IPv6 address, so the website can reach the API over Railway's
+  // private network (IPv6) and visitors' addresses survive for per-address limits (D-169).
+  await app.listen(env.API_PORT);
 }
