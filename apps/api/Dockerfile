@@ -20,6 +20,9 @@ RUN apt-get update \
  && rm -rf /var/lib/apt/lists/*
 # RDS presents certificates from the Amazon RDS CA, which Node doesn't trust by default.
 ADD --chmod=0644 https://truststore.pki.rds.amazonaws.com/global/global-bundle.pem /etc/ssl/certs/rds-global-bundle.pem
+# ADD --chmod also applies the mode to the folders it creates; without this the non-root `node` user can't
+# open /etc/ssl (Node then logs "BIO_new_file: Permission denied" for openssl.cnf and can't read the bundle).
+RUN chmod 0755 /etc/ssl /etc/ssl/certs
 ENV NODE_EXTRA_CA_CERTS=/etc/ssl/certs/rds-global-bundle.pem
 WORKDIR /app
 COPY --from=build /out ./
