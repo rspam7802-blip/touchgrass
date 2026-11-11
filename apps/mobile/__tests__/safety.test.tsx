@@ -1,3 +1,4 @@
+import * as SMS from 'expo-sms';
 import { act, fireEvent, screen, waitFor } from '@testing-library/react-native';
 import type {
   EventSummary,
@@ -180,6 +181,28 @@ describe('safety centre (F-SAF-07)', () => {
       });
     });
     expect(await screen.findByTestId('safety-sos-sent')).toBeOnTheScreen();
+  });
+
+  it('when the server could not text anyone, the phone texts the contacts itself (D-166)', async () => {
+    (Location.getForegroundPermissionsAsync as jest.Mock).mockResolvedValue({ granted: false });
+    api.on('POST', '/v1/safety/sos', {
+      status: 200,
+      body: { share: share({ sosAt: new Date().toISOString(), contactsNotified: 0 }) },
+    });
+    await renderWithProviders(<SafetyScreen />, { fetchFn: api.fetch });
+    await fireEvent.press(await screen.findByTestId('safety-sos'));
+    await act(async () => {
+      pressAlert('Send SOS and call 112');
+      await Promise.resolve();
+    });
+    expect(await screen.findByTestId('safety-sos-text-yourself')).toBeOnTheScreen();
+    expect(screen.queryByTestId('safety-sos-sent')).toBeNull();
+    await fireEvent.press(screen.getByTestId('safety-sos-text-contacts'));
+    await waitFor(() => expect(SMS.sendSMSAsync).toHaveBeenCalled());
+    const [to, message] = (SMS.sendSMSAsync as jest.Mock).mock.calls[0] as [string[], string];
+    expect(to.length).toBeGreaterThan(0);
+    expect(message).toContain(share().link);
+    expect(message).toMatch(/pressed SOS/);
   });
 
   it('shows a running share and hides the verify button once verified', async () => {

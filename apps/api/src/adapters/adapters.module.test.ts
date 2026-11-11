@@ -19,6 +19,13 @@ import { MemoryObjectStorage } from './storage/memory.storage.js';
 import { S3ObjectStorage } from './storage/s3.storage.js';
 import { FakeWeatherProvider } from './weather/fake.weather.js';
 import { OpenWeatherProvider } from './weather/openweather.js';
+import { GoogleVisionModerationProvider } from './moderation/google-vision.js';
+import { DisabledPaymentsGateway } from './payments/disabled.payments.js';
+import { FakePhoneVerifier } from './phone-auth/fake.phone-auth.js';
+import { FirebasePhoneVerifier } from './phone-auth/firebase.phone-auth.js';
+import { NoPhoneIdentityVerifier } from './phone-auth/phone-auth.port.js';
+import { NoSmsSender } from './sms/none.sms.js';
+import { NoWeatherProvider, OpenMeteoProvider } from './weather/open-meteo.js';
 
 describe('buildAdapters', () => {
   it('uses fakes by default', () => {
@@ -32,6 +39,28 @@ describe('buildAdapters', () => {
     expect(a.moderation).toBeInstanceOf(FakeModerationProvider);
     expect(a.analytics).toBeInstanceOf(NoopAnalyticsSink);
     expect(a.email).toBeInstanceOf(SmtpEmailSender);
+    expect(a.phoneAuth).toBeInstanceOf(NoPhoneIdentityVerifier);
+  });
+  it('uses the lean-launch choices (D-165, D-166)', () => {
+    const lean = buildAdapters(
+      testEnv({
+        SMS_PROVIDER: 'none',
+        PHONE_AUTH_PROVIDER: 'firebase',
+        FIREBASE_PROJECT_ID: 'touchgrass',
+        PAYMENTS_PROVIDER: 'disabled',
+        WEATHER_PROVIDER: 'open-meteo',
+        MODERATION_PROVIDER: 'google-vision',
+        GOOGLE_VISION_API_KEY: 'v',
+      }),
+    );
+    expect(lean.sms).toBeInstanceOf(NoSmsSender);
+    expect(lean.phoneAuth).toBeInstanceOf(FirebasePhoneVerifier);
+    expect(lean.payments).toBeInstanceOf(DisabledPaymentsGateway);
+    expect(lean.weather).toBeInstanceOf(OpenMeteoProvider);
+    expect(lean.moderation).toBeInstanceOf(GoogleVisionModerationProvider);
+    const off = buildAdapters(testEnv({ WEATHER_PROVIDER: 'none', PHONE_AUTH_PROVIDER: 'fake' }));
+    expect(off.weather).toBeInstanceOf(NoWeatherProvider);
+    expect(off.phoneAuth).toBeInstanceOf(FakePhoneVerifier);
   });
   it('uses real providers when configured', () => {
     const a = buildAdapters(
@@ -69,7 +98,7 @@ describe('buildAdapters', () => {
   it('builds a global module honouring overrides', () => {
     const sms = new FakeSmsSender();
     const mod = AdaptersModule.forRoot(testEnv(), { sms });
-    expect(mod.providers).toHaveLength(9);
+    expect(mod.providers).toHaveLength(10);
     expect(mod.providers?.[0]).toMatchObject({ useValue: sms });
   });
 });

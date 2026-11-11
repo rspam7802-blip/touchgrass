@@ -194,3 +194,45 @@ describe('OTP screen (F-ACC-02)', () => {
     expect(mockRouter.replace).toHaveBeenCalledWith('/phone');
   });
 });
+
+describe('Firebase phone sign-in in store builds (D-166)', () => {
+  const constants = jest.requireMock<{
+    default: { expoConfig: { extra: Record<string, unknown> }; executionEnvironment?: string };
+  }>('expo-constants');
+  beforeEach(() => {
+    constants.default.expoConfig.extra.firebasePhoneAuth = true;
+    constants.default.executionEnvironment = 'standalone';
+  });
+  afterEach(() => {
+    delete constants.default.expoConfig.extra.firebasePhoneAuth;
+    delete constants.default.executionEnvironment;
+  });
+
+  it('Firebase texts the code; the app trades the proof for a session, never calling our SMS', async () => {
+    api
+      .on('POST', '/v1/auth/phone-proof', { status: 200, body: authResponseFixture() })
+      .on('POST', '/v1/me/consents', { status: 204 });
+    await renderWithProviders(<PhoneScreen />, { fetchFn: api.fetch });
+    await fireEvent.changeText(screen.getByTestId('phone-input'), '98480 22338');
+    await fireEvent.press(screen.getByRole('button', { name: 'Send code' }));
+    await waitFor(() => expect(mockRouter.push).toHaveBeenCalledWith('/otp'));
+    expect(api.callsTo('POST', '/v1/auth/otp/request')).toHaveLength(0);
+
+    await renderWithProviders(<OtpScreen />, { fetchFn: api.fetch });
+    await fireEvent.changeText(screen.getByTestId('otp-input'), '000000');
+    await fireEvent.press(screen.getByRole('button', { name: 'Verify' }));
+    expect(
+      await screen.findByText("That code isn't right. Check and try again."),
+    ).toBeOnTheScreen();
+    expect(api.callsTo('POST', '/v1/auth/phone-proof')).toHaveLength(0);
+
+    await fireEvent.changeText(screen.getByTestId('otp-input'), '123456');
+    await fireEvent.press(screen.getByRole('button', { name: 'Verify' }));
+    await waitFor(() => expect(useAuthStore.getState().status).toBe('signedIn'));
+    expect(api.callsTo('POST', '/v1/auth/phone-proof')[0]?.body).toMatchObject({
+      token: 'firebase-proof-for-+919848022338',
+      device: { name: 'Pixel 9' },
+    });
+    expect(api.callsTo('POST', '/v1/auth/otp/verify')).toHaveLength(0);
+  });
+});

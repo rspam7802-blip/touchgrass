@@ -1,9 +1,15 @@
 import { useMutation } from '@tanstack/react-query';
-import { AuthResponse, InviteCheckResponse, OtpRequestResponse } from '@touchgrass/shared';
+import { AuthResponse, InviteCheckResponse, LIMITS, OtpRequestResponse } from '@touchgrass/shared';
 import { z } from 'zod';
 import { deviceInfo } from '../../lib/device';
 import { useApi } from '../../providers/api-context';
 import { useAuthStore } from '../../stores/auth-store';
+import {
+  endFirebaseSignIn,
+  firebaseProof,
+  sendFirebaseCode,
+  usesFirebasePhoneAuth,
+} from './firebase-phone';
 
 export const TERMS_VERSION = '2026-10';
 const Empty = z.undefined();
@@ -11,11 +17,19 @@ const Empty = z.undefined();
 export function useRequestOtp() {
   const { client } = useApi();
   return useMutation({
-    mutationFn: (phone: string) =>
-      client.request('/v1/auth/otp/request', OtpRequestResponse, {
+    mutationFn: async (phone: string) => {
+      if (usesFirebasePhoneAuth()) {
+        await sendFirebaseCode(phone);
+        return {
+          expiresAt: new Date(Date.now() + LIMITS.otp.ttlMs).toISOString(),
+          resendAfterSeconds: LIMITS.otp.resendAfterMs / 1000,
+        };
+      }
+      return client.request('/v1/auth/otp/request', OtpRequestResponse, {
         method: 'POST',
         body: { phone },
-      }),
+      });
+    },
   });
 }
 
@@ -40,16 +54,22 @@ export function useVerifyOtp() {
       inviteCode: string | null;
       claimToken?: string | null;
     }) => {
-      const res = await client.request('/v1/auth/otp/verify', AuthResponse, {
-        method: 'POST',
-        body: {
-          phone: input.phone,
-          code: input.code,
-          inviteCode: input.inviteCode ?? undefined,
-          claimToken: input.claimToken ?? undefined,
-          device: await deviceInfo(appVersion),
-        },
-      });
+      const common = {
+        inviteCode: input.inviteCode ?? undefined,
+        claimToken: input.claimToken ?? undefined,
+        device: await deviceInfo(appVersion),
+      };
+      const firebase = usesFirebasePhoneAuth();
+      const res = firebase
+        ? await client.request('/v1/auth/phone-proof', AuthResponse, {
+            method: 'POST',
+            body: { token: await firebaseProof(input.phone, input.code), ...common },
+          })
+        : await client.request('/v1/auth/otp/verify', AuthResponse, {
+            method: 'POST',
+            body: { phone: input.phone, code: input.code, ...common },
+          });
+      if (firebase) await endFirebaseSignIn();
       await useAuthStore.getState().signIn(res);
       if (res.isNewUser) {
         for (const kind of ['terms', 'privacy', 'age_confirmation'] as const) {

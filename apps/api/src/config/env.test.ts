@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { EnvValidationError, loadEnv } from './env.js';
 import { testEnv } from '../test-support/env.js';
@@ -56,6 +57,52 @@ describe('env', () => {
       );
       expect(loadEnv({ ...base, EMAIL_PROVIDER: 'fake' }).EMAIL_PROVIDER).toBe('fake');
     }
+  });
+  it('accepts the lean go-live settings file in production (D-165, D-166)', () => {
+    // infra/railway/production-variables.env with its <placeholders> filled in plausibly.
+    const file = readFileSync(
+      new URL('../../../../infra/railway/production-variables.env', import.meta.url),
+      'utf8',
+    );
+    const filled: Record<string, string> = {};
+    for (const line of file.split('\n')) {
+      const m = /^([A-Z0-9_]+)=(.*)$/.exec(line.trim());
+      if (!m?.[1]) continue;
+      filled[m[1]] = (m[2] ?? '')
+        .replace(/\$\{\{Redis\.REDIS_URL\}\}/, 'redis://redis.railway.internal:6379')
+        .replace(/^<postgres.*>$/, 'postgres://u:p@pooler.supabase.com:5432/postgres')
+        .replace(
+          /^<-----BEGIN.*>$/,
+          '-----BEGIN CERTIFICATE-----\\nAAAA\\n-----END CERTIFICATE-----',
+        )
+        .replace(/^<secret \d>$/, 'x'.repeat(64))
+        .replace(/^<\+91.*>$/, '+919000012345')
+        .replace(/^<6 digits.*>$/, '482913')
+        .replace(/^<smtp:.*>$/, 'smtp://u:p@smtp-relay.brevo.com:587')
+        .replace(/https:\/\/<[^>]+>/g, 'https://example.up.railway.app')
+        .replace(/<[^>]+>/g, 'value');
+    }
+    const env = loadEnv(filled);
+    expect(env).toMatchObject({
+      NODE_ENV: 'production',
+      SMS_PROVIDER: 'none',
+      PHONE_AUTH_PROVIDER: 'firebase',
+      PAYMENTS_PROVIDER: 'disabled',
+      WEATHER_PROVIDER: 'none',
+      MODERATION_PROVIDER: 'google-vision',
+    });
+  });
+  it('keeps sign-in possible and fakes out of production', () => {
+    expect(() => loadEnv({ ...base, SMS_PROVIDER: 'none' })).toThrow(/needs PHONE_AUTH_PROVIDER/);
+    expect(() => loadEnv({ ...base, PHONE_AUTH_PROVIDER: 'firebase' })).toThrow(
+      /FIREBASE_PROJECT_ID/,
+    );
+    expect(() => loadEnv({ ...base, MODERATION_PROVIDER: 'google-vision' })).toThrow(
+      /GOOGLE_VISION_API_KEY/,
+    );
+    expect(() => loadEnv({ ...base, NODE_ENV: 'production', PHONE_AUTH_PROVIDER: 'fake' })).toThrow(
+      /PHONE_AUTH_PROVIDER=fake is not allowed in production/,
+    );
   });
   it('rejects short secrets', () => {
     expect(() => loadEnv({ ...base, JWT_ACCESS_SECRET: 'short' })).toThrow(EnvValidationError);

@@ -4,6 +4,7 @@ import {
   VideoTooLargeError,
   VideoTooLongError,
 } from '../features/media/upload';
+import { FirebasePhoneError } from '../features/auth/firebase-phone';
 import { ApiError } from './api-client';
 
 /** Translated copy for a stable reason code, with the dates some reasons carry (e.g. a cooldown's end). */
@@ -23,6 +24,8 @@ export function errorMessage(t: TFunction, err: unknown): string | null {
   if (err instanceof PhotoAccessDeniedError) return t('states.photoAccessDenied');
   if (err instanceof VideoTooLongError) return t('stories.videoTooLong');
   if (err instanceof VideoTooLargeError) return t('stories.videoTooLarge');
+  if (err instanceof FirebasePhoneError)
+    return err.appCode === 'INVALID_PHONE' ? t('auth.invalidPhone') : t(`errors.${err.appCode}`);
   if (err instanceof ApiError) {
     if (err.code === 'NETWORK') return t('states.offlineBody');
     const reason = reasonOf(err.details);

@@ -81,6 +81,8 @@ describe('theme and config', () => {
       apiUrl: 'http://localhost:4000',
       realtimeUrl: 'http://localhost:4001',
       webUrl: 'http://localhost:3000',
+      // Off unless the build has the Firebase config files (D-166).
+      firebasePhoneAuth: false,
       appVersion: '0.1.0',
     });
   });

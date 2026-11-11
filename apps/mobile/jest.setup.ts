@@ -130,6 +130,27 @@ jest.mock('expo-video', () => {
     VideoView: (props: object) => createElement(View, { ...props, testID: 'video-view' }),
   };
 });
+jest.mock('expo-sms', () => ({
+  isAvailableAsync: jest.fn(() => Promise.resolve(true)),
+  sendSMSAsync: jest.fn(() => Promise.resolve({ result: 'sent' })),
+}));
+// Firebase phone sign-in (D-166): a confirmation whose code is always 123456.
+jest.mock('@react-native-firebase/auth', () => ({
+  getAuth: jest.fn(() => ({})),
+  signOut: jest.fn(() => Promise.resolve()),
+  signInWithPhoneNumber: jest.fn((_auth: unknown, phone: string) =>
+    Promise.resolve({
+      confirm: (code: string) =>
+        code === '123456'
+          ? Promise.resolve({
+              user: { getIdToken: () => Promise.resolve(`firebase-proof-for-${phone}`) },
+            })
+          : Promise.reject(
+              Object.assign(new Error('bad code'), { code: 'auth/invalid-verification-code' }),
+            ),
+    }),
+  ),
+}));
 jest.mock('expo-image-manipulator', () => ({
   SaveFormat: { JPEG: 'jpeg' },
   ImageManipulator: {
@@ -166,6 +187,7 @@ jest.mock('expo-file-system', () => {
 });
 jest.mock('expo-constants', () => ({
   __esModule: true,
+  ExecutionEnvironment: { Bare: 'bare', Standalone: 'standalone', StoreClient: 'storeClient' },
   default: {
     expoConfig: {
       version: '0.1.0',
