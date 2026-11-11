@@ -11,7 +11,7 @@ import { formatTime } from '../../../src/features/events/format';
 import { useTheme } from '../../../src/theme/theme';
 
 const TIPS = ['public', 'tell', 'own_way', 'drinks', 'leave', 'report'] as const;
-const SAFETY_EMAIL = 'safety@touchgrass.app';
+const SAFETY_EMAIL = 'safety@touchgrass.co.in';
 
 /** Safety centre (F-SAF-07): emergency numbers, live location and SOS, verification, tips and reporting. */
 export default function SafetyCentreScreen() {

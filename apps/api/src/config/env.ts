@@ -135,7 +135,7 @@ export const EnvSchema = z
 
     EMAIL_PROVIDER: z.enum(['smtp', 'ses', 'fake']).default('smtp'),
     SMTP_URL: z.string().default('smtp://localhost:1025'),
-    EMAIL_FROM: z.string().default('TouchGrass <hello@touchgrass.app>'),
+    EMAIL_FROM: z.string().default('TouchGrass <hello@touchgrass.co.in>'),
 
     /** Video stories are re-encoded by the worker (D-164); the image ships these binaries. */
     FFMPEG_PATH: z.string().default('ffmpeg'),

@@ -411,7 +411,7 @@ describe('calendar sync (F-CAL-01)', () => {
 
     const one = await api(b).get(`/v1/events/${open.id}/calendar.ics`).expect(200);
     expect(one.headers['content-type']).toContain('text/calendar');
-    expect(one.text).toContain(`UID:${open.id}@touchgrass.app`);
+    expect(one.text).toContain(`UID:${open.id}@touchgrass.co.in`);
     const stranger = await member(h);
     await api(stranger).get(`/v1/events/${mystery.id}/calendar.ics`).expect(200);
   });

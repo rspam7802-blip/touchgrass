@@ -125,7 +125,7 @@ describe('safety centre (F-SAF-07)', () => {
     expect(mockRouter.push).toHaveBeenCalledWith('/safety/share');
     await fireEvent.press(screen.getByTestId('safety-report'));
     expect(openURL).toHaveBeenCalledWith(
-      expect.stringMatching(/^mailto:safety@touchgrass\.app\?subject=/),
+      expect.stringMatching(/^mailto:safety@touchgrass\.co\.in\?subject=/),
     );
   });
 

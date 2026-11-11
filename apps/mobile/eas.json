@@ -8,7 +8,7 @@
       "node": "22.21.1",
       "pnpm": "10.28.0",
       "env": {
-        "EXPO_PUBLIC_LINK_HOST": "touchgrass.app"
+        "EXPO_PUBLIC_LINK_HOST": "touchgrass.co.in"
       }
     },
     "development": {
@@ -18,9 +18,9 @@
       "channel": "development",
       "env": {
         "APP_VARIANT": "development",
-        "EXPO_PUBLIC_API_URL": "https://api.staging.touchgrass.app",
-        "EXPO_PUBLIC_REALTIME_URL": "https://api.staging.touchgrass.app",
-        "EXPO_PUBLIC_WEB_URL": "https://staging.touchgrass.app"
+        "EXPO_PUBLIC_API_URL": "https://api.touchgrass.co.in",
+        "EXPO_PUBLIC_REALTIME_URL": "https://rt.touchgrass.co.in",
+        "EXPO_PUBLIC_WEB_URL": "https://touchgrass.co.in"
       },
       "ios": {
         "simulator": true
@@ -35,9 +35,9 @@
       "channel": "preview",
       "env": {
         "APP_VARIANT": "preview",
-        "EXPO_PUBLIC_API_URL": "https://api.staging.touchgrass.app",
-        "EXPO_PUBLIC_REALTIME_URL": "https://api.staging.touchgrass.app",
-        "EXPO_PUBLIC_WEB_URL": "https://staging.touchgrass.app"
+        "EXPO_PUBLIC_API_URL": "https://api.touchgrass.co.in",
+        "EXPO_PUBLIC_REALTIME_URL": "https://rt.touchgrass.co.in",
+        "EXPO_PUBLIC_WEB_URL": "https://touchgrass.co.in"
       },
       "android": {
         "buildType": "apk"
@@ -50,9 +50,9 @@
       "autoIncrement": true,
       "env": {
         "APP_VARIANT": "production",
-        "EXPO_PUBLIC_API_URL": "https://api.touchgrass.app",
-        "EXPO_PUBLIC_REALTIME_URL": "https://api.touchgrass.app",
-        "EXPO_PUBLIC_WEB_URL": "https://touchgrass.app"
+        "EXPO_PUBLIC_API_URL": "https://api.touchgrass.co.in",
+        "EXPO_PUBLIC_REALTIME_URL": "https://rt.touchgrass.co.in",
+        "EXPO_PUBLIC_WEB_URL": "https://touchgrass.co.in"
       },
       "android": {
         "buildType": "app-bundle"

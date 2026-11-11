@@ -112,7 +112,7 @@ export class CalendarService {
     const link = `${this.env.WEB_PUBLIC_URL}/e/${e.slug}`;
     const open = fillParams(translate('calendar.openInApp', lang), { url: link }, lang);
     return {
-      uid: `${e.id}@touchgrass.app`,
+      uid: `${e.id}@touchgrass.co.in`,
       sequence: Math.max(0, Math.floor((updatedAt.getTime() - SEQUENCE_EPOCH) / 1000)),
       start: new Date(e.startsAt),
       end: new Date(e.endsAt),
