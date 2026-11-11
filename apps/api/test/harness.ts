@@ -30,7 +30,11 @@ export async function createHarness(
 ): Promise<Harness> {
   const sms = new FakeSmsSender();
   const storage = new MemoryObjectStorage('http://media.test');
-  const env = integrationEnv({ STORAGE_PROVIDER: 'memory', TRUST_PROXY_HOPS: '1', ...envOverrides });
+  const env = integrationEnv({
+    STORAGE_PROVIDER: 'memory',
+    TRUST_PROXY_HOPS: '1',
+    ...envOverrides,
+  });
   const app = await createApiApp(env, {
     logger: false,
     adapterOverrides: { sms, storage, ...overrides },
