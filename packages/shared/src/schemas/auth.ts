@@ -39,6 +39,18 @@ export const OtpVerifyBody = z.object({
 });
 export type OtpVerifyBody = z.infer<typeof OtpVerifyBody>;
 
+/**
+ * Sign-in with a phone proof from the identity provider (Firebase Authentication, D-166) instead of our own
+ * SMS code. The phone number comes from the verified proof, never from the client.
+ */
+export const PhoneProofSignInBody = z.object({
+  token: z.string().min(20).max(4096),
+  inviteCode: InviteCodeInput.optional(),
+  claimToken: z.string().min(20).max(100).optional(),
+  device: DeviceInfo,
+});
+export type PhoneProofSignInBody = z.infer<typeof PhoneProofSignInBody>;
+
 export const SessionUser = z.object({
   id: z.uuid(),
   status: UserStatus,

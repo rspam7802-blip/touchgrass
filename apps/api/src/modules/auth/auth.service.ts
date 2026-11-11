@@ -3,10 +3,17 @@ import {
   type AuthTokens,
   normalizeE164,
   type OtpVerifyBody,
+  type PhoneProofSignInBody,
 } from '@touchgrass/shared';
 import { Inject, Injectable } from '@nestjs/common';
+import type { Redis } from 'ioredis';
+import {
+  invalidPhoneProof,
+  PhoneIdentityVerifier,
+} from '../../adapters/phone-auth/phone-auth.port.js';
 import { AppError } from '../../common/errors/app-error.js';
-import { DB, type Database } from '../../infra/database/database.module.js';
+import { DB, type Database, type Tx } from '../../infra/database/database.module.js';
+import { REDIS } from '../../infra/redis/redis.module.js';
 import { OutboxService } from '../../infra/outbox/outbox.service.js';
 import { PlusOneClaimService } from '../events/plus-one/plus-one-claim.service.js';
 import { ReferralCodesService } from '../referrals/referral-codes.service.js';
@@ -29,6 +36,9 @@ export function normalizePhoneOrThrow(raw: string): string {
 }
 
 /** Statuses that may never sign in. */
+/** A phone proof must be used within 15 minutes of the person entering the SMS code. */
+const PROOF_MAX_AGE_MS = 15 * 60_000;
+
 const BLOCKED: Partial<Record<UserRow['status'], AppError>> = {
   age_blocked: new AppError('AGE_RESTRICTED', 'TouchGrass is for people 18 and over'),
   suspended: new AppError('ACCOUNT_SUSPENDED', 'Account suspended'),
@@ -49,6 +59,8 @@ export class AuthService {
     private readonly outbox: OutboxService,
     private readonly plusOnes: PlusOneClaimService,
     private readonly referralCodes: ReferralCodesService,
+    private readonly phoneAuth: PhoneIdentityVerifier,
+    @Inject(REDIS) private readonly redis: Redis,
   ) {}
 
   async requestOtp(
@@ -66,12 +78,55 @@ export class AuthService {
   async verifyOtp(body: OtpVerifyBody, ip: string | null): Promise<AuthResponse> {
     const phone = normalizePhoneOrThrow(body.phone);
     const requestId = await this.otp.check(phone, body.code);
+    return this.signIn(phone, body, ip, {
+      // A blocked person's code is still used up, so it can't be tried again.
+      onBlocked: async () => {
+        await this.otp.consume(requestId, this.db);
+      },
+      claim: (tx) => this.otp.consume(requestId, tx),
+      used: () => new AppError('OTP_EXPIRED', 'Code already used'),
+    });
+  }
+
+  /**
+   * Sign-in with a Firebase phone proof (D-166). The proof must be fresh (code entered in the last 15
+   * minutes) and is accepted once; the phone number is taken from it.
+   */
+  async signInWithPhoneProof(
+    body: PhoneProofSignInBody,
+    ip: string | null,
+    now: Date = new Date(),
+  ): Promise<AuthResponse> {
+    const proof = await this.phoneAuth.verify(body.token, now);
+    if (now.getTime() - proof.authTime.getTime() > PROOF_MAX_AGE_MS)
+      throw invalidPhoneProof('STALE');
+    const phone = normalizePhoneOrThrow(proof.phoneE164);
+    const ttl = Math.max(60, Math.ceil((proof.expiresAt.getTime() - now.getTime()) / 1000));
+    return this.signIn(phone, body, ip, {
+      onBlocked: () => Promise.resolve(),
+      claim: async () =>
+        (await this.redis.set(`phone-proof:${proof.proofId}`, '1', 'EX', ttl, 'NX')) === 'OK',
+      used: () => invalidPhoneProof('USED'),
+    });
+  }
+
+  /** Everything after the phone is proven: blocks, invite gate, new or returning account, session. */
+  private async signIn(
+    phone: string,
+    body: Pick<OtpVerifyBody, 'inviteCode' | 'claimToken' | 'device'>,
+    ip: string | null,
+    proof: {
+      onBlocked: () => Promise<void>;
+      claim: (tx: Tx) => Promise<boolean>;
+      used: () => AppError;
+    },
+  ): Promise<AuthResponse> {
     const existing = await this.users.findByPhone(phone);
 
     if (existing) {
       const blocked = BLOCKED[existing.status];
       if (blocked) {
-        await this.otp.consume(requestId, this.db);
+        await proof.onBlocked();
         throw blocked;
       }
     }
@@ -91,8 +146,7 @@ export class AuthService {
     }
 
     return this.db.transaction(async (tx) => {
-      if (!(await this.otp.consume(requestId, tx)))
-        throw new AppError('OTP_EXPIRED', 'Code already used');
+      if (!(await proof.claim(tx))) throw proof.used();
       let user: UserRow;
       let isNewUser = false;
       if (existing) {

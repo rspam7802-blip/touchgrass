@@ -50,7 +50,11 @@ export const EnvSchema = z
     MIN_SUPPORTED_APP_VERSION: z.string().default('0.1.0'),
     LATEST_APP_VERSION: z.string().default('0.1.0'),
 
-    SMS_PROVIDER: z.enum(['fake', 'msg91']).default('fake'),
+    // `none` (D-166): the server sends no texts; sign-in goes through PHONE_AUTH_PROVIDER=firebase.
+    SMS_PROVIDER: z.enum(['fake', 'msg91', 'none']).default('fake'),
+    /** Who proves phone numbers besides our own SMS codes: Firebase Authentication texts the code itself. */
+    PHONE_AUTH_PROVIDER: z.enum(['none', 'fake', 'firebase']).default('none'),
+    FIREBASE_PROJECT_ID: z.string().optional(),
     MSG91_AUTH_KEY: z.string().optional(),
     MSG91_OTP_TEMPLATE_ID: z.string().optional(),
     MSG91_SMS_FLOW_ID: z.string().optional(),
@@ -157,6 +161,17 @@ export const EnvSchema = z
       ['MSG91_AUTH_KEY', 'MSG91_OTP_TEMPLATE_ID', 'MSG91_SMS_FLOW_ID'],
       'SMS_PROVIDER=msg91',
     );
+    requireKeys(
+      env.PHONE_AUTH_PROVIDER === 'firebase',
+      ['FIREBASE_PROJECT_ID'],
+      'PHONE_AUTH_PROVIDER=firebase',
+    );
+    if (env.SMS_PROVIDER === 'none' && env.PHONE_AUTH_PROVIDER === 'none')
+      ctx.addIssue({
+        code: 'custom',
+        path: ['SMS_PROVIDER'],
+        message: 'SMS_PROVIDER=none needs PHONE_AUTH_PROVIDER (otherwise nobody can sign in)',
+      });
     requireKeys(Boolean(env.STORE_REVIEW_PHONE), ['STORE_REVIEW_OTP'], 'STORE_REVIEW_PHONE is set');
     requireKeys(Boolean(env.STORE_REVIEW_OTP), ['STORE_REVIEW_PHONE'], 'STORE_REVIEW_OTP is set');
     requireKeys(
@@ -190,6 +205,7 @@ export const EnvSchema = z
     if (env.NODE_ENV === 'production') {
       const fakes: [keyof typeof env, string][] = [
         ['SMS_PROVIDER', 'fake'],
+        ['PHONE_AUTH_PROVIDER', 'fake'],
         ['PAYMENTS_PROVIDER', 'fake'],
         ['PUSH_PROVIDER', 'fake'],
         ['STORAGE_PROVIDER', 'memory'],

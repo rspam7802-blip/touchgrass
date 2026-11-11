@@ -20,6 +20,7 @@ import {
   OtpRequestBody,
   OtpRequestResponse,
   OtpVerifyBody,
+  PhoneProofSignInBody,
   RefreshBody,
   SessionList,
 } from '@touchgrass/shared';
@@ -89,6 +90,20 @@ export class AuthController {
     @Req() req: AppRequest,
   ): Promise<AuthResponse> {
     return this.auth.verifyOtp(body, clientIp(req));
+  }
+
+  /** Sign-in with a Firebase phone proof (D-166): the provider texted and checked the code. */
+  @Public()
+  @Post('phone-proof')
+  @HttpCode(200)
+  @RateLimit({ name: 'phone-proof-ip', limit: 30, windowSeconds: 900, by: 'ip' })
+  @ApiZodBody(PhoneProofSignInBody)
+  @ApiZodResponse(200, AuthResponse)
+  phoneProof(
+    @Body(new ZodPipe(PhoneProofSignInBody)) body: Dto.PhoneProofSignInBody,
+    @Req() req: AppRequest,
+  ): Promise<AuthResponse> {
+    return this.auth.signInWithPhoneProof(body, clientIp(req));
   }
 
   @Public()

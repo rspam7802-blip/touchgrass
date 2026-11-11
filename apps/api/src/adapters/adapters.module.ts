@@ -20,7 +20,11 @@ import { RazorpayPaymentsGateway } from './payments/razorpay.payments.js';
 import { ExpoPushSender } from './push/expo.push.js';
 import { FakePushSender } from './push/fake.push.js';
 import { PushSender } from './push/push.port.js';
+import { FakePhoneVerifier } from './phone-auth/fake.phone-auth.js';
+import { FirebasePhoneVerifier } from './phone-auth/firebase.phone-auth.js';
+import { NoPhoneIdentityVerifier, PhoneIdentityVerifier } from './phone-auth/phone-auth.port.js';
 import { FakeSmsSender } from './sms/fake.sms.js';
+import { NoSmsSender } from './sms/none.sms.js';
 import { Msg91SmsSender } from './sms/msg91.sms.js';
 import { SmsSender } from './sms/sms.port.js';
 import { MemoryObjectStorage } from './storage/memory.storage.js';
@@ -46,6 +50,7 @@ export interface AdapterInstances {
   moderation: ModerationProvider;
   analytics: AnalyticsSink;
   email: EmailSender;
+  phoneAuth: PhoneIdentityVerifier;
 }
 
 /** Chooses real or fake implementations from env. Env validation already guarantees required keys. */
@@ -64,7 +69,9 @@ export function buildAdapters(env: Env): AdapterInstances {
                 }
               : {},
           })
-        : new FakeSmsSender(),
+        : env.SMS_PROVIDER === 'none'
+          ? new NoSmsSender()
+          : new FakeSmsSender(),
     payments:
       env.PAYMENTS_PROVIDER === 'razorpay'
         ? new RazorpayPaymentsGateway({
@@ -125,6 +132,12 @@ export function buildAdapters(env: Env): AdapterInstances {
         : env.EMAIL_PROVIDER === 'fake'
           ? new FakeEmailSender()
           : new SmtpEmailSender(env.SMTP_URL, env.EMAIL_FROM),
+    phoneAuth:
+      env.PHONE_AUTH_PROVIDER === 'firebase'
+        ? new FirebasePhoneVerifier(required(env.FIREBASE_PROJECT_ID, 'FIREBASE_PROJECT_ID'))
+        : env.PHONE_AUTH_PROVIDER === 'fake'
+          ? new FakePhoneVerifier()
+          : new NoPhoneIdentityVerifier(),
   };
 }
 
@@ -144,6 +157,7 @@ export class AdaptersModule {
       { provide: ModerationProvider, useValue: a.moderation },
       { provide: AnalyticsSink, useValue: a.analytics },
       { provide: EmailSender, useValue: a.email },
+      { provide: PhoneIdentityVerifier, useValue: a.phoneAuth },
     ];
     return { module: AdaptersModule, providers, exports: providers };
   }
