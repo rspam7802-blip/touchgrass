@@ -82,9 +82,11 @@ describe('seed', () => {
     expect(summary.stories.live).toBeGreaterThanOrEqual(4);
     // Pictures: every plan and crew has a cover and every seeded person a profile picture, as real files.
     const { rows: missing } = await pool.query<{ plans: number; crews: number; people: number }>(
-      `SELECT (SELECT count(*)::int FROM events WHERE cover_media_id IS NULL) AS plans,
-              (SELECT count(*)::int FROM crews WHERE cover_media_id IS NULL) AS crews,
-              (SELECT count(*)::int FROM users u WHERE NOT EXISTS
+      // Only the demo data: other test files share this database and create rows of their own.
+      `SELECT (SELECT count(*)::int FROM events WHERE slug LIKE 'seedev%' AND cover_media_id IS NULL) AS plans,
+              (SELECT count(*)::int FROM crews c JOIN users u ON u.id = c.created_by
+                WHERE u.phone_e164 LIKE '+9190000%' AND c.cover_media_id IS NULL) AS crews,
+              (SELECT count(*)::int FROM users u WHERE u.phone_e164 LIKE '+9190000%' AND NOT EXISTS
                  (SELECT 1 FROM profile_photos p WHERE p.user_id = u.id)) AS people`,
     );
     expect(missing[0]).toEqual({ plans: 0, crews: 0, people: 0 });
