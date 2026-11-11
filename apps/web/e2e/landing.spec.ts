@@ -49,6 +49,21 @@ test('sends security headers', async ({ request }) => {
   expect(csp).toContain("object-src 'none'");
   expect(csp).toMatch(/script-src 'self'/);
   expect(csp).not.toContain('unsafe-eval');
+  expect(csp).not.toContain('https://www.google.com');
+});
+
+test('only the admin sign-in page allows Firebase sign-in scripts', async ({ request }) => {
+  const res = await request.get('/admin/login');
+  const csp = res.headers()['content-security-policy'] ?? '';
+  // D-167: reCAPTCHA and Google's identity endpoints, still no framing of our pages and no plugins.
+  expect(csp).toContain('https://www.google.com');
+  expect(csp).toContain('https://identitytoolkit.googleapis.com');
+  expect(csp).toContain("frame-ancestors 'none'");
+  expect(csp).toContain("object-src 'none'");
+  for (const path of ['/privacy', '/delete-account']) {
+    const other = (await request.get(path)).headers()['content-security-policy'] ?? '';
+    expect(other).not.toContain('https://www.google.com');
+  }
 });
 
 test('dark mode uses dark tokens', async ({ browser }) => {

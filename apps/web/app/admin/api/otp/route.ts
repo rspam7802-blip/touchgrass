@@ -17,9 +17,18 @@ const Body = z.discriminatedUnion('step', [
     phone: z.string().min(6).max(20),
     code: z.string().regex(/^\d{6}$/),
   }),
+  // Firebase phone sign-in (D-167): the proof Firebase issued after checking the code in the browser.
+  z.object({ step: z.literal('proof'), token: z.string().min(20).max(4096) }),
 ]);
 
-/** Admin sign-in: proxies OTP to the API, then keeps the tokens in httpOnly cookies. Non-admins are refused. */
+const adminDevice = () => ({
+  deviceId: `admin-web-${randomUUID()}`,
+  name: 'Admin dashboard',
+  platform: 'web' as const,
+  appVersion: 'web',
+});
+
+/** Admin sign-in: proxies OTP (or a Firebase phone proof) to the API, then keeps the tokens in httpOnly cookies. Non-admins are refused. */
 export async function POST(req: Request): Promise<Response> {
   const parsed = Body.safeParse(await req.json().catch(() => null));
   if (!parsed.success)
@@ -37,20 +46,22 @@ export async function POST(req: Request): Promise<Response> {
       });
       return NextResponse.json(await parse(res, OtpRequestResponse));
     }
-    const res = await rawApi('/v1/auth/otp/verify', {
-      method: 'POST',
-      headers: forwarded,
-      body: JSON.stringify({
-        phone: parsed.data.phone,
-        code: parsed.data.code,
-        device: {
-          deviceId: `admin-web-${randomUUID()}`,
-          name: 'Admin dashboard',
-          platform: 'web',
-          appVersion: 'web',
-        },
-      }),
-    });
+    const res =
+      parsed.data.step === 'proof'
+        ? await rawApi('/v1/auth/phone-proof', {
+            method: 'POST',
+            headers: forwarded,
+            body: JSON.stringify({ token: parsed.data.token, device: adminDevice() }),
+          })
+        : await rawApi('/v1/auth/otp/verify', {
+            method: 'POST',
+            headers: forwarded,
+            body: JSON.stringify({
+              phone: parsed.data.phone,
+              code: parsed.data.code,
+              device: adminDevice(),
+            }),
+          });
     const auth = await parse(res, AuthResponse);
     if (!isAdminRole(auth.user.roles)) {
       await rawApi('/v1/auth/logout', { method: 'POST', token: auth.accessToken });

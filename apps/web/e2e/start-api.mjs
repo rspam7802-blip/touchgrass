@@ -61,6 +61,8 @@ const api = spawn('node', [...envArgs, 'dist/main.js'], {
     API_PORT: process.env.API_E2E_PORT ?? '4100',
     LOG_LEVEL: 'warn',
     STORAGE_PROVIDER: 'memory',
+    // Firebase-style phone proofs (D-167) with the fake verifier: `fake-phone:<E.164>:<unique>`.
+    PHONE_AUTH_PROVIDER: 'fake',
     // API-driven e2e sign-ins send their own X-Forwarded-For so per-IP OTP limits don't couple tests.
     TRUST_PROXY_HOPS: '1',
   },

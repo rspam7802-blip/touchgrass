@@ -1,6 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import { type APIRequestContext, expect, test } from '@playwright/test';
-import { MEMBER_PHONE, signInAs } from './admin-helpers';
+import { ADMIN_PHONE, MEMBER_PHONE, signInAs } from './admin-helpers';
 import { freshIp } from './api-helpers';
 
 test.describe.configure({ mode: 'serial' });
@@ -374,4 +374,23 @@ test('sign out ends the session', async ({ page }) => {
   await expect(page).toHaveURL(/\/admin\/login$/);
   await page.goto('/admin/invite-codes');
   await expect(page).toHaveURL(/\/admin\/login$/);
+});
+
+test('signs in with a Firebase phone proof, refusing members (D-167)', async ({ browser }) => {
+  // A browser with no session: the proof alone must be enough, and only for admins.
+  const context = await browser.newContext({ storageState: { cookies: [], origins: [] } });
+  const page = await context.newPage();
+  const proof = (phone: string) => ({
+    headers: freshIp(),
+    data: { step: 'proof', token: `fake-phone:+91${phone}:${String(Date.now())}` },
+  });
+  const member = await page.request.post('/admin/api/otp', proof(MEMBER_PHONE));
+  expect(member.status()).toBe(403);
+  expect(((await member.json()) as { error: { code: string } }).error.code).toBe('FORBIDDEN');
+
+  const admin = await page.request.post('/admin/api/otp', proof(ADMIN_PHONE));
+  expect(admin.ok()).toBe(true);
+  await page.goto('/admin');
+  await expect(page.getByText('Your roles: super_admin').first()).toBeVisible();
+  await context.close();
 });

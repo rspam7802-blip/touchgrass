@@ -171,3 +171,15 @@ variable "latest_app_version" {
   type    = string
   default = "1.0.0"
 }
+
+variable "firebase_project_id" {
+  description = "Firebase project ID for admin console sign-in (D-167). Empty = the console uses the API's own codes."
+  type        = string
+  default     = ""
+}
+
+variable "firebase_web_api_key" {
+  description = "Public API key of the Firebase Web app (Project settings → Your apps), for admin console sign-in (D-167)."
+  type        = string
+  default     = ""
+}

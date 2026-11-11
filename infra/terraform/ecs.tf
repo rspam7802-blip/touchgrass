@@ -122,6 +122,8 @@ locals {
         { name = "LEGAL_ADDRESS", value = var.legal_address },
         { name = "GRIEVANCE_OFFICER_NAME", value = var.grievance_officer_name },
         { name = "GRIEVANCE_OFFICER_EMAIL", value = var.grievance_officer_email },
+        { name = "FIREBASE_PROJECT_ID", value = var.firebase_project_id },
+        { name = "FIREBASE_WEB_API_KEY", value = var.firebase_web_api_key },
         { name = "APPLE_TEAM_ID", value = var.apple_team_id },
         { name = "ANDROID_SHA256_CERT_FINGERPRINTS", value = join(",", var.android_sha256_cert_fingerprints) },
       ]
