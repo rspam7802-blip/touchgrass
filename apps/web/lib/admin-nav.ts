@@ -23,6 +23,7 @@ export const ADMIN_NAV: { section: AdminSection; href: string; label: string }[]
   { section: 'feedback', href: '/admin/feedback', label: t.feedback },
   { section: 'payments', href: '/admin/payments', label: t.payments },
   { section: 'inviteCodes', href: '/admin/invite-codes', label: t.inviteCodes },
+  { section: 'waitlist', href: '/admin/waitlist', label: t.waitlist.title },
   { section: 'weights', href: '/admin/weights', label: c.weights },
   { section: 'notificationTemplates', href: '/admin/notification-templates', label: c.templates },
   { section: 'featureFlags', href: '/admin/feature-flags', label: t.featureFlags },

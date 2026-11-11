@@ -1,5 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
+import { freshIp } from './api-helpers';
 
 test('landing page shows the brand and passes axe (WCAG 2.1 AA)', async ({ page }) => {
   await page.goto('/');
@@ -96,4 +97,85 @@ test('a referral link shows the friend’s code, kept across language switches; 
     .withTags(['wcag2a', 'wcag2aa', 'wcag21aa'])
     .analyze();
   expect(results.violations).toEqual([]);
+});
+
+test.describe('landing page sections and forms (D-169)', () => {
+  // A visitor address of its own, so per-address limits never couple runs or projects.
+  test.use({ extraHTTPHeaders: freshIp() });
+
+  test('explains the app in ordered sections and passes axe', async ({ page }) => {
+    await page.goto('/?lang=en');
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Log off. Pull up.');
+    await expect(page.getByRole('heading', { level: 2 })).toHaveText([
+      'How it works',
+      'What you can do',
+      'Safety comes first',
+      'Invite-only, on purpose',
+      'Got an invite code?',
+      'No invite yet?',
+      'Questions',
+    ]);
+    await expect(page.getByRole('heading', { level: 3, name: 'Pull up' })).toBeVisible();
+    await expect(page.getByText('SOS and live location sharing')).toBeVisible();
+    await page.getByText('Does it cost anything?').click();
+    await expect(page.getByText('plans are free at launch')).toBeVisible();
+    await page.getByRole('link', { name: 'Join the waitlist' }).click();
+    await expect(page).toHaveURL(/#waitlist$/);
+    await expect(page).toHaveTitle(/TouchGrass/);
+    const results = await new AxeBuilder({ page })
+      .withTags(['wcag2a', 'wcag2aa', 'wcag21aa'])
+      .analyze();
+    expect(results.violations).toEqual([]);
+  });
+
+  test('checks invite codes: the seeded code works, a made-up one does not', async ({ page }) => {
+    await page.goto('/?lang=en');
+    const result = page.getByTestId('invite-result');
+    await page.getByRole('textbox', { name: 'Invite code' }).fill('grass-2026');
+    await page.getByRole('button', { name: 'Check code' }).click();
+    await expect(result).toContainText('This code works.');
+    await expect(result).toContainText('Enter GRASS-2026 when the app asks for an invite code.');
+    const results = await new AxeBuilder({ page })
+      .withTags(['wcag2a', 'wcag2aa', 'wcag21aa'])
+      .analyze();
+    expect(results.violations).toEqual([]);
+
+    await page.getByRole('textbox', { name: 'Invite code' }).fill('NOPE-0000');
+    await page.getByRole('button', { name: 'Check code' }).click();
+    await expect(result).toContainText("This code doesn't work.");
+    await expect(result).not.toContainText('This code works.');
+  });
+
+  test('joins the waitlist after fixing a missing contact', async ({ page }) => {
+    await page.goto('/?lang=en');
+    const form = page.locator('#waitlist');
+    await form.getByLabel('Your name').fill('E2E Waitlister');
+    await form.getByLabel('What would you like to do?').fill('Board games on weekends');
+    await form.getByRole('checkbox').check();
+    await form.getByRole('button', { name: 'Join the waitlist' }).click();
+    await expect(form.getByRole('alert')).toHaveText('Add a mobile number or an email.');
+    // What was typed survives the failed attempt.
+    await expect(form.getByLabel('Your name')).toHaveValue('E2E Waitlister');
+    await expect(form.getByRole('checkbox')).toBeChecked();
+    const results = await new AxeBuilder({ page })
+      .withTags(['wcag2a', 'wcag2aa', 'wcag21aa'])
+      .analyze();
+    expect(results.violations).toEqual([]);
+
+    await form
+      .getByLabel('Email')
+      .fill(`e2e-${String(Date.now())}-${String(Math.random()).slice(2, 8)}@example.com`);
+    await form.getByRole('button', { name: 'Join the waitlist' }).click();
+    await expect(page.getByTestId('waitlist-done')).toHaveText(
+      "You're on the list. We'll be in touch when there's a spot for you.",
+    );
+  });
+
+  test('the whole page is translated', async ({ page }) => {
+    await page.goto('/?lang=te');
+    for (const heading of await page.getByRole('heading', { level: 2 }).allTextContents())
+      expect(heading).toMatch(/[ఀ-౿]/);
+    await page.goto('/?lang=hi');
+    await expect(page.getByRole('button', { name: 'वेटलिस्ट में जुड़ो' })).toBeVisible();
+  });
 });

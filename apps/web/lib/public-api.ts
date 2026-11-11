@@ -82,10 +82,11 @@ export async function publicPost<T>(
   path: string,
   body: unknown,
   schema: z.ZodType<T> | null,
+  extraHeaders: Record<string, string> = {},
 ): Promise<PostResult<T>> {
   const res = await fetch(`${API_URL}${path}`, {
     method: 'POST',
-    headers: { 'content-type': 'application/json' },
+    headers: { ...extraHeaders, 'content-type': 'application/json' },
     body: JSON.stringify(body),
     cache: 'no-store',
   });

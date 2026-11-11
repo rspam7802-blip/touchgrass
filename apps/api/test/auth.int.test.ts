@@ -283,8 +283,13 @@ describe('invite gate (F-ACC-01)', () => {
 
   it('lets anyone sign up when the gate is off', async () => {
     await setInviteGate(h, false);
-    const res = await signIn(h, freshPhone(), { inviteCode: null });
-    expect(res.isNewUser).toBe(true);
+    try {
+      const res = await signIn(h, freshPhone(), { inviteCode: null });
+      expect(res.isNewUser).toBe(true);
+    } finally {
+      // Other suites share the database: leave the gate as this file found it (on, see beforeEach).
+      await setInviteGate(h, true);
+    }
   });
 
   it('existing users never need an invite', async () => {

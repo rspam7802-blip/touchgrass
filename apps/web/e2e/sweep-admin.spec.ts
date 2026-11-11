@@ -23,6 +23,7 @@ const SECTIONS = [
   '/admin/feedback',
   '/admin/payments',
   '/admin/invite-codes',
+  '/admin/waitlist',
   '/admin/weights',
   '/admin/notification-templates',
   '/admin/feature-flags',

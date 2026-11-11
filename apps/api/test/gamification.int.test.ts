@@ -18,6 +18,7 @@ import { GamificationHandlers } from '../src/modules/gamification/gamification.h
 import { GamificationService } from '../src/modules/gamification/gamification.service.js';
 import { RecapsService } from '../src/modules/gamification/recaps.service.js';
 import { PayoutsService } from '../src/modules/payments/payouts.service.js';
+import { FeatureFlagsService } from '../src/modules/platform/feature-flags.service.js';
 import { RefundsService } from '../src/modules/payments/refunds.service.js';
 import { WebhooksService } from '../src/modules/payments/webhooks.service.js';
 import { ReferralsHandlers } from '../src/modules/referrals/referrals.handlers.js';
@@ -508,6 +509,8 @@ describe('referral rewards (F-GRW-01)', () => {
     expect(mine.perReferral).toEqual({ priorityPasses: 2, credits: 1 });
     expect((await get(referrer, '/v1/me/referrals')).body.code).toBe(mine.code);
 
+    // Other suites share the database: put the gate back the way this test found it.
+    const gateWas = await h.app.get(FeatureFlagsService).isEnabled('invite_gate');
     await setInviteGate(h, true);
     try {
       const s = await signIn(h, undefined, { inviteCode: mine.code.toLowerCase() });
@@ -567,7 +570,7 @@ describe('referral rewards (F-GRW-01)', () => {
       });
       expect(farmed.balance.priorityPasses).toBe(0);
     } finally {
-      await setInviteGate(h, false);
+      await setInviteGate(h, gateWas);
     }
   });
 

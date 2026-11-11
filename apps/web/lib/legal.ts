@@ -44,13 +44,15 @@ export function companyDetails(
 }
 
 const UPDATED = '9 November 2026';
+/** The privacy policy gained the website waitlist (D-169). */
+const PRIVACY_UPDATED = '11 November 2026';
 
 export function privacyPolicy(c: CompanyDetails): LegalDocument {
   const grace = LIMITS.account.deletionGraceDays;
   const contact = c.grievanceEmail ?? c.supportEmail ?? 'the contact page';
   return {
     title: 'Privacy policy',
-    updated: UPDATED,
+    updated: PRIVACY_UPDATED,
     intro: `${c.entity} ("we") runs ${BRAND.name}, an app for meeting people in person. This policy explains what we collect, why, who processes it for us, how long we keep it and the rights you have under India's Digital Personal Data Protection Act, 2023.`,
     sections: [
       {
@@ -91,6 +93,12 @@ export function privacyPolicy(c: CompanyDetails): LegalDocument {
           'Verification selfies are deleted after review.',
           `When you delete your account it is hidden at once and permanently erased after ${String(grace)} days, unless you sign in again before then to cancel.`,
           'Payment and tax records are kept for as long as Indian tax law requires. Records of bans and safety actions are kept so a removed person cannot simply return.',
+        ],
+      },
+      {
+        heading: 'The website waitlist',
+        paragraphs: [
+          `If you join the waitlist on our website without an account, we keep the name, mobile number and/or email, city and the optional note you give us, only to send you an invite code when there is room (by email if you gave one, or by our team reaching out to you) and to see which cities to open next. Only our team sees it. We delete it when you ask us at ${contact}, or once it is no longer needed for that purpose.`,
         ],
       },
       {

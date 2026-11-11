@@ -289,6 +289,33 @@ export const en = {
     events: 'Plans',
   },
   admin: {
+    waitlist: {
+      title: 'Waitlist',
+      intro:
+        'People without an invite who asked to join on the website. Invite them, or remove them when they ask.',
+      show: 'Show',
+      waiting: 'Not invited yet',
+      all: 'Everyone',
+      apply: 'Apply',
+      name: 'Name',
+      contact: 'Contact',
+      city: 'City',
+      note: 'Wants to do',
+      joined: 'Joined',
+      status: 'Status',
+      waitingStatus: 'Waiting',
+      invitedOn: 'Invited {{date}}',
+      invite: 'Invite',
+      inviteName: 'Invite {{name}}',
+      codeFor: 'Invite code for {{name}}',
+      emailed: 'Also emailed to {{email}}.',
+      sendYourself: 'Send it to them yourself.',
+      remove: 'Remove',
+      removeName: 'Remove {{name}}',
+      confirmRemove: 'Remove {{name}} for good?',
+      confirm: 'Yes, remove',
+      keep: 'Keep',
+    },
     console: {
       placeName: 'Place name',
       address: 'Address',
@@ -1962,6 +1989,128 @@ export const en = {
     update: 'Update',
     later: 'Later',
     cachedNotice: 'You are offline. Showing what you last saw.',
+  },
+  landing: {
+    heroBody:
+      'TouchGrass is an invite-only app for meeting people in person in Hyderabad. Find a small plan nearby or Plot your own, then spend the evening with real people instead of a screen.',
+    checkCta: 'Check an invite code',
+    waitlistCta: 'Join the waitlist',
+    getApp: 'Get the app',
+    howTitle: 'How it works',
+    how: {
+      find: {
+        title: 'Find or Plot',
+        body: 'Browse small plans near you: coffee, runs, board games, treks, open mics. Nothing fits? Plot your own in a minute.',
+      },
+      pullUp: {
+        title: 'Pull up',
+        body: 'Say you are coming. You get a spot and join the plan’s group chat to say hi before you meet.',
+      },
+      meet: {
+        title: 'Meet',
+        body: 'Show up and check in at the venue. Small groups make it easy to talk to everyone.',
+      },
+      lore: {
+        title: 'Keep the Lore',
+        body: 'Afterwards, the photos and moments from the plan stay with the people who were there.',
+      },
+    },
+    featuresTitle: 'What you can do',
+    features: {
+      plans: {
+        title: 'Plans',
+        body: 'Small, real-world plans in your city. See who is hosting and who is going before you decide.',
+      },
+      crews: {
+        title: 'Crews',
+        body: 'Groups that meet again and again, like a Sunday run or a weekly quiz night.',
+      },
+      squad: {
+        title: 'Squad',
+        body: 'Add the people you click with, see what they are pulling up to and go together.',
+      },
+      chat: {
+        title: 'Chat',
+        body: 'Every plan has its own group chat, so you can sort out the details and find each other.',
+      },
+    },
+    safetyTitle: 'Safety comes first',
+    safetyIntro: 'Meeting new people should feel easy. These are always on:',
+    safety: {
+      adults: 'Everyone is 18 or over, and every account is verified with a phone number.',
+      selfie: 'Selfie verification shows that people look like their photos.',
+      reliability:
+        'Reliability tracking, so people who often skip plans they said yes to are noticed.',
+      report: 'Report or block anyone, any time. Our team reviews reports.',
+      sos: 'SOS and live location sharing with your trusted contacts during a plan.',
+      mystery:
+        'Mystery plans show the exact spot only to confirmed people, shortly before the start.',
+    },
+    inviteTitle: 'Invite-only, on purpose',
+    inviteBody:
+      'Every new member joins with an invite code from someone already on TouchGrass or from our team. It keeps plans small, friendly and accountable while we grow.',
+    inviteCities: 'We are starting in Hyderabad. Other cities come next.',
+    check: {
+      title: 'Got an invite code?',
+      body: 'Check that it works before you get the app.',
+      label: 'Invite code',
+      submit: 'Check code',
+      valid: 'This code works.',
+      validFrom: '{{name}} invited you.',
+      nextTitle: 'What to do next',
+      step1: 'Get the TouchGrass app.',
+      step2: 'Sign in with your phone number.',
+      step3: 'Enter {{code}} when the app asks for an invite code.',
+      invalid:
+        "This code doesn't work. It may be mistyped, used up or expired. Ask the person who sent it for a new one, or join the waitlist.",
+    },
+    waitlist: {
+      title: 'No invite yet?',
+      body: 'Join the waitlist. When there is room, we send you an invite code.',
+      name: 'Your name',
+      phone: 'Mobile number',
+      email: 'Email',
+      contactHint:
+        'Give us a mobile number, an email, or both. We only use them to send your invite.',
+      city: 'City',
+      note: 'What would you like to do? (optional)',
+      noteHint: 'For example: weekend treks, board games, open mics. Up to 200 characters.',
+      consent: 'TouchGrass may contact me about an invite. I have read the privacy policy.',
+      privacy: 'Read the privacy policy',
+      submit: 'Join the waitlist',
+      done: "You're on the list. We'll be in touch when there's a spot for you.",
+      errors: {
+        name: 'Tell us your name.',
+        phone: 'Enter a valid Indian mobile number.',
+        email: 'Enter a valid email address.',
+        contact: 'Add a mobile number or an email.',
+        city: 'Tell us your city.',
+        consent: 'Tick the box so we may contact you.',
+      },
+    },
+    faqTitle: 'Questions',
+    faq: {
+      whoQ: 'Who can join?',
+      whoA: 'Anyone 18 or over with an invite code. Members can invite friends, and we invite people from the waitlist as there is room.',
+      costQ: 'Does it cost anything?',
+      costA: 'No. The app is free, and plans are free at launch.',
+      cityQ: 'Which cities?',
+      cityA: 'Hyderabad first. Tell us your city on the waitlist so we know where to go next.',
+      phoneQ: 'Who sees my phone number?',
+      phoneA: 'Nobody else. Other members see your profile, never your number.',
+      mysteryQ: 'What is a mystery plan?',
+      mysteryA:
+        'A plan whose exact spot stays hidden. Confirmed people see it shortly before the start; everyone else sees only the area.',
+    },
+    inviteEmail: {
+      subject: 'Your TouchGrass invite',
+      greeting: 'Hi {{name}},',
+      body: 'A spot opened up for you on TouchGrass. Your invite code is:',
+      steps:
+        'Get the TouchGrass app, sign in with your phone number and enter the code when asked. It works once and is valid for {{days}} days.',
+      site: 'More about TouchGrass: {{url}}',
+      signoff: 'See you out there,',
+    },
   },
   a11y: {
     offlineBanner: 'You are offline',

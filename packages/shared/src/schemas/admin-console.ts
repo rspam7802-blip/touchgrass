@@ -16,6 +16,8 @@ export const ADMIN_SECTIONS = {
   moderation: ['admin', 'moderator', 'support'],
   events: ['admin', 'city_curator'],
   inviteCodes: ['admin'],
+  /** Public launch waitlist (D-169): support handles removal requests; inviting needs `inviteCodes`. */
+  waitlist: ['admin', 'support'],
   cities: ['admin', 'city_curator'],
   venues: ['admin', 'city_curator'],
   hostApplications: ['admin', 'city_curator'],

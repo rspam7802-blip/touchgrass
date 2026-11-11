@@ -46,6 +46,7 @@ import { ProfilesModule } from './modules/profiles/profiles.module.js';
 import { SocialModule } from './modules/social/social.module.js';
 import { PlatformModule } from './modules/platform/platform.module.js';
 import { VenuesModule } from './modules/venues/venues.module.js';
+import { WaitlistModule } from './modules/waitlist/waitlist.module.js';
 
 /** Infrastructure shared by all three processes (api, realtime, worker). */
 export function coreImports(
@@ -110,6 +111,7 @@ export class AppModule {
         RemindersModule,
         CalendarModule,
         AnalyticsModule,
+        WaitlistModule,
       ],
     };
   }

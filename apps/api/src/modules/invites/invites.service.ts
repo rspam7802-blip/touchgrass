@@ -9,7 +9,7 @@ import {
   type Paginated,
   TimeIdCursor,
 } from '@touchgrass/shared';
-import { and, count, desc, eq, gt, isNull, lt, or, sql } from 'drizzle-orm';
+import { and, count, desc, eq, gt, inArray, isNull, lt, or, sql } from 'drizzle-orm';
 import { uuidv7 } from 'uuidv7';
 import { randomInviteCode } from '../../common/auth/hashing.js';
 import { AppError } from '../../common/errors/app-error.js';
@@ -213,6 +213,16 @@ export class InvitesService {
           ? encodeCursor({ t: last.createdAt.toISOString(), id: last.id })
           : null,
     };
+  }
+
+  /** Code strings by id (the launch waitlist shows which code each person got). */
+  async codesByIds(ids: readonly string[]): Promise<Map<string, string>> {
+    if (ids.length === 0) return new Map();
+    const rows = await this.db
+      .select({ id: inviteCodes.id, code: inviteCodes.code })
+      .from(inviteCodes)
+      .where(inArray(inviteCodes.id, [...ids]));
+    return new Map(rows.map((r) => [r.id, r.code]));
   }
 
   /** Invite tree: who was invited by this user (and through which code). */
