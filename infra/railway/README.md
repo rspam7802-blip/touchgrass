@@ -58,7 +58,11 @@ rename them. If Railway imported the monorepo by itself (services named `@touchg
 - **Settings → Build**: builder **Dockerfile**, **Dockerfile Path** `apps/api/Dockerfile` (`apps/web/Dockerfile`
   for `web`), no custom build command. **Settings → Deploy**: no custom start command, region **Southeast Asia
   (Singapore)** (close to the Mumbai database).
-- **Settings → Config-as-code → Railway config file**: `/` + the path in the table.
+- **Settings → Deploy** (Railway retired config-as-code for new services in 2026, so the JSON files here are a
+  record of these settings, not something Railway reads): Custom Start Command `node dist/main.js` (api),
+  `node dist/realtime.js` (realtime), `node dist/worker.js` (worker), `node_modules/.bin/next start --port 3000`
+  (web). On api also Pre-deploy Command `node dist/infra/database/migrate.cli.js up` and Healthcheck Path
+  `/v1/health/live` (timeout 120). Without a start command realtime and worker would run the API.
 - Variable `RAILWAY_DOCKERFILE_PATH` = the same Dockerfile path.
 - Press **Deploy** in the "Apply changes" bar; Railway applies nothing until you do.
 
@@ -73,7 +77,9 @@ Project → **Settings → Shared Variables**: paste `infra/railway/shared-varia
 - Three secrets from `openssl rand -hex 32` (run it three times).
 - The domains Railway generated for `api`, `web` and `storage`, and the storage keys from step 2.
 
-Then on `api`, `realtime` and `worker`: **Variables → Shared Variable** → add all of them. `web` doesn't get them; it
+Then on `api`, `realtime` and `worker`: **Variables → Shared Variable** → add all of them (or paste
+`NAME=${{shared.NAME}}` lines in each service's Raw Editor). Set `NODE_ENV=production` on each service directly:
+if it is missing the services start in development mode. `web` doesn't get them; it
 only needs the variables in the table above.
 
 ## 5. Deploy, then add demo data
