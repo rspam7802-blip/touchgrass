@@ -12,6 +12,7 @@ import { MapsProvider } from './maps/maps.port.js';
 import { FakeModerationProvider } from './moderation/fake.moderation.js';
 import { ModerationProvider } from './moderation/moderation.port.js';
 import { RekognitionModerationProvider } from './moderation/rekognition.js';
+import { DisabledPaymentsGateway } from './payments/disabled.payments.js';
 import { FakePaymentsGateway } from './payments/fake.payments.js';
 import { PaymentsGateway } from './payments/payments.port.js';
 import { RazorpayPaymentsGateway } from './payments/razorpay.payments.js';
@@ -25,6 +26,7 @@ import { MemoryObjectStorage } from './storage/memory.storage.js';
 import { S3ObjectStorage } from './storage/s3.storage.js';
 import { ObjectStorage } from './storage/storage.port.js';
 import { FakeWeatherProvider } from './weather/fake.weather.js';
+import { NoWeatherProvider, OpenMeteoProvider } from './weather/open-meteo.js';
 import { OpenWeatherProvider } from './weather/openweather.js';
 import { WeatherProvider } from './weather/weather.port.js';
 
@@ -69,7 +71,9 @@ export function buildAdapters(env: Env): AdapterInstances {
             keySecret: required(env.RAZORPAY_KEY_SECRET, 'RAZORPAY_KEY_SECRET'),
             webhookSecret: required(env.RAZORPAY_WEBHOOK_SECRET, 'RAZORPAY_WEBHOOK_SECRET'),
           })
-        : new FakePaymentsGateway(),
+        : env.PAYMENTS_PROVIDER === 'disabled'
+          ? new DisabledPaymentsGateway()
+          : new FakePaymentsGateway(),
     push:
       env.PUSH_PROVIDER === 'expo'
         ? new ExpoPushSender(env.EXPO_ACCESS_TOKEN)
@@ -94,7 +98,11 @@ export function buildAdapters(env: Env): AdapterInstances {
     weather:
       env.WEATHER_PROVIDER === 'openweather'
         ? new OpenWeatherProvider(required(env.OPENWEATHER_API_KEY, 'OPENWEATHER_API_KEY'))
-        : new FakeWeatherProvider(),
+        : env.WEATHER_PROVIDER === 'open-meteo'
+          ? new OpenMeteoProvider(env.OPEN_METEO_API_KEY)
+          : env.WEATHER_PROVIDER === 'none'
+            ? new NoWeatherProvider()
+            : new FakeWeatherProvider(),
     moderation:
       env.MODERATION_PROVIDER === 'rekognition'
         ? new RekognitionModerationProvider(env.AWS_REGION)

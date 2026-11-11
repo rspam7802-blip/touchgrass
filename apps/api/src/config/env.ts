@@ -87,7 +87,8 @@ export const EnvSchema = z
       .refine((v) => !v.split(',').some((p) => p.endsWith(':000000')), 'must not use 000000')
       .optional(),
 
-    PAYMENTS_PROVIDER: z.enum(['fake', 'razorpay']).default('fake'),
+    // `disabled`: free plans only (D-165), allowed in production; no tickets can be sold.
+    PAYMENTS_PROVIDER: z.enum(['fake', 'razorpay', 'disabled']).default('fake'),
     RAZORPAY_KEY_ID: z.string().optional(),
     RAZORPAY_KEY_SECRET: z.string().optional(),
     RAZORPAY_WEBHOOK_SECRET: z.string().optional(),
@@ -114,7 +115,9 @@ export const EnvSchema = z
     MAPS_PROVIDER: z.enum(['fake', 'google']).default('fake'),
     GOOGLE_MAPS_API_KEY: z.string().optional(),
 
-    WEATHER_PROVIDER: z.enum(['fake', 'openweather']).default('fake'),
+    // `open-meteo` needs no key (free tier is non-commercial; OPEN_METEO_API_KEY for their paid API), `none` hides weather.
+    WEATHER_PROVIDER: z.enum(['fake', 'openweather', 'open-meteo', 'none']).default('fake'),
+    OPEN_METEO_API_KEY: z.string().optional(),
     OPENWEATHER_API_KEY: z.string().optional(),
 
     MODERATION_PROVIDER: z.enum(['fake', 'rekognition']).default('fake'),

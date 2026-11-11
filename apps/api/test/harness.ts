@@ -24,10 +24,13 @@ export interface Harness {
 }
 
 /** The real API app wired to fake SMS + in-memory storage, against the Testcontainers Postgres/Redis. */
-export async function createHarness(overrides: Partial<AdapterInstances> = {}): Promise<Harness> {
+export async function createHarness(
+  overrides: Partial<AdapterInstances> = {},
+  envOverrides: Record<string, string> = {},
+): Promise<Harness> {
   const sms = new FakeSmsSender();
   const storage = new MemoryObjectStorage('http://media.test');
-  const env = integrationEnv({ STORAGE_PROVIDER: 'memory', TRUST_PROXY_HOPS: '1' });
+  const env = integrationEnv({ STORAGE_PROVIDER: 'memory', TRUST_PROXY_HOPS: '1', ...envOverrides });
   const app = await createApiApp(env, {
     logger: false,
     adapterOverrides: { sms, storage, ...overrides },

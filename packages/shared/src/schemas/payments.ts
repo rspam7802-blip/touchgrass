@@ -239,6 +239,8 @@ export const HostStatus = z.object({
   canHostFree: z.boolean(),
   /** Paid plans need an approved application. */
   canHostPaid: z.boolean(),
+  /** False while the platform runs free plans only (D-165): no applications, no Paid option. */
+  ticketsEnabled: z.boolean().default(true),
   application: HostApplication.nullable(),
   account: HostAccount.nullable(),
   platformFeeBps: z.number().int(),

@@ -41,30 +41,40 @@ export default function HostingScreen() {
         {t('hosting.title')}
       </Text>
       {!s.canHostFree ? <Text tone="muted">{t('hosting.verifyFirst')}</Text> : null}
-      <Text variant="heading" accessibilityRole="header">
-        {t('hosting.applyTitle')}
-      </Text>
-      {app?.status === 'approved' ? (
-        <Text tone="primary" testID="host-approved">
-          {t('hosting.approved')}
-        </Text>
-      ) : app?.status === 'pending' ? (
-        <Text testID="host-pending">{t('hosting.pending')}</Text>
-      ) : (
+      {s.ticketsEnabled ? (
         <>
-          <Text tone="muted">
-            {app?.status === 'rejected' ? t('hosting.rejected') : t('hosting.applyBody')}
+          <Text variant="heading" accessibilityRole="header">
+            {t('hosting.applyTitle')}
           </Text>
-          {s.canHostFree ? (
-            <Button
-              label={app?.status === 'rejected' ? t('hosting.applyAgain') : t('hosting.applyTitle')}
-              onPress={() => {
-                router.push('/hosting/apply');
-              }}
-              testID="host-apply"
-            />
-          ) : null}
+          {app?.status === 'approved' ? (
+            <Text tone="primary" testID="host-approved">
+              {t('hosting.approved')}
+            </Text>
+          ) : app?.status === 'pending' ? (
+            <Text testID="host-pending">{t('hosting.pending')}</Text>
+          ) : (
+            <>
+              <Text tone="muted">
+                {app?.status === 'rejected' ? t('hosting.rejected') : t('hosting.applyBody')}
+              </Text>
+              {s.canHostFree ? (
+                <Button
+                  label={
+                    app?.status === 'rejected' ? t('hosting.applyAgain') : t('hosting.applyTitle')
+                  }
+                  onPress={() => {
+                    router.push('/hosting/apply');
+                  }}
+                  testID="host-apply"
+                />
+              ) : null}
+            </>
+          )}
         </>
+      ) : (
+        <Text tone="muted" testID="tickets-off">
+          {t('hosting.ticketsOff')}
+        </Text>
       )}
       {s.canHostPaid ? (
         <>

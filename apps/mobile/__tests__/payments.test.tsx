@@ -127,6 +127,7 @@ function hostStatus(over: Partial<HostStatus> = {}): HostStatus {
   return {
     canHostFree: true,
     canHostPaid: false,
+    ticketsEnabled: true,
     application: null,
     account: null,
     platformFeeBps: 1000,
@@ -535,6 +536,20 @@ describe('hosting (F-HST-01/02, F-PAY-03)', () => {
       pathname: '/hosting/event/[id]',
       params: { id: EVENT_ID },
     });
+  });
+
+  it('free plans only (D-165): no application, a plain explanation instead', async () => {
+    api
+      .on('GET', '/v1/host/status', {
+        status: 200,
+        body: hostStatus({ ticketsEnabled: false }),
+      })
+      .on('GET', '/v1/host/analytics', { status: 200, body: analytics });
+    await renderWithProviders(<HostingScreen />, { fetchFn: api.fetch });
+    expect(await screen.findByTestId('tickets-off')).toHaveTextContent(
+      /Paid plans are coming later/,
+    );
+    expect(screen.queryByTestId('host-apply')).toBeNull();
   });
 
   it('approved without payouts: set up KYC; with an active account: the ledger', async () => {

@@ -70,6 +70,11 @@ describe('hosting rights (F-HST-01)', () => {
       canHostPaid: true,
     });
     expect(hostingRights(false, true, { status: 'approved' }).canHostPaid).toBe(false);
+    // Free plans only (D-165): even approved hosts can't sell.
+    expect(hostingRights(true, true, { status: 'approved' }, false)).toEqual({
+      canHostFree: true,
+      canHostPaid: false,
+    });
   });
 });
 

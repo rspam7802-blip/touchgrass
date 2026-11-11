@@ -1252,6 +1252,8 @@ export const en = {
   hosting: {
     title: 'Hosting',
     applyTitle: 'Host paid plans',
+    ticketsOff:
+      'Paid plans are coming later. For now every plan on TouchGrass is free, and anyone can host one.',
     applyBody:
       'Anyone verified can host free plans. To sell tickets, tell us a bit about you. We usually reply within 2 days.',
     about: 'About you',

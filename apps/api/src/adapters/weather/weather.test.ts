@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { fakeFetch } from '../../test-support/env.js';
 import { FakeWeatherProvider } from './fake.weather.js';
+import { conditionFromWmoCode, NoWeatherProvider, OpenMeteoProvider } from './open-meteo.js';
 import { OpenWeatherProvider } from './openweather.js';
 import { conditionFromOwmId } from './weather.port.js';
 
@@ -52,5 +53,57 @@ describe('weather', () => {
     expect(await fake.hourlyForecast(hyd)).toHaveLength(1);
     fake.setForecast(null);
     expect(await new FakeWeatherProvider().hourlyForecast(hyd)).toHaveLength(48);
+  });
+  it('maps WMO weather codes (Open-Meteo)', () => {
+    expect([0, 2, 45, 53, 63, 81, 95, 71].map(conditionFromWmoCode)).toEqual([
+      'clear',
+      'clouds',
+      'mist',
+      'drizzle',
+      'rain',
+      'rain',
+      'storm',
+      'other',
+    ]);
+  });
+  it('parses Open-Meteo hourly forecasts without a key, and uses the paid host with one', async () => {
+    const f = fakeFetch([
+      {
+        body: {
+          hourly: {
+            time: [1_793_000_000, 1_793_003_600, 1_793_007_200],
+            temperature_2m: [24.46, null, 22],
+            precipitation_probability: [70, 10, null],
+            weather_code: [61, 0, null],
+          },
+        },
+      },
+      { body: {} },
+    ]);
+    const free = new OpenMeteoProvider(undefined, f.fetch);
+    expect(await free.hourlyForecast(hyd)).toEqual([
+      {
+        time: new Date(1_793_000_000_000).toISOString(),
+        tempC: 24.5,
+        condition: 'rain',
+        precipitationProbability: 0.7,
+      },
+      {
+        time: new Date(1_793_007_200_000).toISOString(),
+        tempC: 22,
+        condition: 'other',
+        precipitationProbability: 0,
+      },
+    ]);
+    const url = new URL(f.calls[0]?.url ?? '');
+    expect(url.host).toBe('api.open-meteo.com');
+    expect(url.searchParams.get('apikey')).toBeNull();
+    await new OpenMeteoProvider('k', f.fetch).hourlyForecast(hyd);
+    const paid = new URL(f.calls[1]?.url ?? '');
+    expect(paid.host).toBe('customer-api.open-meteo.com');
+    expect(paid.searchParams.get('apikey')).toBe('k');
+  });
+  it('none: no forecast at all', async () => {
+    expect(await new NoWeatherProvider().hourlyForecast(hyd)).toEqual([]);
   });
 });

@@ -15,6 +15,8 @@ import { and, asc, desc, eq, gt, inArray, or } from 'drizzle-orm';
 import { uuidv7 } from 'uuidv7';
 import { type CityScope, inScope } from '../../common/auth/admin-scope.js';
 import { AppError } from '../../common/errors/app-error.js';
+import { ENV } from '../../config/config.module.js';
+import type { Env } from '../../config/env.js';
 import { DB, type Database, type Tx } from '../../infra/database/database.module.js';
 import { hostApplications } from '../../infra/database/schema/index.js';
 import { PayoutsService } from '../payments/payouts.service.js';
@@ -44,9 +46,13 @@ export function hostingRights(
   verified: boolean,
   verificationRequired: boolean,
   application: { status: string } | null,
+  ticketsEnabled = true,
 ): { canHostFree: boolean; canHostPaid: boolean } {
   const canHostFree = verified || !verificationRequired;
-  return { canHostFree, canHostPaid: canHostFree && application?.status === 'approved' };
+  return {
+    canHostFree,
+    canHostPaid: ticketsEnabled && canHostFree && application?.status === 'approved',
+  };
 }
 
 /** Open hosting and host applications (F-HST-01). */
@@ -59,7 +65,13 @@ export class HostingService {
     private readonly settings: AppSettingsService,
     private readonly payouts: PayoutsService,
     private readonly people: PeopleService,
+    @Inject(ENV) private readonly env: Env,
   ) {}
+
+  /** Free plans only (D-165): selling tickets is switched off platform-wide. */
+  private get ticketsEnabled(): boolean {
+    return this.env.PAYMENTS_PROVIDER !== 'disabled';
+  }
 
   /** Latest application: the live one (pending/approved) if any, else the most recent rejection. */
   private async latest(userId: string): Promise<ApplicationRow | null> {
@@ -80,9 +92,10 @@ export class HostingService {
       this.payouts.account(userId),
       this.settings.get('platform_fee_bps'),
     ]);
-    const rights = hostingRights(verified.has(userId), required, application);
+    const rights = hostingRights(verified.has(userId), required, application, this.ticketsEnabled);
     return {
       ...rights,
+      ticketsEnabled: this.ticketsEnabled,
       application: application ? toApplication(application) : null,
       account,
       platformFeeBps: feeBps,
@@ -95,6 +108,10 @@ export class HostingService {
   }
 
   async apply(userId: string, body: CreateHostApplicationBody): Promise<HostApplication> {
+    if (!this.ticketsEnabled)
+      throw new AppError('FORBIDDEN', 'Paid plans are not available yet', {
+        reason: 'TICKETS_OFF',
+      });
     const status = await this.status(userId);
     if (!status.canHostFree)
       throw new AppError('VERIFICATION_REQUIRED', 'Verify your profile to host');
