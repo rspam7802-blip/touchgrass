@@ -102,6 +102,8 @@ export const EnvSchema = z
 
     STORAGE_PROVIDER: z.enum(['memory', 's3']).default('s3'),
     S3_ENDPOINT: z.url().optional(),
+    /** Local development on a phone: the laptop's Wi-Fi address for the store (signed links use it). */
+    S3_PUBLIC_ENDPOINT: z.url().optional(),
     S3_REGION: z.string().default('ap-south-1'),
     S3_ACCESS_KEY_ID: z.string().optional(),
     S3_SECRET_ACCESS_KEY: z.string().optional(),

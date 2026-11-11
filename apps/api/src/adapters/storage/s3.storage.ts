@@ -17,6 +17,12 @@ export interface S3StorageConfig {
   bucket: string;
   region: string;
   endpoint?: string;
+  /**
+   * Where phones reach the store, when that differs from where the server does (local development: the
+   * server uses localhost, a phone on the same Wi-Fi uses the laptop's address). Upload forms and download
+   * links are signed for this host; everything the server does itself uses `endpoint`.
+   */
+  publicEndpoint?: string;
   accessKeyId?: string;
   secretAccessKey?: string;
   forcePathStyle: boolean;
@@ -25,18 +31,23 @@ export interface S3StorageConfig {
 
 export class S3ObjectStorage extends ObjectStorage {
   private readonly client: S3Client;
+  /** Signs URLs only (never connects), so the signature matches the host the phone will call. */
+  private readonly signer: S3Client;
 
   constructor(private readonly config: S3StorageConfig) {
     super();
-    this.client = new S3Client({
-      region: config.region,
-      endpoint: config.endpoint,
-      forcePathStyle: config.forcePathStyle,
-      credentials:
-        config.accessKeyId && config.secretAccessKey
-          ? { accessKeyId: config.accessKeyId, secretAccessKey: config.secretAccessKey }
-          : undefined,
-    });
+    const make = (endpoint: string | undefined): S3Client =>
+      new S3Client({
+        region: config.region,
+        endpoint,
+        forcePathStyle: config.forcePathStyle,
+        credentials:
+          config.accessKeyId && config.secretAccessKey
+            ? { accessKeyId: config.accessKeyId, secretAccessKey: config.secretAccessKey }
+            : undefined,
+      });
+    this.client = make(config.endpoint);
+    this.signer = config.publicEndpoint ? make(config.publicEndpoint) : this.client;
   }
 
   async createPresignedUpload(
@@ -45,7 +56,7 @@ export class S3ObjectStorage extends ObjectStorage {
     maxBytes: number,
     expiresInSeconds: number,
   ): Promise<PresignedUpload> {
-    const { url, fields } = await createPresignedPost(this.client, {
+    const { url, fields } = await createPresignedPost(this.signer, {
       Bucket: this.config.bucket,
       Key: key,
       Conditions: [
@@ -105,7 +116,7 @@ export class S3ObjectStorage extends ObjectStorage {
 
   signedDownloadUrl(key: string, expiresInSeconds: number): Promise<string> {
     return getSignedUrl(
-      this.client,
+      this.signer,
       new GetObjectCommand({ Bucket: this.config.bucket, Key: key }),
       { expiresIn: expiresInSeconds },
     );

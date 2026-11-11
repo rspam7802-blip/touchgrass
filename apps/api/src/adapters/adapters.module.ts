@@ -80,6 +80,7 @@ export function buildAdapters(env: Env): AdapterInstances {
             bucket: env.S3_BUCKET_MEDIA,
             region: env.S3_REGION,
             endpoint: env.S3_ENDPOINT,
+            publicEndpoint: env.S3_PUBLIC_ENDPOINT,
             accessKeyId: env.S3_ACCESS_KEY_ID,
             secretAccessKey: env.S3_SECRET_ACCESS_KEY,
             forcePathStyle: env.S3_FORCE_PATH_STYLE,
