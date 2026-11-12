@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { firebaseProblem, firebaseWebConfig } from './firebase-web';
+import { firebaseErrorCode, firebaseProblem, firebaseWebConfig } from './firebase-web';
 
 describe('firebaseWebConfig', () => {
   it('is off without an API key or project', () => {
@@ -37,5 +37,16 @@ describe('firebaseProblem', () => {
     expect(firebaseProblem({ code: 'auth/invalid-phone-number' })).toBe('badPhone');
     expect(firebaseProblem(new Error('network'))).toBe('other');
     expect(firebaseProblem(null)).toBe('other');
+  });
+});
+
+describe('firebaseErrorCode', () => {
+  it('returns only well-formed Firebase auth codes', () => {
+    expect(firebaseErrorCode({ code: 'auth/billing-not-enabled' })).toBe(
+      'auth/billing-not-enabled',
+    );
+    expect(firebaseErrorCode({ code: '<script>' })).toBeNull();
+    expect(firebaseErrorCode(new Error('x'))).toBeNull();
+    expect(firebaseErrorCode(null)).toBeNull();
   });
 });

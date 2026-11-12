@@ -4,7 +4,11 @@ import { normalizeE164, resources } from '@touchgrass/shared';
 import type { ConfirmationResult } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import { useRef, useState } from 'react';
-import { type FirebaseWebConfig, firebaseProblem } from '../../../lib/firebase-web';
+import {
+  type FirebaseWebConfig,
+  firebaseErrorCode,
+  firebaseProblem,
+} from '../../../lib/firebase-web';
 
 const t = resources.en.admin;
 const RECAPTCHA_ID = 'admin-recaptcha';
@@ -43,8 +47,13 @@ export function LoginForm({ firebase }: { firebase: FirebaseWebConfig | null }) 
 
   const showFirebaseError = (err: unknown) => {
     const problem = firebaseProblem(err);
+    const code = firebaseErrorCode(err);
     setError(
-      problem === 'badPhone' ? t.phoneInvalid : problem === 'other' ? t.signInFailed : t[problem],
+      problem === 'badPhone'
+        ? t.phoneInvalid
+        : problem === 'other'
+          ? `${t.signInFailed}${code ? ` (${code})` : ''}`
+          : t[problem],
     );
   };
 

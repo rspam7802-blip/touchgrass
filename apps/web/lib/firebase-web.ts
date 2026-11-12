@@ -43,3 +43,10 @@ export function firebaseProblem(err: unknown): FirebaseSignInProblem {
   if (code === 'auth/invalid-phone-number') return 'badPhone';
   return 'other';
 }
+
+/** Firebase's short error code (e.g. `auth/billing-not-enabled`), shown next to the generic message so a
+ * setup problem can be diagnosed without the browser console. Only well-formed codes are returned. */
+export function firebaseErrorCode(err: unknown): string | null {
+  const code = typeof err === 'object' && err !== null && 'code' in err ? String(err.code) : '';
+  return /^auth\/[a-z0-9-]{1,60}$/.test(code) ? code : null;
+}
