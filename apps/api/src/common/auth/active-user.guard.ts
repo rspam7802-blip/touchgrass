@@ -3,10 +3,13 @@ import { Reflector } from '@nestjs/core';
 import { UsersService } from '../../modules/users/users.service.js';
 import { AppError } from '../errors/app-error.js';
 import type { AppRequest } from '../http/request-context.js';
-import { ALLOW_INCOMPLETE, IS_PUBLIC } from './decorators.js';
+import type { AdminRole } from '@touchgrass/shared';
+import { ALLOW_INCOMPLETE, IS_PUBLIC, REQUIRED_ROLES } from './decorators.js';
+import { hasAnyRole } from './roles.guard.js';
 
 /**
- * Users who have not finished onboarding may only call routes marked @AllowOnboarding().
+ * Users who have not finished onboarding may only call routes marked @AllowOnboarding(), public routes, and
+ * (for staff) the admin routes their role allows: running the admin console doesn't need a member profile.
  * Status is cached for 60 s and invalidated whenever it changes.
  */
 @Injectable()
@@ -32,9 +35,21 @@ export class ActiveUserGuard implements CanActivate {
     // the person requesting or verifying a code (signing in again, or with another number).
     const allowIncomplete =
       this.reflector.getAllAndOverride<boolean | undefined>(ALLOW_INCOMPLETE, targets) === true ||
-      this.reflector.getAllAndOverride<boolean | undefined>(IS_PUBLIC, targets) === true;
+      this.reflector.getAllAndOverride<boolean | undefined>(IS_PUBLIC, targets) === true ||
+      isStaffRoute(
+        this.reflector.getAllAndOverride<AdminRole[] | undefined>(REQUIRED_ROLES, targets),
+        req.principal.roles,
+      );
     if (status === 'onboarding' && !allowIncomplete)
       throw new AppError('ONBOARDING_INCOMPLETE', 'Finish onboarding first');
     return true;
   }
+}
+
+/** An admin route (one with @Roles) called by someone holding one of its roles; RolesGuard still enforces them. */
+export function isStaffRoute(
+  required: readonly AdminRole[] | undefined,
+  held: readonly string[],
+): boolean {
+  return required !== undefined && required.length > 0 && hasAnyRole(held, required);
 }

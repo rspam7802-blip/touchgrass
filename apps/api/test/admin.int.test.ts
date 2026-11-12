@@ -62,6 +62,37 @@ describe('admin authorisation', () => {
       .send({ enabled: false })
       .expect(403);
   });
+
+  it('staff who have not finished their member profile can still use the admin routes their role allows', async () => {
+    // e.g. the first super admin, created by the production bootstrap before any profile exists
+    const s = await signIn(h);
+    await h.app.get(UsersService).grantRole(s.user.id, 'admin', null);
+    const refreshed = await request(h.http)
+      .post('/v1/auth/refresh')
+      .set(...fromIp())
+      .send({ refreshToken: s.refreshToken })
+      .expect(200);
+    const token = refreshed.body.accessToken as string;
+    await request(h.http)
+      .get('/v1/admin/invite-codes')
+      .set(...bearer(token))
+      .expect(200);
+    // Routes the role doesn't cover stay closed (feature flags are super_admin only; the onboarding check
+    // answers first), and member routes still need a finished profile.
+    await request(h.http)
+      .put('/v1/admin/feature-flags/invite_gate')
+      .set(...bearer(token))
+      .send({ enabled: false })
+      .expect(409);
+    expect(
+      (
+        await request(h.http)
+          .get(`/v1/users/${s.user.id}/profile`)
+          .set(...bearer(token))
+          .expect(409)
+      ).body.error.code,
+    ).toBe('ONBOARDING_INCOMPLETE');
+  });
 });
 
 describe('invite codes admin (F-ACC-01)', () => {

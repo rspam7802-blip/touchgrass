@@ -3,7 +3,7 @@ import { Reflector } from '@nestjs/core';
 import { describe, expect, it, vi } from 'vitest';
 import type { UsersService } from '../../modules/users/users.service.js';
 import { testEnv } from '../../test-support/env.js';
-import { ActiveUserGuard } from './active-user.guard.js';
+import { ActiveUserGuard, isStaffRoute } from './active-user.guard.js';
 import { AuthGuard } from './auth.guard.js';
 import { AllowOnboarding, Public, Roles } from './decorators.js';
 import {
@@ -131,6 +131,20 @@ describe('ActiveUserGuard', () => {
     await expect(guard('onboarding').canActivate(ctx('closed', p))).rejects.toMatchObject({
       code: 'ONBOARDING_INCOMPLETE',
     });
+  });
+  it('lets staff still onboarding use the admin routes their role allows, and nothing else', async () => {
+    const staff = { principal: { ...p.principal, roles: ['moderator'] } };
+    await expect(guard('onboarding').canActivate(ctx('mod', staff))).resolves.toBe(true);
+    await expect(guard('onboarding').canActivate(ctx('closed', staff))).rejects.toMatchObject({
+      code: 'ONBOARDING_INCOMPLETE',
+    });
+    await expect(guard('onboarding').canActivate(ctx('mod', p))).rejects.toMatchObject({
+      code: 'ONBOARDING_INCOMPLETE',
+    });
+    expect(isStaffRoute(['moderator'], ['super_admin'])).toBe(true);
+    expect(isStaffRoute(['moderator'], ['support'])).toBe(false);
+    expect(isStaffRoute([], ['super_admin'])).toBe(false);
+    expect(isStaffRoute(undefined, ['super_admin'])).toBe(false);
   });
   it('never blocks public routes (e.g. requesting a code) for a half-finished sign-up', async () => {
     await expect(guard('onboarding').canActivate(ctx('open', p))).resolves.toBe(true);

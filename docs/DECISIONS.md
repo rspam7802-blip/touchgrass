@@ -714,3 +714,7 @@ The website's home page is now a real landing page (server component, three lang
 ## D-170 EAS Update for the app
 
 Builds carry `expo-updates` pointed at the expo.dev project (`@touchgrass2026s-team/touchgrass`), each EAS profile on its own channel (`development`, `preview`, `production`). JavaScript-only fixes go out with `eas update --channel <channel>`; `runtimeVersion` follows the app version, so a change to native code (a new native module or permission) still needs a new build with a higher version. Updates ship only what is in the repository at that commit; publish them from a clean, pushed checkout.
+
+## D-171 Staff can use the admin console before finishing a member profile
+
+The first super admin is created by the production bootstrap with no profile, so `ActiveUserGuard` blocked every admin route with `ONBOARDING_INCOMPLETE` and the console failed on every page. A user still onboarding may now call a route marked `@Roles(...)` when they hold one of its roles (`isStaffRoute`); `RolesGuard` still enforces the roles, routes their role doesn't cover stay closed, and member routes still require a finished profile.
