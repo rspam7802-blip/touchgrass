@@ -4,24 +4,27 @@
 
 ## 1. System overview
 
+What runs in production today (lean launch, D-165/D-168). `infra/terraform` keeps a full AWS design for when traffic needs it (§10).
+
 ```
-Clients: Mobile app (Expo) │ Web share pages │ Admin dashboard (Next.js /admin)
+Clients: Mobile app (Expo, built and updated by EAS) │ Website: landing, waitlist, share pages, admin (Next.js)
         │ HTTPS + WSS
-CloudFront + AWS WAF ──► Application Load Balancer (ap-south-1)
+touchgrass.co.in (Namecheap DNS) ──► Railway custom domains, TLS by Railway
+  apex → web · api. → api · rt. → realtime · media. → storage
         │
-App tier — stateless containers on ECS Fargate, each auto-scaled independently
-  ├─ api       NestJS modular monolith, REST /v1        (apps/api/src/main.ts)
+Railway project (Singapore) — one container per service, private network between them
+  ├─ api       NestJS modular monolith, REST /v1        (apps/api/src/main.ts; runs migrations before deploy)
   ├─ realtime  Socket.IO gateway, Redis adapter         (apps/api/src/realtime.ts)
   ├─ worker    BullMQ consumers, outbox relay, cron jobs (apps/api/src/worker.ts)
-  └─ web       Next.js SSR (share pages, live-location viewer, admin)
+  ├─ web       Next.js SSR (landing, waitlist, share pages, live-location viewer, admin)
+  ├─ Redis     cache, rate limits, idempotency, locks, presence, pub/sub, BullMQ
+  └─ storage   RustFS (S3-compatible) on a Railway volume — photos and videos
         │
-Data tier
-  ├─ RDS PostgreSQL 16 + PostGIS — primary (writes) + read replica (feeds, search)
-  ├─ ElastiCache Redis 7 — cache, rate limits, idempotency, locks, presence, pub/sub, BullMQ
-  └─ S3 (media) behind CloudFront
+Supabase (Mumbai): PostgreSQL + PostGIS only, through the session pooler with TLS. Data API off, tables locked down.
 External services, each behind an adapter (real + fake):
-  Razorpay · MSG91 · Expo Push · Google Maps Platform · OpenWeather · Rekognition · SES · PostHog
-Observability: Sentry · OpenTelemetry (OTLP → ADOT → CloudWatch/Grafana) · Pino JSON logs · PostHog
+  Firebase Authentication (phone sign-in) · Expo Push · Google Maps Platform · Google Cloud Vision · SMTP email
+  Switched off for launch: Razorpay (no paid plans), MSG91 (no server SMS), weather, analytics
+Observability: Pino JSON logs in Railway · Sentry and OpenTelemetry when their variables are set
 ```
 
 All three backend processes are built from the same package and share infrastructure modules (`coreImports` in `src/app.module.ts`). None keeps in-process state that would break with more than one replica: sessions, rate limits, idempotency records, locks and presence all live in Redis, and cross-instance Socket.IO fan-out goes through the Redis adapter (proven by `test/realtime.int.test.ts`, which runs two gateway instances).
@@ -36,7 +39,8 @@ All three backend processes are built from the same package and share infrastruc
 | `packages/shared` | Zod schemas, enums, constants, error codes, design tokens, i18n resources, socket contracts — the single source of truth for every app                                                                                              |
 | `packages/config` | ESLint flat configs, tsconfig presets, Prettier                                                                                                                                                                                     |
 | `infra/docker`    | Local stack: PostGIS, Redis, S3-compatible store (RustFS), Mailpit                                                                                                                                                                  |
-| `infra/terraform` | AWS ap-south-1 (Phase 12)                                                                                                                                                                                                           |
+| `infra/railway`   | Live deployment: Railway service settings, production variables, Supabase lock-down script (§10)                                                                                                                                    |
+| `infra/terraform` | AWS ap-south-1 (Phase 12); not deployed, kept for scale-up                                                                                                                                                                          |
 
 ## 3. Backend module boundaries
 
@@ -275,19 +279,20 @@ Namespaces `/chat` and `/events`. JWT checked in namespace middleware on connect
 
 ## 7. Adapters
 
-| Port (`src/adapters/*`) | Real                                                                                       | Fake (dev/tests)                                              | Env switch            |
-| ----------------------- | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------- | --------------------- |
-| `SmsSender`             | MSG91 v5 `/otp` + `/flow` (DLT templates)                                                  | logs OTP, records outbox; dev accepts `000000` (Phase 1 auth) | `SMS_PROVIDER`        |
-| `PaymentsGateway`       | Razorpay Orders, Payment Links, Refunds, Route (linked accounts, transfers), HMAC webhooks | in-memory with correctly signed webhook simulation            | `PAYMENTS_PROVIDER`   |
-| `PushSender`            | Expo Push API (chunks of 100, ticket error mapping)                                        | records; `…unregistered…` tokens return `DeviceNotRegistered` | `PUSH_PROVIDER`       |
-| `ObjectStorage`         | S3 (+ CloudFront URLs); RustFS locally                                                     | in-memory store with policy-checked `simulateUpload`          | `STORAGE_PROVIDER`    |
-| `MapsProvider`          | Places API (New) autocomplete/details + Geocoding                                          | Hyderabad landmark fixtures                                   | `MAPS_PROVIDER`       |
-| `WeatherProvider`       | OpenWeather One Call 3.0                                                                   | deterministic 48 h fixture with a rain window                 | `WEATHER_PROVIDER`    |
-| `ModerationProvider`    | Rekognition DetectModerationLabels + CompareFaces                                          | safe, except the `FLAGGED_FIXTURE` bytes                      | `MODERATION_PROVIDER` |
-| `AnalyticsSink`         | PostHog batch API, person profiles off                                                     | no-op (still enforces the PII guard)                          | `ANALYTICS_PROVIDER`  |
-| `EmailSender`           | SES v2                                                                                     | SMTP → Mailpit                                                | `EMAIL_PROVIDER`      |
+| Port (`src/adapters/*`) | Real implementations                                                                                    | Live setting              | Fake (dev/tests)                                              | Env switch            |
+| ----------------------- | ------------------------------------------------------------------------------------------------------- | ------------------------- | ------------------------------------------------------------- | --------------------- |
+| `PhoneIdentityVerifier` | Firebase ID tokens checked against Google's keys (D-166)                                                | `firebase`                | accepts test proofs (refused in production)                   | `PHONE_AUTH_PROVIDER` |
+| `SmsSender`             | MSG91 v5 `/otp` + `/flow` (DLT templates); `none` sends nothing                                         | `none`                    | logs OTP, records outbox; dev accepts `000000` (Phase 1 auth) | `SMS_PROVIDER`        |
+| `PaymentsGateway`       | Razorpay Orders, Payment Links, Refunds, Route, HMAC webhooks; `disabled` refuses paid features (D-165) | `disabled`                | in-memory with correctly signed webhook simulation            | `PAYMENTS_PROVIDER`   |
+| `PushSender`            | Expo Push API (chunks of 100, ticket error mapping)                                                     | `expo`                    | records; `…unregistered…` tokens return `DeviceNotRegistered` | `PUSH_PROVIDER`       |
+| `ObjectStorage`         | Any S3-compatible store (presigned POST)                                                                | `s3` → RustFS on Railway  | in-memory store with policy-checked `simulateUpload`          | `STORAGE_PROVIDER`    |
+| `MapsProvider`          | Places API (New) autocomplete/details + Geocoding                                                       | `google`                  | Hyderabad landmark fixtures                                   | `MAPS_PROVIDER`       |
+| `WeatherProvider`       | Open-Meteo; OpenWeather One Call 3.0; `none` shows no weather                                           | `none` (Open-Meteo ready) | deterministic 48 h fixture with a rain window                 | `WEATHER_PROVIDER`    |
+| `ModerationProvider`    | Google Cloud Vision SafeSearch (D-165); Rekognition DetectModerationLabels + CompareFaces               | `google-vision`           | safe, except the `FLAGGED_FIXTURE` bytes                      | `MODERATION_PROVIDER` |
+| `AnalyticsSink`         | PostHog batch API, person profiles off                                                                  | `noop`                    | no-op (still enforces the PII guard)                          | `ANALYTICS_PROVIDER`  |
+| `EmailSender`           | SMTP (any provider); SES v2                                                                             | `smtp`                    | SMTP → Mailpit                                                | `EMAIL_PROVIDER`      |
 
-The environment schema refuses fake providers when `NODE_ENV=production`.
+Live settings are in `infra/railway/production-variables.env`. The environment schema refuses fake providers when `NODE_ENV=production`.
 
 ## 8. Clients
 
@@ -299,9 +304,29 @@ The environment schema refuses fake providers when `NODE_ENV=production`.
 
 `pnpm dev` → creates `.env` from `.env.example` if needed → `docker compose up --wait` → builds shared + api → migrates → creates the bucket → seeds → `turbo dev` (api, realtime, worker, web, Expo). Ports: API 4000 (`/docs`), realtime 4001, web 3000, Expo 8081, S3 9000 (console 9001), Mailpit 8025, Postgres 5432, Redis 6379.
 
-## 10. Deployment (AWS ap-south-1)
+## 10. Deployment
 
-Everything is in `infra/terraform` (D-140); `infra/terraform/README.md` has the first-deployment and release steps, and `docs/LAUNCH_CHECKLIST.md` what a person must do first.
+### Live: Railway + Supabase
+
+Chosen for the lean launch (D-165): a few dollars a month instead of a full AWS setup. Setup steps are in `infra/railway/README.md`; `docs/LAUNCH_CHECKLIST.md` lists what a person must do first.
+
+- **Compute:** Railway project `compassionate-solace`, region Southeast Asia (Singapore), close to the Mumbai database. Services `api`, `realtime` and `worker` build from `apps/api/Dockerfile` with start commands `node dist/main.js`, `node dist/realtime.js` and `node dist/worker.js`; `web` builds from `apps/web/Dockerfile`. Railway no longer reads config-as-code, so these settings are entered in each service's Settings; `infra/railway/*.json` is the record of them. Every push to `main` redeploys.
+- **Releases:** `api` runs `node dist/infra/database/migrate.cli.js up` as its pre-deploy command, then must pass `/v1/health/live`. A fresh database got reference data and the first super admin from `dist/seed/bootstrap.cli.js` (D-142).
+- **Database:** Supabase project `touchgrass-live` (South Asia, Mumbai), PostgreSQL + PostGIS, reached through the session pooler with TLS (`DATABASE_CA_CERT`). `infra/railway/supabase-lockdown.sql` revokes Supabase's API roles and the Data API is off; the app only uses its own connection. No read replica (`DATABASE_REPLICA_URL` unset), so feeds read from the primary.
+- **Redis:** Railway Redis, reached over the private network (`?family=0` so IPv6 works).
+- **Media:** `storage` service running RustFS (`rustfs/rustfs`) with a volume at `/data`, served at `media.touchgrass.co.in`; uploads go there by presigned POST and images are read from `MEDIA_PUBLIC_BASE_URL`.
+- **Edge:** Namecheap DNS points the apex and `api.`, `rt.`, `media.` at Railway custom domains; Railway terminates TLS. `TRUST_PROXY_HOPS=1` for Railway's proxy. There is no WAF; rate limits in Redis are the only abuse control.
+- **Variables:** project Shared Variables, attached to each service as `${{shared.X}}`; `NODE_ENV=production` set on each service. The web service's `API_URL` is `https://api.touchgrass.co.in`.
+- **Sign-in:** Firebase project `touchgrass-e5d1e` (Blaze plan) sends and checks the codes for both the app and the admin console (D-166, D-167).
+- **Email:** SMTP from `hello@touchgrass.co.in`.
+
+### Mobile: EAS
+
+The app is built, signed and updated by Expo's cloud service (expo.dev project `@touchgrass2026s-team/touchgrass`). Profiles `development`, `preview` and `production` in `apps/mobile/eas.json` all point at the live domains (D-168). `eas build` makes the Android/iOS binaries and keeps the signing keys and Firebase config files (`GOOGLE_SERVICES_JSON`, `GOOGLE_SERVICE_INFO_PLIST`); `eas update` sends JavaScript-only fixes to installed apps on each profile's channel (D-170); `eas submit` uploads to the stores (D-141).
+
+### Later: AWS ap-south-1
+
+`infra/terraform` (D-140) describes the scale-up deployment; it is not running. Moving to it changes environment variables, not code. `infra/terraform/README.md` has its first-deployment and release steps.
 
 - **Network:** VPC across 3 AZs with public (ALB, NAT), private (tasks) and data (RDS, Redis) subnets; a NAT gateway per AZ; S3 gateway endpoint; flow logs.
 - **Compute:** ECS Fargate services `api` (several processes per task, `API_WORKERS`, D-131), `realtime` (Socket.IO behind a sticky ALB target group, so the polling fallback stays on one task), `worker` and `web`. One API image runs api, realtime, worker, migrations and the bootstrap with different commands. Deployment circuit breaker with rollback; CPU target-tracking autoscaling. An ADOT sidecar sends traces to X-Ray and metrics to CloudWatch.
@@ -310,5 +335,4 @@ Everything is in `infra/terraform` (D-140); `infra/terraform/README.md` has the 
 - **Edge:** ACM certificates, Route 53, ALB routing `api.` to api/realtime and the apex to web; `/admin` can be limited to office IPs; WAF (managed rules, per-IP and OTP rate rules) on the ALB and CloudFront.
 - **Secrets:** Secrets Manager under one KMS key: generated app secrets, and a providers secret for third-party keys that Terraform never overwrites. Tasks read both as environment variables; empty values count as unset.
 - **Email:** SES domain identity with DKIM and DMARC.
-- **Releases:** build and push images tagged with the git SHA → run the migrate task → `terraform apply -var image_tag=<sha>`. A fresh database gets reference data and the first super admin from `dist/seed/bootstrap.cli.js` (D-142).
-- **Mobile:** EAS build profiles (development, preview, production) and `eas submit` (D-141).
+- **Releases:** build and push images tagged with the git SHA → run the migrate task → `terraform apply -var image_tag=<sha>`.
