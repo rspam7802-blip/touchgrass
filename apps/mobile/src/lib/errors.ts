@@ -30,7 +30,11 @@ export function errorMessage(t: TFunction, err: unknown): string | null {
   if (err instanceof VideoTooLongError) return t('stories.videoTooLong');
   if (err instanceof VideoTooLargeError) return t('stories.videoTooLarge');
   if (err instanceof FirebasePhoneError)
-    return err.appCode === 'INVALID_PHONE' ? t('auth.invalidPhone') : t(`errors.${err.appCode}`);
+    return err.appCode === 'INVALID_PHONE'
+      ? t('auth.invalidPhone')
+      : err.appCode === 'CODE_REQUEST_TIMEOUT'
+        ? t('auth.codeRequestTimeout')
+        : t(`errors.${err.appCode}`);
   if (err instanceof ApiError) {
     if (err.code === 'NETWORK') return t('states.offlineBody');
     const reason = reasonOf(err.details);

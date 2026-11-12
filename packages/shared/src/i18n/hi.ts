@@ -175,6 +175,7 @@ export const hi: Translation = {
     checkInvite: 'कोड चेक करो',
     termsNotice: 'आगे बढ़ने पर तुम हमारी शर्तों और प्राइवेसी पॉलिसी से सहमत हो.',
     invalidPhone: 'सही मोबाइल नंबर डालो.',
+    codeRequestTimeout: 'अभी कोड नहीं मिल पाया. ऐप बंद करके फिर से खोलो और कोशिश करो.',
   },
   onboarding: {
     cityMissing: 'मेरा शहर सूची में नहीं है',

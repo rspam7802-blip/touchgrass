@@ -178,6 +178,7 @@ export const en = {
     checkInvite: 'Check code',
     termsNotice: 'By continuing you agree to our Terms and Privacy Policy.',
     invalidPhone: 'Enter a valid mobile number.',
+    codeRequestTimeout: "Couldn't get a code right now. Close the app, open it again and retry.",
   },
   onboarding: {
     cityMissing: "My city isn't listed",

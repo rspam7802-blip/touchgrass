@@ -17,7 +17,8 @@ export function usesFirebasePhoneAuth(): boolean {
 /** A Firebase sign-in problem the person can act on, with the API error code it corresponds to. */
 export class FirebasePhoneError extends Error {
   constructor(
-    public readonly appCode: 'OTP_INVALID' | 'OTP_EXPIRED' | 'RATE_LIMITED' | 'INVALID_PHONE',
+    public readonly appCode:
+      'OTP_INVALID' | 'OTP_EXPIRED' | 'RATE_LIMITED' | 'INVALID_PHONE' | 'CODE_REQUEST_TIMEOUT',
   ) {
     super(appCode);
     this.name = 'FirebasePhoneError';
@@ -52,11 +53,35 @@ function translate(err: unknown): unknown {
   return err;
 }
 
+/**
+ * How long to wait for Firebase to send a code. Its app check (Play Integrity, or a reCAPTCHA page) can stall
+ * without ever failing, which left the sign-in button loading forever.
+ */
+export const CODE_REQUEST_TIMEOUT_MS = 60_000;
+
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => {
+      reject(new FirebasePhoneError('CODE_REQUEST_TIMEOUT'));
+    }, ms);
+  });
+  return Promise.race([promise, timeout]).finally(() => {
+    clearTimeout(timer);
+  });
+}
+
 /** Asks Firebase to text a code to `phone` (E.164). */
 export async function sendFirebaseCode(phone: string): Promise<void> {
   const { getAuth, signInWithPhoneNumber } = firebaseAuth();
   try {
-    pending = { phone, confirmation: await signInWithPhoneNumber(getAuth(), phone) };
+    pending = {
+      phone,
+      confirmation: await withTimeout(
+        signInWithPhoneNumber(getAuth(), phone),
+        CODE_REQUEST_TIMEOUT_MS,
+      ),
+    };
     proven = null;
   } catch (err) {
     throw translate(err);

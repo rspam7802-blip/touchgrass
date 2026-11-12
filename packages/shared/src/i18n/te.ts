@@ -176,6 +176,7 @@ export const te: Translation = {
     checkInvite: 'కోడ్ చెక్ చేయి',
     termsNotice: 'కొనసాగితే మా నిబంధనలు, ప్రైవసీ పాలసీకి ఒప్పుకున్నట్టే.',
     invalidPhone: 'సరైన మొబైల్ నంబర్ ఎంటర్ చేయి.',
+    codeRequestTimeout: 'ఇప్పుడు కోడ్ రాలేదు. యాప్ మూసి, మళ్ళీ తెరిచి ప్రయత్నించు.',
   },
   onboarding: {
     cityMissing: 'నా నగరం జాబితాలో లేదు',
