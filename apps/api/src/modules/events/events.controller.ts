@@ -29,7 +29,10 @@ import {
   InviteLink,
   InviteUsersBody,
   InviteUsersResult,
+  JoinRequestList,
+  JoinRequestListQuery,
   MyEventsQuery,
+  MyJoinRequest,
   PlusOnePreview,
   PublicEventView,
   RsvpBody,
@@ -46,6 +49,7 @@ import { RateLimit } from '../../common/rate-limit/rate-limit.decorator.js';
 import { ZodPipe } from '../../common/validation/zod.js';
 import { CheckInService } from './check-in.service.js';
 import { EventInvitesService } from './event-invites.service.js';
+import { EventJoinRequestsService } from './event-join-requests.service.js';
 import { EventsService } from './events.service.js';
 import { RsvpService } from './rsvp.service.js';
 
@@ -61,6 +65,7 @@ export class EventsController {
     private readonly rsvps: RsvpService,
     private readonly invites: EventInvitesService,
     private readonly checkIns: CheckInService,
+    private readonly joinRequests: EventJoinRequestsService,
   ) {}
 
   @Post()
@@ -181,6 +186,59 @@ export class EventsController {
     @Param('id', new ParseUUIDPipe()) id: string,
   ): Promise<Dto.AttendeeList> {
     return this.rsvps.attendees(user.userId, id);
+  }
+
+  // ---------- private plans: ask to join (D-179) ----------
+
+  @Post(':id/join-request')
+  @HttpCode(200)
+  @RateLimit({ name: 'event-join-request', limit: 60, windowSeconds: 86_400, by: 'user' })
+  @ApiZodResponse(200, MyJoinRequest)
+  requestToJoin(
+    @CurrentUser() user: AuthPrincipal,
+    @Param('id', new ParseUUIDPipe()) id: string,
+  ): Promise<Dto.MyJoinRequest> {
+    return this.joinRequests.request(user.userId, id);
+  }
+
+  @Delete(':id/join-request')
+  @HttpCode(204)
+  async withdrawJoinRequest(
+    @CurrentUser() user: AuthPrincipal,
+    @Param('id', new ParseUUIDPipe()) id: string,
+  ): Promise<void> {
+    await this.joinRequests.withdraw(user.userId, id);
+  }
+
+  @Get(':id/join-requests')
+  @ApiZodQuery(JoinRequestListQuery)
+  @ApiZodResponse(200, JoinRequestList)
+  joinRequestList(
+    @CurrentUser() user: AuthPrincipal,
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @Query(new ZodPipe(JoinRequestListQuery)) q: Dto.JoinRequestListQuery,
+  ): Promise<Dto.JoinRequestList> {
+    return this.joinRequests.pending(user.userId, id, q);
+  }
+
+  @Post(':id/join-requests/:userId/approve')
+  @HttpCode(204)
+  async approveJoinRequest(
+    @CurrentUser() user: AuthPrincipal,
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @Param('userId', new ParseUUIDPipe()) userId: string,
+  ): Promise<void> {
+    await this.joinRequests.decide(user.userId, id, userId, true);
+  }
+
+  @Post(':id/join-requests/:userId/decline')
+  @HttpCode(204)
+  async declineJoinRequest(
+    @CurrentUser() user: AuthPrincipal,
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @Param('userId', new ParseUUIDPipe()) userId: string,
+  ): Promise<void> {
+    await this.joinRequests.decide(user.userId, id, userId, false);
   }
 
   @Post(':id/invites')

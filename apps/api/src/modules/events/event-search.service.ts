@@ -86,7 +86,7 @@ export class EventSearchService {
       sql`NOT EXISTS (SELECT 1 FROM event_hosts h WHERE h.event_id = e.id AND h.user_id = ${me})`,
       sql`NOT EXISTS (SELECT 1 FROM rsvps r WHERE r.event_id = e.id AND r.user_id = ${me} AND r.status IN ('going','checked_in','waitlisted'))`,
       sql`(
-        e.visibility IN ('public','balanced')
+        e.visibility IN ('public','balanced','approval')
         OR (e.visibility = 'women_only' AND ${viewer.verifiedWoman})
         OR (e.visibility = 'men_only' AND ${viewer.verifiedMan})
         OR EXISTS (SELECT 1 FROM event_invites i WHERE i.event_id = e.id AND i.invitee_user_id = ${me})

@@ -257,6 +257,21 @@ describe('visibility and privacy in discovery (F-DSC-06, F-EVT-03/12)', () => {
     expect(ids(await allItems(me, { radiusKm: 4 }))).not.toContain(fof.id);
   });
 
+  it('private plans are listed with a fuzzed centre, never their spot (D-179)', async () => {
+    const host = await verifiedMember(h);
+    const me = await member(h);
+    const e = await plot(h, host, {
+      title: uniqueTitle('Private supper'),
+      visibility: 'approval',
+      ...at(30 * H),
+    });
+    const item = (await allItems(me, { radiusKm: 5 })).find((i) => i.id === e.id);
+    expect(item?.location).toMatchObject({ kind: 'approximate', hiddenBy: 'approval' });
+    const center = item?.location.kind === 'approximate' ? item.location.center : SPOT;
+    expect(haversineMeters(center, SPOT)).toBeGreaterThanOrEqual(1000);
+    expect(item?.viewer.blockedReason).toBe('APPROVAL_REQUIRED');
+  });
+
   it('mystery plans: approximate area in feed, map and search; distance from the fuzzed centre', async () => {
     const host = await verifiedMember(h);
     const me = await member(h);

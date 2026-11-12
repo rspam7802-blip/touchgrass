@@ -32,6 +32,7 @@ import {
   holdsSeat,
   type IneligibleReason,
   isLateCancel,
+  isLetIn,
   matchesGenderOnly,
   rsvpEligibility,
 } from './event.policy.js';
@@ -58,6 +59,9 @@ const REASON_ERRORS: Record<IneligibleReason, AppError> = {
     'VERIFICATION_REQUIRED',
     'Get verified to pull up to this plan',
   ),
+  APPROVAL_REQUIRED: new AppError('NOT_ELIGIBLE', 'Ask the host to join this plan', {
+    reason: 'APPROVAL_REQUIRED',
+  }),
   HOST: new AppError('CONFLICT', 'You are hosting this plan'),
 };
 
@@ -644,8 +648,13 @@ export class RsvpService {
    * see everyone, since they run the door). First-timers are flagged when they allow the badge.
    */
   async attendees(viewerId: string, eventId: string): Promise<AttendeeList> {
-    const { facts } = await this.access.visibleOrThrow(viewerId, eventId);
+    const { core, facts } = await this.access.visibleOrThrow(viewerId, eventId);
     const isHost = facts.hostRole !== null;
+    // Private plans (D-179): the guest list is for people the host has let in.
+    if (core.visibility === 'approval' && !isLetIn(facts)) {
+      const seats = await this.store.seatCounts(eventId);
+      return { items: [], hiddenCount: seats.seats };
+    }
     const statuses = isHost
       ? (['going', 'checked_in', 'waitlisted'] as const)
       : (['going', 'checked_in'] as const);

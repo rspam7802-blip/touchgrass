@@ -1167,3 +1167,112 @@ describe('squad activity and the invite picker (F-SOC-04, F-EVT-04)', () => {
       .expect(403);
   });
 });
+
+describe('private plans: ask to join (D-179)', () => {
+  const post = (m: Member, path: string) =>
+    request(h.http)
+      .post(path)
+      .set(...bearer(m.token))
+      .set(...idem());
+
+  it('hides the spot, guest list and seats until a host approves, and a decline is final', async () => {
+    const host = await verifiedMember(h);
+    const asker = await member(h);
+    const turnedDown = await member(h);
+    const changedMind = await member(h);
+    const plan = await plot(h, host, { visibility: 'approval', title: 'Rooftop supper' });
+
+    // Anyone can see the basics, but not where it is, who is going, or a way in.
+    const before = (await detail(h, asker, plan.id).expect(200)).body as EventDetail;
+    expect(before.title).toBe('Rooftop supper');
+    expect(before.location).toMatchObject({ kind: 'approximate', hiddenBy: 'approval' });
+    if (before.location.kind !== 'approximate') throw new Error('expected a hidden spot');
+    expect(haversineMeters(before.location.center, SPOT)).toBeGreaterThanOrEqual(1000);
+    expect(before.viewer).toMatchObject({
+      canRsvp: false,
+      blockedReason: 'APPROVAL_REQUIRED',
+      joinRequest: null,
+    });
+    expect(before.pendingJoinRequests).toBe(0);
+    const refused = await rsvp(h, asker, plan.id);
+    expect(refused.status).toBe(403);
+    expect(refused.body.error.details).toMatchObject({ reason: 'APPROVAL_REQUIRED' });
+    const maybe = await rsvp(h, asker, plan.id, { status: 'interested' });
+    expect(maybe.status).toBe(403);
+    const guests = await request(h.http)
+      .get(`/v1/events/${plan.id}/attendees`)
+      .set(...bearer(asker.token))
+      .expect(200);
+    expect(guests.body).toEqual({ items: [], hiddenCount: 1 });
+
+    // Asking is idempotent and tells the hosts once.
+    const asked = await post(asker, `/v1/events/${plan.id}/join-request`).expect(200);
+    expect(asked.body).toMatchObject({
+      status: 'pending',
+      event: { viewer: { joinRequest: 'pending' } },
+    });
+    await post(asker, `/v1/events/${plan.id}/join-request`).expect(200);
+    expect(await outboxFor(h, plan.id, 'event.join_requested')).toEqual([
+      { eventId: plan.id, userId: asker.id },
+    ]);
+    await post(turnedDown, `/v1/events/${plan.id}/join-request`).expect(200);
+    await post(changedMind, `/v1/events/${plan.id}/join-request`).expect(200);
+    await request(h.http)
+      .delete(`/v1/events/${plan.id}/join-request`)
+      .set(...bearer(changedMind.token))
+      .expect(204);
+
+    // Only hosts see who is waiting, oldest first.
+    await request(h.http)
+      .get(`/v1/events/${plan.id}/join-requests`)
+      .set(...bearer(asker.token))
+      .expect(403);
+    const waiting = await request(h.http)
+      .get(`/v1/events/${plan.id}/join-requests`)
+      .set(...bearer(host.token))
+      .expect(200);
+    expect(
+      (waiting.body as { items: { person: { id: string } }[] }).items.map((i) => i.person.id),
+    ).toEqual([asker.id, turnedDown.id]);
+    expect(
+      ((await detail(h, host, plan.id).expect(200)).body as EventDetail).pendingJoinRequests,
+    ).toBe(2);
+
+    // A request can only be answered by a host, and only once.
+    await post(asker, `/v1/events/${plan.id}/join-requests/${asker.id}/approve`).expect(403);
+    await post(host, `/v1/events/${plan.id}/join-requests/${asker.id}/approve`).expect(204);
+    await post(host, `/v1/events/${plan.id}/join-requests/${asker.id}/decline`).expect(404);
+    await post(host, `/v1/events/${plan.id}/join-requests/${turnedDown.id}/decline`).expect(204);
+    expect(await outboxFor(h, plan.id, 'event.join_decided')).toEqual([
+      { eventId: plan.id, userId: asker.id, approved: true, byUserId: host.id },
+      { eventId: plan.id, userId: turnedDown.id, approved: false, byUserId: host.id },
+    ]);
+
+    // Approved: they may pull up, and once going they see the spot and the guest list.
+    const approved = (await detail(h, asker, plan.id).expect(200)).body as EventDetail;
+    expect(approved.viewer).toMatchObject({ canRsvp: true, joinRequest: 'approved' });
+    expect(approved.location.kind).toBe('approximate');
+    const going = await rsvp(h, asker, plan.id).expect(200);
+    expect((going.body as { event: EventDetail }).event.location).toMatchObject({
+      kind: 'exact',
+      address: ADDRESS,
+    });
+    const list = await request(h.http)
+      .get(`/v1/events/${plan.id}/attendees`)
+      .set(...bearer(asker.token))
+      .expect(200);
+    expect((list.body as { items: unknown[] }).items).toHaveLength(2);
+
+    // Declined: no second request and still no way in.
+    const again = await post(turnedDown, `/v1/events/${plan.id}/join-request`);
+    expect(again.status).toBe(403);
+    expect(again.body.error.details).toMatchObject({ reason: 'JOIN_DECLINED' });
+    expect((await rsvp(h, turnedDown, plan.id)).status).toBe(403);
+
+    // Open plans don't take requests.
+    const open = await plot(h, host);
+    const wrong = await post(asker, `/v1/events/${open.id}/join-request`);
+    expect(wrong.status).toBe(403);
+    expect(wrong.body.error.details).toMatchObject({ reason: 'NOT_PRIVATE' });
+  });
+});

@@ -6,6 +6,7 @@ import {
   EventType,
   EventVisibility,
   HostRole,
+  JoinRequestStatus,
   ReliabilityTier,
   RsvpStatus,
 } from '../enums';
@@ -197,6 +198,8 @@ export const EventLocationView = z.discriminatedUnion('kind', [
     radiusMeters: z.number().int(),
     neighbourhoodName: z.string().nullable(),
     revealsAt: z.iso.datetime(),
+    /** Why the spot is hidden: a mystery plan before its reveal, or a private plan until the host lets you in. */
+    hiddenBy: z.enum(['mystery', 'approval']).default('mystery'),
   }),
 ]);
 export type EventLocationView = z.infer<typeof EventLocationView>;
@@ -206,6 +209,8 @@ export type EventHost = z.infer<typeof EventHost>;
 
 export const ViewerState = z.object({
   rsvp: RsvpStatus.nullable(),
+  /** The viewer's request to join a private plan, if they made one (D-179). */
+  joinRequest: JoinRequestStatus.nullable().default(null),
   isHost: z.boolean(),
   hostRole: HostRole.nullable(),
   invitedBy: PersonCard.nullable(),
@@ -269,6 +274,8 @@ export const EventSummary = z.object({
 export type EventSummary = z.infer<typeof EventSummary>;
 
 export const EventDetail = EventSummary.extend({
+  /** Hosts of a private plan: how many people are waiting for an answer (D-179). Zero for everyone else. */
+  pendingJoinRequests: z.number().int().default(0),
   description: z.string(),
   hosts: z.array(EventHost),
   interests: z.array(Interest),
@@ -419,3 +426,20 @@ export const InviteUsersResult = z.object({ invited: z.number().int() });
 export type InviteUsersResult = z.infer<typeof InviteUsersResult>;
 export const BySlugQuery = z.object({ i: z.string().min(10).max(100).optional() });
 export type BySlugQuery = z.infer<typeof BySlugQuery>;
+
+/** A person asking to join a private plan, as its hosts see them (D-179). */
+export const JoinRequest = z.object({
+  person: PersonCard,
+  status: JoinRequestStatus,
+  requestedAt: z.iso.datetime(),
+});
+export type JoinRequest = z.infer<typeof JoinRequest>;
+export const JoinRequestList = z.object({
+  items: z.array(JoinRequest),
+  nextCursor: z.string().nullable(),
+});
+export type JoinRequestList = z.infer<typeof JoinRequestList>;
+export const JoinRequestListQuery = z.object({ cursor: z.string().optional() });
+export type JoinRequestListQuery = z.infer<typeof JoinRequestListQuery>;
+export const MyJoinRequest = z.object({ status: JoinRequestStatus.nullable(), event: EventDetail });
+export type MyJoinRequest = z.infer<typeof MyJoinRequest>;

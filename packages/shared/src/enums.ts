@@ -6,6 +6,8 @@ export const EventVisibility = z.enum([
   'public',
   'friends_of_friends',
   'invite_only',
+  /** Private: anyone can see the basics and ask to join; the host approves each person (D-179). */
+  'approval',
   'women_only',
   'men_only',
   'balanced',
@@ -23,6 +25,8 @@ export const RsvpStatus = z.enum([
   'checked_in',
   'held',
 ]);
+/** A person's request to join a private (`approval`) plan. */
+export const JoinRequestStatus = z.enum(['pending', 'approved', 'declined']);
 export const HostRole = z.enum(['host', 'co_host', 'welcome_host']);
 export const AdminRole = z.enum(['super_admin', 'admin', 'moderator', 'city_curator', 'support']);
 export const Gender = z.enum(['woman', 'man', 'non_binary', 'prefer_not_to_say']);
@@ -144,3 +148,5 @@ export type ConsentKind = z.infer<typeof ConsentKind>;
 export type DevicePlatform = z.infer<typeof DevicePlatform>;
 export type MediaStatus = z.infer<typeof MediaStatus>;
 export type ModerationStatus = z.infer<typeof ModerationStatus>;
+
+export type JoinRequestStatus = z.infer<typeof JoinRequestStatus>;

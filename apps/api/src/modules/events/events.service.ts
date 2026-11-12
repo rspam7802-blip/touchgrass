@@ -53,6 +53,7 @@ import {
   canViewEvent,
   genderBucket,
   genderOnlyError,
+  hidesSpot,
   holdsSeat,
   matchesGenderOnly,
   materialChanges,
@@ -149,7 +150,8 @@ export class EventsService {
       });
 
     const id = uuidv7();
-    const approx = body.mystery
+    // Mystery and private plans publish a fuzzed centre, so feeds and maps never give the spot away.
+    const approx = hidesSpot(body)
       ? mysteryCenter(id, where.point, where.centroid, this.env.SIGNED_URL_SECRET)
       : where.point;
     const status = body.publish ? 'published' : 'draft';
@@ -331,10 +333,10 @@ export class EventsService {
           });
         const mystery = body.mystery ?? locked.mystery;
         const point = where?.point ?? beforeExact?.point ?? locked.approxCenter;
-        const needsApprox =
-          where !== null || (mystery && !locked.mystery) || (!mystery && locked.mystery);
+        const hidden = hidesSpot({ mystery, visibility });
+        const needsApprox = where !== null || hidden !== hidesSpot(locked);
         const approx = needsApprox
-          ? mystery
+          ? hidden
             ? mysteryCenter(
                 eventId,
                 point,

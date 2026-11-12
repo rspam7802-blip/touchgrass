@@ -1929,6 +1929,14 @@ export const en = {
       },
       crew: { body: '{{crew}}' },
       eventInvited: { title: '{{name}} invited you to {{title}}', body: '{{when}}' },
+      joinRequested: {
+        title: '{{name}} wants to join {{title}}',
+        body: 'Take a look and let them know.',
+      },
+      joinApproved: {
+        title: "You're in: {{title}}",
+        body: 'The host approved you. Pull up to save your spot.',
+      },
       eventUpdated: { title: '{{title}} changed', body: 'Now {{when}}. Check the details.' },
       eventCancelled: {
         title: '{{title}} is cancelled',

@@ -21,6 +21,7 @@ import { CheckInService } from './check-in.service.js';
 import { EventAccessService } from './event-access.service.js';
 import { EventActivityHandlers } from './event-activity.handlers.js';
 import { EventInvitesService } from './event-invites.service.js';
+import { EventJoinRequestsService } from './event-join-requests.service.js';
 import { EventSearchService } from './event-search.service.js';
 import { EventHooks } from './event-hooks.js';
 import { EventStore } from './event-store.service.js';
@@ -69,6 +70,7 @@ import { WaitlistService } from './waitlist.service.js';
     WaitlistService,
     CheckInService,
     EventInvitesService,
+    EventJoinRequestsService,
     EventActivityHandlers,
     EventSearchService,
     EventHooks,
@@ -97,6 +99,7 @@ export class EventsModule implements OnModuleInit {
     private readonly activity: ActivityService,
     private readonly accountData: AccountDataRegistry,
     private readonly store: EventStore,
+    private readonly joinRequests: EventJoinRequestsService,
   ) {}
 
   onModuleInit(): void {
@@ -115,8 +118,12 @@ export class EventsModule implements OnModuleInit {
     );
     this.accountData.register({
       name: 'events',
-      export: (userId) => this.events.exportFor(userId),
+      export: async (userId) => ({
+        ...(await this.events.exportFor(userId)),
+        joinRequests: await this.joinRequests.exportFor(userId),
+      }),
       erase: async (userId, tx) => {
+        await this.joinRequests.eraseFor(userId, tx);
         const touched = await this.events.eraseFor(userId, tx);
         // Cached cores are refreshed once the purge has committed.
         return async () => {

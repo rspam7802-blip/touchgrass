@@ -137,6 +137,18 @@ export const NOTIFICATION_TEMPLATES = {
     body: 'notifications.kinds.eventInvited.body',
     link: 'events/{{eventId}}',
   },
+  join_requested: {
+    category: 'event_updates',
+    title: 'notifications.kinds.joinRequested.title',
+    body: 'notifications.kinds.joinRequested.body',
+    link: 'events/{{eventId}}/requests',
+  },
+  join_approved: {
+    category: 'event_updates',
+    title: 'notifications.kinds.joinApproved.title',
+    body: 'notifications.kinds.joinApproved.body',
+    link: 'events/{{eventId}}',
+  },
   event_updated: {
     category: 'event_updates',
     title: 'notifications.kinds.eventUpdated.title',

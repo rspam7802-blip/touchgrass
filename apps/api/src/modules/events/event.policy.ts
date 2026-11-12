@@ -4,6 +4,7 @@ import {
   type EventVisibility,
   type Gender,
   type HostRole,
+  type JoinRequestStatus,
   LIMITS,
   type RsvpStatus,
 } from '@touchgrass/shared';
@@ -32,6 +33,8 @@ export interface ViewerFacts {
   blockedWithHost: boolean;
   gender: Gender | null;
   verified: boolean;
+  /** Their request to join a private plan, if any (D-179). */
+  joinRequest?: JoinRequestStatus | null;
 }
 
 export type IneligibleReason =
@@ -41,6 +44,7 @@ export type IneligibleReason =
   | 'WOMEN_ONLY'
   | 'MEN_ONLY'
   | 'VERIFICATION_REQUIRED'
+  | 'APPROVAL_REQUIRED'
   | 'HOST';
 export type GenderBucket = 'woman' | 'man' | 'other';
 
@@ -74,6 +78,8 @@ export function canViewEvent(v: ViewerFacts, e: EventFacts): boolean {
   switch (e.visibility) {
     case 'public':
     case 'balanced':
+    // Private plans show their basics to everyone; the spot, guest list and chat wait for approval.
+    case 'approval':
       return true;
     case 'friends_of_friends':
       return v.relationshipToHosts === 'squad' || v.relationshipToHosts === 'friend_of_friend';
@@ -83,6 +89,20 @@ export function canViewEvent(v: ViewerFacts, e: EventFacts): boolean {
     case 'men_only':
       return matchesGenderOnly(e.visibility, v);
   }
+}
+
+/**
+ * Private plans (D-179): a host has let this person in, by approving their request or inviting them, or they
+ * already have a place (a seat, the waitlist or a payment hold).
+ */
+export function isLetIn(v: Pick<ViewerFacts, 'hostRole' | 'invited' | 'rsvp'>): boolean {
+  return (
+    v.hostRole !== null ||
+    v.invited ||
+    holdsSeat(v.rsvp) ||
+    v.rsvp === 'waitlisted' ||
+    v.rsvp === 'held'
+  );
 }
 
 /** Whether the viewer may pull up at all; capacity and gender balance are checked separately under lock. */
@@ -108,6 +128,7 @@ export function rsvpEligibility(
     };
   }
   if (!canViewEvent(v, e)) return { ok: false, reason: 'NOT_INVITED' };
+  if (e.visibility === 'approval' && !isLetIn(v)) return { ok: false, reason: 'APPROVAL_REQUIRED' };
   return { ok: true };
 }
 
@@ -129,14 +150,23 @@ export function balancedAllows(
   return bucketSeats + adding <= cap;
 }
 
-/** Mystery spot is revealed to hosts always, and to people going once the reveal time has come (F-EVT-12). */
+/** Plans whose true spot is not public: mystery plans and private (`approval`) plans. */
+export function hidesSpot(e: Pick<EventFacts, 'mystery' | 'visibility'>): boolean {
+  return e.mystery || e.visibility === 'approval';
+}
+
+/**
+ * The true spot is shown to hosts always. A mystery spot is revealed to people going once the reveal time has
+ * come (F-EVT-12); a private plan's spot only to people going (D-179).
+ */
 export function isLocationRevealed(
   v: Pick<ViewerFacts, 'hostRole' | 'rsvp'>,
-  e: Pick<EventFacts, 'mystery' | 'startsAt' | 'mysteryRevealMinutesBefore'>,
+  e: Pick<EventFacts, 'mystery' | 'visibility' | 'startsAt' | 'mysteryRevealMinutesBefore'>,
   now: Date,
 ): boolean {
-  if (!e.mystery || v.hostRole) return true;
-  return holdsSeat(v.rsvp) && now.getTime() >= revealTime(e).getTime();
+  if (!hidesSpot(e) || v.hostRole) return true;
+  if (!holdsSeat(v.rsvp)) return false;
+  return !e.mystery || now.getTime() >= revealTime(e).getTime();
 }
 
 export function revealTime(e: Pick<EventFacts, 'startsAt' | 'mysteryRevealMinutesBefore'>): Date {

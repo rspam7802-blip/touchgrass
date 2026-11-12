@@ -79,7 +79,15 @@ export const events = pgTable('events', {
   pricePaise: integer('price_paise').notNull().default(0),
   refundPolicy: jsonb('refund_policy').$type<RefundPolicyJson>(),
   visibility: text('visibility', {
-    enum: ['public', 'friends_of_friends', 'invite_only', 'women_only', 'men_only', 'balanced'],
+    enum: [
+      'public',
+      'friends_of_friends',
+      'invite_only',
+      'approval',
+      'women_only',
+      'men_only',
+      'balanced',
+    ],
   }).notNull(),
   balancedMaxSharePct: integer('balanced_max_share_pct'),
   soloFriendly: boolean('solo_friendly').notNull().default(false),
@@ -135,6 +143,22 @@ export const eventInvites = pgTable('event_invites', {
   expiresAt: ts('expires_at'),
   ...timestamps,
 });
+
+/** Requests to join a private (`approval`) plan (D-179). */
+export const eventJoinRequests = pgTable(
+  'event_join_requests',
+  {
+    eventId: uuid('event_id').notNull(),
+    userId: uuid('user_id').notNull(),
+    status: text('status', { enum: ['pending', 'approved', 'declined'] })
+      .notNull()
+      .default('pending'),
+    decidedBy: uuid('decided_by'),
+    decidedAt: ts('decided_at'),
+    ...timestamps,
+  },
+  (t) => [primaryKey({ columns: [t.eventId, t.userId] })],
+);
 
 export const rsvps = pgTable(
   'rsvps',

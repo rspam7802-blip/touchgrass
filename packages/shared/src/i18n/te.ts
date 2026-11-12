@@ -1942,6 +1942,14 @@ export const te: Translation = {
       },
       crew: { body: '{{crew}}' },
       eventInvited: { title: '{{name}} నిన్ను {{title}}కి పిలిచారు', body: '{{when}}' },
+      joinRequested: {
+        title: '{{name}} {{title}}లో చేరాలనుకుంటున్నారు',
+        body: 'ఒకసారి చూసి వాళ్ళకి చెప్పు.',
+      },
+      joinApproved: {
+        title: 'నువ్వు లోపల ఉన్నావు: {{title}}',
+        body: 'హోస్ట్ ఒప్పుకున్నారు. నీ చోటు కోసం పుల్ అప్ చెయ్యి.',
+      },
       eventUpdated: { title: '{{title}} మారింది', body: 'ఇప్పుడు {{when}}. వివరాలు చూడు.' },
       eventCancelled: {
         title: '{{title}} రద్దయింది',

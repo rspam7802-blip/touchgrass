@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import type { DomainEventBus } from '../../worker/domain-event-bus.js';
 import { EVENT_INVITED_EVENT } from '../events/event-invites.service.js';
+import { JOIN_DECIDED_EVENT, JOIN_REQUESTED_EVENT } from '../events/event-join-requests.service.js';
 import { EventSearchService } from '../events/event-search.service.js';
 import { EventStore } from '../events/event-store.service.js';
 import {
@@ -90,6 +91,30 @@ export class RemindersHandlers {
         title: core.title,
         eventId: core.id,
         when: await this.reminders.when(core),
+      });
+    });
+    // Private plans (D-179): hosts hear about a request; the person hears when they are approved. A
+    // declined request is not announced.
+    bus.subscribe(JOIN_REQUESTED_EVENT, 'notify.join-requested', async (e) => {
+      const core = await this.plan(String(e.payload.eventId));
+      if (!core || core.status !== 'published') return;
+      const hosts = (await this.store.hosts(core.id))
+        .filter((h) => h.role !== 'welcome_host')
+        .map((h) => h.userId);
+      await this.notifications.notify(
+        hosts,
+        'join_requested',
+        { name: await this.name(String(e.payload.userId)), title: core.title, eventId: core.id },
+        { collapseKey: `join-requested:${core.id}` },
+      );
+    });
+    bus.subscribe(JOIN_DECIDED_EVENT, 'notify.join-decided', async (e) => {
+      if (e.payload.approved !== true) return;
+      const core = await this.plan(String(e.payload.eventId));
+      if (!core || core.status !== 'published') return;
+      await this.notifications.notify([String(e.payload.userId)], 'join_approved', {
+        title: core.title,
+        eventId: core.id,
       });
     });
     bus.subscribe(EVENT_UPDATED_EVENT, 'notify.event-updated', async (e) => {

@@ -3,7 +3,12 @@ import type { Gender, HostRole } from '@touchgrass/shared';
 import { and, asc, eq, inArray } from 'drizzle-orm';
 import { AppError } from '../../common/errors/app-error.js';
 import { DB, type Database } from '../../infra/database/database.module.js';
-import { eventHosts, eventInvites, rsvps } from '../../infra/database/schema/index.js';
+import {
+  eventHosts,
+  eventInvites,
+  eventJoinRequests,
+  rsvps,
+} from '../../infra/database/schema/index.js';
 import type { DbOrTx } from '../../infra/database/types.js';
 import type { Relationship } from '../profiles/profile.policy.js';
 import { ProfilesService } from '../profiles/profiles.service.js';
@@ -59,7 +64,7 @@ export class EventAccessService {
   ): Promise<Map<string, EventViewerFacts>> {
     const out = new Map<string, EventViewerFacts>();
     if (eventIds.length === 0) return out;
-    const [hostRows, inviteRows, rsvpRows] = await Promise.all([
+    const [hostRows, inviteRows, rsvpRows, requestRows] = await Promise.all([
       db
         .select({ eventId: eventHosts.eventId, userId: eventHosts.userId, role: eventHosts.role })
         .from(eventHosts)
@@ -75,6 +80,15 @@ export class EventAccessService {
         .select({ eventId: rsvps.eventId, status: rsvps.status })
         .from(rsvps)
         .where(and(inArray(rsvps.eventId, eventIds), eq(rsvps.userId, ctx.userId))),
+      db
+        .select({ eventId: eventJoinRequests.eventId, status: eventJoinRequests.status })
+        .from(eventJoinRequests)
+        .where(
+          and(
+            inArray(eventJoinRequests.eventId, eventIds),
+            eq(eventJoinRequests.userId, ctx.userId),
+          ),
+        ),
     ]);
     const allHostIds = [...new Set(hostRows.map((h) => h.userId))].filter(
       (id) => id !== ctx.userId && !ctx.squad.has(id),
@@ -106,6 +120,7 @@ export class EventAccessService {
         blockedWithHost: hosts.some((h) => ctx.blocked.has(h.userId)),
         gender: ctx.gender,
         verified: ctx.verified,
+        joinRequest: requestRows.find((r) => r.eventId === eventId)?.status ?? null,
       });
     }
     return out;

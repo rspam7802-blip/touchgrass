@@ -1936,6 +1936,14 @@ export const hi: Translation = {
       },
       crew: { body: '{{crew}}' },
       eventInvited: { title: '{{name}} ने तुम्हें {{title}} में बुलाया', body: '{{when}}' },
+      joinRequested: {
+        title: '{{name}} {{title}} में आना चाहते हैं',
+        body: 'एक नज़र डालो और उन्हें बता दो.',
+      },
+      joinApproved: {
+        title: 'तुम अंदर हो: {{title}}',
+        body: 'होस्ट ने हाँ कह दी. अपनी जगह पक्की करने के लिए पुल अप करो.',
+      },
       eventUpdated: { title: '{{title}} बदल गया', body: 'अब {{when}}. डिटेल्स देखो.' },
       eventCancelled: {
         title: '{{title}} कैंसिल हो गया',

@@ -9,12 +9,12 @@ import type {
   ViewerState,
 } from '@touchgrass/shared';
 import { DEFAULT_REFUND_POLICY, isPopularPlan, LOCALE_DEFAULTS } from '@touchgrass/shared';
-import { and, eq, gt, inArray } from 'drizzle-orm';
+import { and, count, eq, gt, inArray } from 'drizzle-orm';
 import { AppError } from '../../common/errors/app-error.js';
 import { ENV } from '../../config/config.module.js';
 import type { Env } from '../../config/env.js';
 import { DB, type Database } from '../../infra/database/database.module.js';
-import { rsvps, waitlistOffers } from '../../infra/database/schema/index.js';
+import { eventJoinRequests, rsvps, waitlistOffers } from '../../infra/database/schema/index.js';
 import { CitiesService } from '../cities/cities.service.js';
 import { InterestsService } from '../interests/interests.service.js';
 import { MediaService } from '../media/media.service.js';
@@ -210,6 +210,10 @@ export class EventViewService {
       lore,
       crew,
       held: core.held,
+      pendingJoinRequests:
+        core.visibility === 'approval' && facts.hostRole !== null
+          ? await this.pendingJoinRequests(core.id)
+          : 0,
     };
   }
 
@@ -262,6 +266,15 @@ export class EventViewService {
     };
   }
 
+  /** Hosts of a private plan see how many people are waiting for an answer (D-179). */
+  private async pendingJoinRequests(eventId: string): Promise<number> {
+    const [row] = await this.db
+      .select({ n: count() })
+      .from(eventJoinRequests)
+      .where(and(eq(eventJoinRequests.eventId, eventId), eq(eventJoinRequests.status, 'pending')));
+    return row?.n ?? 0;
+  }
+
   private location(
     c: EventCore,
     exact: ExactLocation | null,
@@ -281,6 +294,7 @@ export class EventViewService {
       radiusMeters: MYSTERY_AREA_RADIUS_M,
       neighbourhoodName,
       revealsAt: revealTime(c).toISOString(),
+      hiddenBy: c.mystery ? 'mystery' : 'approval',
     };
   }
 
@@ -306,6 +320,7 @@ export class EventViewService {
       blockedReason = 'FULL_WAITLIST_OPEN';
     return {
       rsvp: f.rsvp,
+      joinRequest: f.joinRequest ?? null,
       isHost: f.hostRole !== null,
       hostRole: f.hostRole,
       invitedBy: f.invitedById ? (cards.get(f.invitedById) ?? null) : null,
