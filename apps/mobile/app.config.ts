@@ -27,6 +27,10 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   name: NAME,
   slug: 'touchgrass',
   owner: EAS_OWNER,
+  // EAS Update: JS-only fixes reach installed builds on their channel (eas.json) without a store release.
+  // `appVersion` keeps an update from loading into a build whose native code doesn't match.
+  updates: { url: `https://u.expo.dev/${EAS_PROJECT_ID}` },
+  runtimeVersion: { policy: 'appVersion' },
   scheme: 'touchgrass',
   version: VERSION,
   orientation: 'portrait',
