@@ -1,6 +1,9 @@
 import type { ConfigContext, ExpoConfig } from 'expo/config';
 
 const VERSION = '0.1.0';
+/** expo.dev project and the account that owns it (EAS builds, updates and push tokens). */
+const EAS_PROJECT_ID = 'b495bb1b-b225-4328-9f19-c93066bcf72d';
+const EAS_OWNER = 'touchgrass2026s-team';
 /** Host serving share links and /.well-known association files (apps/web in production). */
 const LINK_HOST = process.env.EXPO_PUBLIC_LINK_HOST ?? 'tg.app';
 /** EAS profiles (eas.json) set APP_VARIANT so development and preview builds install beside the store app. */
@@ -23,6 +26,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
   name: NAME,
   slug: 'touchgrass',
+  owner: EAS_OWNER,
   scheme: 'touchgrass',
   version: VERSION,
   orientation: 'portrait',
@@ -141,8 +145,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     sentryDsn: process.env.EXPO_PUBLIC_SENTRY_DSN,
     /** The build includes Firebase phone sign-in (D-166). */
     firebasePhoneAuth: FIREBASE,
-    eas: process.env.EXPO_PUBLIC_EAS_PROJECT_ID
-      ? { projectId: process.env.EXPO_PUBLIC_EAS_PROJECT_ID }
-      : undefined,
+    // The EAS project (expo.dev, @touchgrass2026s-team/touchgrass). Not a secret; an env value overrides it.
+    eas: { projectId: process.env.EXPO_PUBLIC_EAS_PROJECT_ID ?? EAS_PROJECT_ID },
   },
 });
