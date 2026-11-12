@@ -464,13 +464,15 @@ describe('steps', () => {
     });
   });
 
-  it('location: shows server errors when onboarding is incomplete', async () => {
+  it('location: goes back to the first missing step when onboarding is incomplete', async () => {
     api.on('POST', '/v1/me/onboarding/complete', {
       status: 409,
       body: { error: { code: 'ONBOARDING_INCOMPLETE', message: 'x' } },
     });
     await renderWithProviders(<LocationStep />, { fetchFn: api.fetch });
     await fireEvent.press(screen.getByRole('button', { name: 'Not now' }));
+    // The start screen re-reads the profile and opens the first unfinished step (name, photos, birthday...).
+    await waitFor(() => expect(mockRouter.replace).toHaveBeenCalledWith('/start'));
     expect(await screen.findByText('Finish setting up your profile first.')).toBeOnTheScreen();
   });
 });
