@@ -365,7 +365,9 @@ describe('calendar sync (F-CAL-01)', () => {
     const open = await plot(h, host, { title: 'Open mic night' });
     const mystery = await plot(h, host, { title: 'Mystery dinner', mystery: true });
     const dropped = await plot(h, host, { title: 'Dropped picnic' });
+    const maybe = await plot(h, host, { title: 'Maybe quiz night' });
     for (const e of [open, mystery, dropped]) await rsvp(h, b, e.id).expect(200);
+    await rsvp(h, b, maybe.id, { status: 'interested' }).expect(200);
     await api(host).post(`/v1/events/${dropped.id}/cancel`, { reason: '' }).expect(200);
 
     const feed = (await api(b).get('/v1/me/calendar').expect(200)).body as CalendarFeed;
@@ -388,6 +390,10 @@ describe('calendar sync (F-CAL-01)', () => {
       'STATUS:CANCELLED',
     );
     expect(ics).not.toContain('Secret Garden Lane, Gachibowli\\nMystery');
+    // A "maybe" is pencilled in as tentative; plans they're going to are confirmed.
+    const block = (title: string) => ics.split('BEGIN:VEVENT').find((v) => v.includes(title));
+    expect(block('Maybe quiz night')).toContain('STATUS:TENTATIVE');
+    expect(block('Open mic night')).toContain('STATUS:CONFIRMED');
 
     const reset = (await api(b).post('/v1/me/calendar/reset').expect(200)).body as CalendarFeed;
     expect(reset.url).not.toBe(feed.url);

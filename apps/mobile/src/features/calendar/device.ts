@@ -17,6 +17,13 @@ export interface CalendarFields {
   location: string;
   notes: string;
   timeZone: string;
+  /** Tentative for a "maybe", busy otherwise. */
+  availability: Calendar.Availability;
+}
+
+/** A "maybe" goes in as tentative; plans you're going to or hosting block the time. */
+export function isTentative(e: EventDetail): boolean {
+  return e.viewer.rsvp === 'interested' && !e.viewer.isHost;
 }
 
 /** What goes in the device calendar: the spot only once it's revealed to this person (mystery-safe). */
@@ -35,11 +42,18 @@ export function calendarFields(e: EventDetail, t: TFunction, webUrl: string): Ca
       .filter((x) => x.length > 0)
       .join('\n\n'),
     timeZone: 'Asia/Kolkata',
+    availability: isTentative(e) ? Calendar.Availability.TENTATIVE : Calendar.Availability.BUSY,
   };
 }
 
 const signatureOf = (f: CalendarFields): string =>
-  JSON.stringify([f.title, f.startDate.toISOString(), f.endDate.toISOString(), f.location]);
+  JSON.stringify([
+    f.title,
+    f.startDate.toISOString(),
+    f.endDate.toISOString(),
+    f.location,
+    f.availability,
+  ]);
 
 async function stored(eventId: string): Promise<Stored | null> {
   try {

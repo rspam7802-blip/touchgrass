@@ -228,6 +228,7 @@ jest.mock('react-native-view-shot', () => ({
 }));
 jest.mock('expo-calendar/legacy', () => ({
   EntityTypes: { EVENT: 'event' },
+  Availability: { BUSY: 'busy', FREE: 'free', TENTATIVE: 'tentative' },
   requestCalendarPermissionsAsync: jest.fn(() => Promise.resolve({ granted: true })),
   getCalendarPermissionsAsync: jest.fn(() => Promise.resolve({ granted: true })),
   getCalendarsAsync: jest.fn(() =>

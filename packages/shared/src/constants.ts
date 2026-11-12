@@ -33,7 +33,7 @@ export const LIMITS = {
   minAgeYears: 18,
   profile: {
     maxPhotos: 6,
-    minPhotos: 1,
+    minPhotos: 3,
     minInterests: 3,
     maxInterests: 15,
     bioMaxLength: 300,

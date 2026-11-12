@@ -6,6 +6,7 @@ import { useTrack } from '../src/features/analytics/analytics';
 import {
   calendarFields,
   type CalendarResult,
+  isTentative,
   saveToCalendar,
   syncCalendarCopy,
 } from '../src/features/calendar/device';
@@ -56,7 +57,7 @@ export function CalendarButton({ event }: { event: EventDetail }) {
           testID="calendar-result"
         >
           {result === 'added'
-            ? t('calendar.added')
+            ? t(isTentative(event) ? 'calendar.addedTentative' : 'calendar.added')
             : result === 'updated'
               ? t('calendar.updated')
               : result === 'denied'

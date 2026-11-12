@@ -122,6 +122,41 @@ beforeEach(async () => {
   api = new FakeApi().on('GET', `/v1/events/${EVENT_ID}`, { status: 200, body: eventFixture() });
 });
 
+/** Sunday 1 Nov 2026, noon IST: only the clock is fixed, timers keep running. */
+const TODAY = new Date('2026-11-01T06:30:00.000Z');
+function freezeToday(): void {
+  jest.useFakeTimers({
+    now: TODAY,
+    doNotFake: [
+      'setTimeout',
+      'clearTimeout',
+      'setInterval',
+      'clearInterval',
+      'setImmediate',
+      'clearImmediate',
+      'nextTick',
+      'queueMicrotask',
+      'requestAnimationFrame',
+      'cancelAnimationFrame',
+      'requestIdleCallback',
+      'cancelIdleCallback',
+      'performance',
+      'hrtime',
+    ],
+  });
+}
+
+/** Picks Tuesday 3 Nov 2026, 6:00 pm from the calendar and time sheets. */
+async function pickWhen(): Promise<void> {
+  await fireEvent.press(screen.getByTestId('plot-date'));
+  await fireEvent.press(await screen.findByTestId('plot-date-day-2026-11-03'));
+  await fireEvent.press(screen.getByTestId('plot-time'));
+  await fireEvent.press(await screen.findByTestId('plot-time-hour-6'));
+  await fireEvent.press(screen.getByTestId('plot-time-minute-00'));
+  await fireEvent.press(screen.getByTestId('plot-time-pm'));
+  await fireEvent.press(screen.getByTestId('plot-time-done'));
+}
+
 describe('IST time helpers', () => {
   it('round-trips date and time entered in IST', () => {
     expect(istToIso('03/11/2026', '18:00')).toBe('2026-11-03T12:30:00.000Z');
@@ -365,7 +400,11 @@ describe('Event detail', () => {
 });
 
 describe('Plot flow (F-EVT-01/02)', () => {
+  afterEach(() => {
+    jest.useRealTimers();
+  });
   beforeEach(() => {
+    freezeToday();
     mockRouteParams.current = {};
     api
       .on('GET', '/v1/interests', { status: 200, body: { items: interestsFixture } })
@@ -442,8 +481,7 @@ describe('Plot flow (F-EVT-01/02)', () => {
     await fireEvent.press(
       await screen.findByTestId(`plot-category-${interestsFixture[0]?.id ?? ''}`),
     );
-    await fireEvent.changeText(screen.getByTestId('plot-date'), '03/11/2026');
-    await fireEvent.changeText(screen.getByTestId('plot-time'), '18:00');
+    await pickWhen();
     await fireEvent.press(screen.getByTestId('plot-submit'));
     expect(await screen.findByText('Pick a place first')).toBeOnTheScreen();
 
@@ -483,8 +521,7 @@ describe('Plot flow (F-EVT-01/02)', () => {
     await fireEvent.press(
       await screen.findByTestId(`plot-category-${interestsFixture[0]?.id ?? ''}`),
     );
-    await fireEvent.changeText(screen.getByTestId('plot-date'), '03/11/2026');
-    await fireEvent.changeText(screen.getByTestId('plot-time'), '18:00');
+    await pickWhen();
     await fireEvent.changeText(screen.getByTestId('plot-place-search'), 'lake');
     await fireEvent.press(await screen.findByTestId('place-fx_lake'));
     await screen.findByTestId('plot-picked');
@@ -509,8 +546,7 @@ describe('Plot flow (F-EVT-01/02)', () => {
     await fireEvent.press(
       await screen.findByTestId(`plot-category-${interestsFixture[0]?.id ?? ''}`),
     );
-    await fireEvent.changeText(screen.getByTestId('plot-date'), '03/11/2026');
-    await fireEvent.changeText(screen.getByTestId('plot-time'), '18:00');
+    await pickWhen();
     await fireEvent.changeText(screen.getByTestId('plot-place-search'), 'lake');
     await fireEvent.press(await screen.findByTestId('place-fx_lake'));
     await screen.findByTestId('plot-picked');
@@ -541,7 +577,11 @@ describe('Plot flow (F-EVT-01/02)', () => {
 });
 
 describe('Plot flow: pin, advanced options and edits', () => {
+  afterEach(() => {
+    jest.useRealTimers();
+  });
   beforeEach(() => {
+    freezeToday();
     api
       .on('GET', '/v1/interests', { status: 200, body: { items: interestsFixture } })
       .on('GET', '/v1/venues/saved', { status: 200, body: { items: [] } })
@@ -604,16 +644,14 @@ describe('Plot flow: pin, advanced options and edits', () => {
     await fireEvent.press(screen.getByTestId('plot-submit'));
     expect(await screen.findAllByText(/./)).not.toHaveLength(0);
     expect(api.callsTo('POST', '/v1/events')).toHaveLength(0);
-    await fireEvent.changeText(screen.getByTestId('plot-date'), '31/02/2026');
-    await fireEvent.press(screen.getByTestId('plot-submit'));
-    expect(api.callsTo('POST', '/v1/events')).toHaveLength(0);
   });
 
   it('edits an existing plan and only sends the place when it changed', async () => {
     mockRouteParams.current = { id: EVENT_ID };
     await renderWithProviders(<PlotScreen />, { fetchFn: api.fetch });
     expect(await screen.findByDisplayValue('Sunset frisbee')).toBeOnTheScreen();
-    expect(screen.getByTestId('plot-date').props.value).toBe('03/11/2026');
+    expect(screen.getByTestId('plot-date')).toHaveAccessibleName('Date: Tue, 3 Nov, 2026');
+    expect(screen.getByTestId('plot-time')).toHaveAccessibleName('Time: 6:00 pm');
     await fireEvent.changeText(screen.getByTestId('plot-title'), 'Sunset frisbee v2');
     await fireEvent.press(screen.getByRole('button', { name: 'Save changes' }));
     await waitFor(() => expect(api.callsTo('PATCH', `/v1/events/${EVENT_ID}`)).toHaveLength(1));

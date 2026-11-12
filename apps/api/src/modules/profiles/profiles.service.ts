@@ -284,7 +284,11 @@ export class ProfilesService {
     ]);
     const state = {
       name: Boolean(profile.displayName),
-      photos: photos.some((p) => p.status === 'ready' || p.status === 'processing'),
+      // New members need the minimum; anyone who finished onboarding under an earlier rule stays in.
+      photos:
+        profile.onboardingCompletedAt !== null ||
+        photos.filter((p) => p.status === 'ready' || p.status === 'processing').length >=
+          LIMITS.profile.minPhotos,
       dateOfBirth: profile.dateOfBirth !== null,
       city: profile.cityId !== null,
       interests: interestIds.length >= LIMITS.profile.minInterests,

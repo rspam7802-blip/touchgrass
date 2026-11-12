@@ -1,5 +1,8 @@
 import type { ConfigContext, ExpoConfig } from 'expo/config';
 
+/** Typed view of the environment: React Native's globals type `process.env` values loosely. */
+const env: Record<string, string | undefined> = process.env;
+
 const VERSION = '0.1.0';
 /** expo.dev project and the account that owns it (EAS builds, updates and push tokens). */
 const EAS_PROJECT_ID = 'b495bb1b-b225-4328-9f19-c93066bcf72d';
@@ -7,9 +10,9 @@ const EAS_OWNER = 'touchgrass2026s-team';
 /** Kotlin for Android builds (see the expo-build-properties entry below). */
 const ANDROID_KOTLIN_VERSION = '2.4.0';
 /** Host serving share links and /.well-known association files (apps/web in production). */
-const LINK_HOST = process.env.EXPO_PUBLIC_LINK_HOST ?? 'tg.app';
+const LINK_HOST = env.EXPO_PUBLIC_LINK_HOST ?? 'tg.app';
 /** EAS profiles (eas.json) set APP_VARIANT so development and preview builds install beside the store app. */
-const VARIANT = process.env.APP_VARIANT ?? 'production';
+const VARIANT = env.APP_VARIANT ?? 'production';
 const SUFFIX = VARIANT === 'production' ? '' : `.${VARIANT}`;
 /** expo-camera and expo-image-picker both write the iOS camera prompt; keep one text covering both uses. */
 const CAMERA_PURPOSE =
@@ -20,8 +23,8 @@ const NAME = VARIANT === 'production' ? 'TouchGrass' : `TouchGrass (${VARIANT})`
  * variables GOOGLE_SERVICES_JSON (Android) and GOOGLE_SERVICE_INFO_PLIST (iOS) hold their paths. Without
  * them (local builds, Expo Go) the app signs in with the server's own codes.
  */
-const ANDROID_FIREBASE = process.env.GOOGLE_SERVICES_JSON;
-const IOS_FIREBASE = process.env.GOOGLE_SERVICE_INFO_PLIST;
+const ANDROID_FIREBASE = env.GOOGLE_SERVICES_JSON;
+const IOS_FIREBASE = env.GOOGLE_SERVICE_INFO_PLIST;
 const FIREBASE = Boolean(ANDROID_FIREBASE || IOS_FIREBASE);
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
@@ -46,7 +49,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     associatedDomains: [`applinks:${LINK_HOST}`],
     config: {
       usesNonExemptEncryption: false,
-      googleMapsApiKey: process.env.EXPO_PUBLIC_GOOGLE_MAPS_IOS_KEY,
+      googleMapsApiKey: env.EXPO_PUBLIC_GOOGLE_MAPS_IOS_KEY,
     },
     ...(IOS_FIREBASE ? { googleServicesFile: IOS_FIREBASE } : {}),
   },
@@ -63,7 +66,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       'android.permission.WRITE_EXTERNAL_STORAGE',
       'android.permission.SYSTEM_ALERT_WINDOW',
     ],
-    config: { googleMaps: { apiKey: process.env.EXPO_PUBLIC_GOOGLE_MAPS_ANDROID_KEY } },
+    config: { googleMaps: { apiKey: env.EXPO_PUBLIC_GOOGLE_MAPS_ANDROID_KEY } },
     ...(ANDROID_FIREBASE ? { googleServicesFile: ANDROID_FIREBASE } : {}),
     intentFilters: [
       {
@@ -147,15 +150,15 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ],
   experiments: { typedRoutes: true },
   extra: {
-    apiUrl: process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:4000',
-    realtimeUrl: process.env.EXPO_PUBLIC_REALTIME_URL ?? 'http://localhost:4001',
-    webUrl: process.env.EXPO_PUBLIC_WEB_URL ?? 'http://localhost:3000',
-    appStoreUrl: process.env.EXPO_PUBLIC_APP_STORE_URL,
-    playStoreUrl: process.env.EXPO_PUBLIC_PLAY_STORE_URL,
-    sentryDsn: process.env.EXPO_PUBLIC_SENTRY_DSN,
+    apiUrl: env.EXPO_PUBLIC_API_URL ?? 'http://localhost:4000',
+    realtimeUrl: env.EXPO_PUBLIC_REALTIME_URL ?? 'http://localhost:4001',
+    webUrl: env.EXPO_PUBLIC_WEB_URL ?? 'http://localhost:3000',
+    appStoreUrl: env.EXPO_PUBLIC_APP_STORE_URL,
+    playStoreUrl: env.EXPO_PUBLIC_PLAY_STORE_URL,
+    sentryDsn: env.EXPO_PUBLIC_SENTRY_DSN,
     /** The build includes Firebase phone sign-in (D-166). */
     firebasePhoneAuth: FIREBASE,
     // The EAS project (expo.dev, @touchgrass2026s-team/touchgrass). Not a secret; an env value overrides it.
-    eas: { projectId: process.env.EXPO_PUBLIC_EAS_PROJECT_ID ?? EAS_PROJECT_ID },
+    eas: { projectId: env.EXPO_PUBLIC_EAS_PROJECT_ID ?? EAS_PROJECT_ID },
   },
 });

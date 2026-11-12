@@ -21,6 +21,8 @@ import {
 } from '../src/features/events/format';
 import { errorMessage, reasonText } from '../src/lib/errors';
 import { useTheme } from '../src/theme/theme';
+import { readAppEnvironment } from '../src/config';
+import { calendarFields, saveToCalendar } from '../src/features/calendar/device';
 import { CalendarButton } from './CalendarButton';
 import { PersonRow } from './PersonRow';
 import { useTrack } from '../src/features/analytics/analytics';
@@ -86,15 +88,35 @@ export function EventDetailView({
     router.push({ pathname, params: { id: event.id } });
   };
 
-  const act = async (input: Parameters<typeof rsvp.mutateAsync>[0]): Promise<void> => {
+  const act = async (input: Parameters<typeof rsvp.mutateAsync>[0]): Promise<boolean> => {
     setError(null);
     setNotice(null);
     try {
       const res = await rsvp.mutateAsync(input);
       if (res && 'plusOneClaimUrl' in res && res.plusOneClaimUrl) setGuestLink(res.plusOneClaimUrl);
       if (res && 'status' in res && res.status === 'waitlisted') setNotice(t('events.waitlisted'));
+      return true;
     } catch (err) {
       setError(errorMessage(t, err));
+      return false;
+    }
+  };
+
+  /** "Maybe": keeps the plan on their list and pencils it into the phone's calendar as tentative. */
+  const maybe = async (): Promise<void> => {
+    if (!(await act({ status: 'interested' }))) return;
+    const asMaybe = { ...event, viewer: { ...event.viewer, rsvp: 'interested' as const } };
+    try {
+      const saved = await saveToCalendar(
+        asMaybe,
+        calendarFields(asMaybe, t, readAppEnvironment().webUrl),
+      );
+      if (saved === 'added' || saved === 'updated') {
+        track('calendar_added', { target: 'device' });
+        setNotice(t('calendar.addedTentative'));
+      }
+    } catch {
+      // The maybe is saved; the calendar copy is a convenience they can add from the button.
     }
   };
 
@@ -307,7 +329,7 @@ export function EventDetailView({
                 <Button
                   label={t('events.interested')}
                   variant="secondary"
-                  onPress={() => void act({ status: 'interested' })}
+                  onPress={() => void maybe()}
                   testID="interested"
                 />
               ) : null}
@@ -463,7 +485,9 @@ export function EventDetailView({
               testID="event-crew"
             />
           ) : null}
-          {holdsSeat || v.isHost ? <CalendarButton event={event} /> : null}
+          {holdsSeat || v.isHost || v.rsvp === 'interested' ? (
+            <CalendarButton event={event} />
+          ) : null}
           {liveLocation && (holdsSeat || v.isHost) && canShareFor(event, Date.now()) ? (
             <Button
               label={t('safety.shareTitle')}

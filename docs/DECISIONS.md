@@ -722,3 +722,19 @@ The first super admin is created by the production bootstrap with no profile, so
 ## D-172 Email through Brevo's HTTPS API
 
 Railway blocks outbound SMTP on plans below Pro, so waitlist invite emails timed out (`Connection timeout`) after holding the admin's request for about two minutes. `EMAIL_PROVIDER=brevo` sends through Brevo's transactional API (`POST https://api.brevo.com/v3/smtp/email`, `BREVO_API_KEY`, 10 s timeout) instead; the sender comes from `EMAIL_FROM` and must be a verified sender in Brevo. SMTP and SES stay available for hosts that allow them.
+
+## D-173 Three photos to join
+
+New members need at least three profile photos (`LIMITS.profile.minPhotos = 3`) before onboarding can finish; the photos step and `onboardingState` both count ready or processing photos. Anyone who finished onboarding under the earlier one-photo rule stays in, and profile editing won't let a member drop below three.
+
+## D-174 "Maybe" is the `interested` RSVP, pencilled in as tentative
+
+The second button on a plan now reads "Maybe" (the stored status stays `interested`, so nothing migrates). Tapping it adds the plan to the phone's calendar as tentative (`Availability.TENTATIVE`), the calendar button is offered for maybes too, and the subscribed feed includes them with `STATUS:TENTATIVE`. Pulling up later turns the same calendar entry into a busy one.
+
+## D-175 Date and time are picked, not typed
+
+Plot uses our own `DateField` (month calendar, Monday first, days before today in IST disabled) and `TimeField` (hour, quarter-hour minutes, am/pm) from `components/DateTimeFields.tsx`. They are plain React Native, so they follow the theme, ship in a JavaScript update and need no native module. The form still stores `DD/MM/YYYY` and `HH:MM` in IST.
+
+## D-176 The logo is the grass mark alone
+
+The app icon, adaptive icon, splash, in-app logo and website icons show the pixel grass without the "touchgrass" wordmark. The icon change reaches phones with the next build, not an update.

@@ -19,6 +19,7 @@ import { useTranslation } from 'react-i18next';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import MapView, { Marker, type MapPressEvent } from 'react-native-maps';
 import { ChipGroup } from '../../components/ChipGroup';
+import { DateField, TimeField } from '../../components/DateTimeFields';
 import { SegmentedTabs } from '../../components/SegmentedTabs';
 import {
   Button,
@@ -626,25 +627,23 @@ function PlotForm({
       </ScrollView>
       <View style={styles.pair}>
         <View style={styles.half}>
-          <TextField
+          <DateField
             label={t('events.dateLabel')}
             value={form.date}
-            onChangeText={(v) => {
+            onChange={(v) => {
               set('date', v);
             }}
-            keyboardType="numbers-and-punctuation"
             error={errors.date || errors.startsAt || null}
             testID="plot-date"
           />
         </View>
         <View style={styles.half}>
-          <TextField
+          <TimeField
             label={t('events.timeLabel')}
             value={form.time}
-            onChangeText={(v) => {
+            onChange={(v) => {
               set('time', v);
             }}
-            keyboardType="numbers-and-punctuation"
             testID="plot-time"
           />
         </View>

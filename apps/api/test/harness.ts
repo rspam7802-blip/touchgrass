@@ -1,5 +1,5 @@
 import type { INestApplication } from '@nestjs/common';
-import type { AuthResponse } from '@touchgrass/shared';
+import { type AuthResponse, LIMITS } from '@touchgrass/shared';
 import type { Server } from 'node:http';
 import { randomUUID } from 'node:crypto';
 import pg from 'pg';
@@ -200,11 +200,12 @@ export async function onboard(
     .set(...bearer(token))
     .send({ interestIds: await interestIds(h, 3) })
     .expect(200);
-  const photo = await uploadPhoto(h, token);
+  const photos: string[] = [];
+  for (let i = 0; i < LIMITS.profile.minPhotos; i += 1) photos.push(await uploadPhoto(h, token));
   await request(h.http)
     .put('/v1/me/photos')
     .set(...bearer(token))
-    .send({ mediaAssetIds: [photo] })
+    .send({ mediaAssetIds: photos })
     .expect(200);
   await request(h.http)
     .post('/v1/me/onboarding/complete')

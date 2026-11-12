@@ -121,7 +121,13 @@ export class CalendarService {
       description: [description, open].filter((x) => x.length > 0).join('\n\n'),
       location: this.location(e, lang),
       url: link,
-      status: e.status === 'cancelled' ? 'CANCELLED' : 'CONFIRMED',
+      // A "maybe" shows as tentative, so it doesn't block the time like a plan they're going to.
+      status:
+        e.status === 'cancelled'
+          ? 'CANCELLED'
+          : e.viewer.rsvp === 'interested' && !e.viewer.isHost
+            ? 'TENTATIVE'
+            : 'CONFIRMED',
     };
   }
 
@@ -129,7 +135,7 @@ export class CalendarService {
     return (await this.users.languages([userId])).get(userId) ?? 'en';
   }
 
-  /** The subscribed feed: hosted and seat-held plans from a month back to six months ahead. */
+  /** The subscribed feed: hosted, seat-held and maybe plans from a month back to six months ahead. */
   async feedIcs(token: string, now: Date = new Date()): Promise<string> {
     const userId = await this.userForToken(token);
     if (!userId) throw AppError.notFound('Calendar');

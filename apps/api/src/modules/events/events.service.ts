@@ -605,7 +605,7 @@ export class EventsService {
           inArray(events.status, ['published', 'cancelled', 'completed']),
           or(
             sql`${events.id} IN (SELECT event_id FROM event_hosts WHERE user_id = ${userId})`,
-            sql`${events.id} IN (SELECT event_id FROM rsvps WHERE user_id = ${userId} AND status IN ('going','checked_in'))`,
+            sql`${events.id} IN (SELECT event_id FROM rsvps WHERE user_id = ${userId} AND status IN ('going','checked_in','interested'))`,
           ),
         ),
       )

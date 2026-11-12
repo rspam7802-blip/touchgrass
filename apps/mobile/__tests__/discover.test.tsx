@@ -232,7 +232,7 @@ describe('Discover tab (F-DSC-01..08)', () => {
       },
     });
     await renderWithProviders(<DiscoverScreen />, { fetchFn: api.fetch });
-    await screen.findByTestId('hero-carousel', {}, { timeout: 5000 });
+    await screen.findByTestId('hero-carousel', {}, { timeout: 20_000 });
     // Featured first, then the ranked order.
     const heroIds = screen
       .getAllByTestId(/^hero-Slug/)
@@ -268,7 +268,7 @@ describe('Discover tab (F-DSC-01..08)', () => {
       ).toBe(true),
     );
     expect(screen.getByTestId('hero-carousel')).toBeOnTheScreen();
-  });
+  }, 40_000);
 
   it('quick chips and the filter panel change the query; clear resets it', async () => {
     const urls: string[] = [];

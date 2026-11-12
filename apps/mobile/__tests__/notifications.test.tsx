@@ -324,6 +324,30 @@ describe('calendar (F-CAL-01)', () => {
     expect(await isInCalendar(EVENT_ID)).toBe(false);
   });
 
+  it('a maybe goes into the calendar as tentative, and as busy once they pull up', async () => {
+    const t = (k: string) => k;
+    const base = eventDetail();
+    const maybe = { ...base, viewer: { ...base.viewer, rsvp: 'interested' as const } };
+    const going = { ...base, viewer: { ...base.viewer, rsvp: 'going' as const } };
+    expect(calendarFields(maybe, t as never, 'http://web.test').availability).toBe('tentative');
+    expect(calendarFields(going, t as never, 'http://web.test').availability).toBe('busy');
+    (Calendar.createEventAsync as jest.Mock).mockClear();
+    await renderWithProviders(<CalendarButton event={maybe} />, { fetchFn: api.fetch });
+    await fireEvent.press(screen.getByTestId('add-to-calendar'));
+    expect(await screen.findByTestId('calendar-result')).toHaveTextContent(
+      'Added to your calendar as tentative',
+    );
+    expect(Calendar.createEventAsync).toHaveBeenCalledWith(
+      'cal-primary',
+      expect.objectContaining({ availability: 'tentative' }),
+    );
+    // Pulling up later turns the same calendar entry into a busy one.
+    (Calendar.updateEventAsync as jest.Mock).mockClear();
+    const fields = calendarFields(going, t as never, 'http://web.test');
+    expect(await syncCalendarCopy(going, fields)).toBe(true);
+    expect(Calendar.updateEventAsync).toHaveBeenCalledWith('device-event-1', fields);
+  });
+
   it('explains when calendar access is refused', async () => {
     (Calendar.requestCalendarPermissionsAsync as jest.Mock).mockResolvedValueOnce({
       granted: false,

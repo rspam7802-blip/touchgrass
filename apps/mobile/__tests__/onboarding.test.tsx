@@ -188,8 +188,9 @@ describe('steps', () => {
         },
       })
       .on('PUT', '/v1/me/photos', (c) => {
+        // Each upload returns the same asset id, so saved photos get distinct ids here.
         photos = (c.body as { mediaAssetIds: string[] }).mediaAssetIds.map((id, position) => ({
-          mediaAssetId: id,
+          mediaAssetId: id === ids.asset ? `${id.slice(0, -1)}${String(position)}` : id,
           position,
           status: 'ready',
           urls: urlsFixture,
@@ -218,11 +219,23 @@ describe('steps', () => {
         sizeBytes: 2048,
       });
       expect(api.callsTo('PUT', '/v1/me/photos')[0]?.body).toEqual({ mediaAssetIds: [ids.asset] });
+      // One photo is not enough: three are needed to continue.
+      await screen.findByRole('button', { name: 'Remove photo 1' });
+      expect(screen.getByTestId('onboarding-primary')).toBeDisabled();
+      await fireEvent.press(screen.getByRole('button', { name: 'Add photo' }));
+      await waitFor(() => expect(api.callsTo('PUT', '/v1/me/photos')).toHaveLength(2));
+      await screen.findByRole('button', { name: 'Remove photo 2' });
+      await fireEvent.press(screen.getByRole('button', { name: 'Add photo' }));
+      await waitFor(() => expect(api.callsTo('PUT', '/v1/me/photos')).toHaveLength(3));
       await waitFor(() => expect(screen.getByTestId('onboarding-primary')).not.toBeDisabled());
       await fireEvent.press(screen.getByRole('button', { name: 'Remove photo 1' }));
       await waitFor(() =>
-        expect(api.callsTo('PUT', '/v1/me/photos')[1]?.body).toEqual({ mediaAssetIds: [] }),
+        expect(
+          (api.callsTo('PUT', '/v1/me/photos')[3]?.body as { mediaAssetIds: string[] })
+            .mediaAssetIds,
+        ).toHaveLength(2),
       );
+      await waitFor(() => expect(screen.getByTestId('onboarding-primary')).toBeDisabled());
     } finally {
       global.fetch = realFetch;
     }

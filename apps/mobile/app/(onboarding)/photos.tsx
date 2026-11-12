@@ -20,7 +20,10 @@ export default function PhotosStep() {
     <OnboardingStep
       step="photos"
       title={t('onboarding.photosTitle')}
-      body={t('onboarding.photosBody')}
+      body={t('onboarding.photosBody', {
+        min: LIMITS.profile.minPhotos,
+        max: LIMITS.profile.maxPhotos,
+      })}
       primaryDisabled={usable < LIMITS.profile.minPhotos}
       error={errorMessage(t, editor.error)}
       onPrimary={next}
