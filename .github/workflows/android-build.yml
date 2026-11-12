@@ -1,0 +1,67 @@
+name: Android build
+
+# Builds the Android app on a GitHub runner instead of waiting in the expo.dev queue. `eas build --local`
+# still uses the expo.dev project: its signing key (so the APK installs over the current app), its
+# environment variables and the Firebase file. Needs the repository secret EXPO_TOKEN (expo.dev →
+# Account settings → Access tokens).
+
+on:
+  workflow_dispatch:
+    inputs:
+      profile:
+        description: EAS build profile
+        type: choice
+        options: [preview, production]
+        default: preview
+
+concurrency:
+  group: android-build-${{ inputs.profile }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Android (${{ inputs.profile }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+    steps:
+      - name: Check the Expo token is set
+        run: |
+          if [ -z "$EXPO_TOKEN" ]; then
+            echo "::error::Add the repository secret EXPO_TOKEN (expo.dev → Account settings → Access tokens)."
+            exit 1
+          fi
+      - name: Free disk space
+        run: sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/.ghcup /usr/local/share/boost
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with: { node-version-file: .nvmrc, cache: pnpm }
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: '17' }
+      - uses: android-actions/setup-android@v3
+      - run: pnpm install --frozen-lockfile
+      - name: Build
+        working-directory: apps/mobile
+        run: >-
+          npx --yes eas-cli@latest build --local --non-interactive
+          --platform android --profile ${{ inputs.profile }}
+          --output "$GITHUB_WORKSPACE/touchgrass-${{ inputs.profile }}-${GITHUB_SHA::7}.${{ inputs.profile == 'production' && 'aab' || 'apk' }}"
+      - name: Check Firebase was included
+        if: inputs.profile == 'preview'
+        run: |
+          apk=$(ls "$GITHUB_WORKSPACE"/touchgrass-*.apk)
+          if ! unzip -p "$apk" resources.arsc | grep -aq google_app_id; then
+            echo "::error::The APK has no Firebase config, so phone sign-in would not work. Check the GOOGLE_SERVICES_JSON file variable on expo.dev for this profile's environment."
+            exit 1
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: touchgrass-${{ inputs.profile }}
+          path: touchgrass-${{ inputs.profile }}-*
+          retention-days: 14
+          compression-level: 0
