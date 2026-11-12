@@ -58,8 +58,11 @@ export async function pickImage(): Promise<string | null> {
 
 /** A storage upload the phone could not complete; `status` is 0 when storage was never reached. */
 export class StorageUploadError extends Error {
-  constructor(readonly status: number) {
-    super(`Upload failed with ${String(status)}`);
+  constructor(
+    readonly status: number,
+    options?: { cause?: unknown },
+  ) {
+    super(`Upload failed with ${String(status)}`, options);
     this.name = 'StorageUploadError';
   }
 }
@@ -83,8 +86,8 @@ async function postToStorage(
       mimeType,
       parameters: upload.fields,
     }));
-  } catch {
-    throw new StorageUploadError(0);
+  } catch (cause) {
+    throw new StorageUploadError(0, { cause });
   }
   if (status < 200 || status >= 300) throw new StorageUploadError(status);
 }

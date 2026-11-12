@@ -43,6 +43,8 @@ export const en = {
     offlineBody: 'Showing what we saved. We’ll sync when you’re back.',
     offlineBanner: 'Offline. Some things may be out of date.',
     photoAccessDenied: 'Photo access is off. Allow it in your phone settings to add photos.',
+    uploadUnreachable: "Couldn't reach photo storage. Check your connection and try again.",
+    uploadFailed: "The photo didn't upload (code {{status}}). Try again in a bit.",
     openSettings: 'Open settings',
     signOut: 'Sign out',
   },

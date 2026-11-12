@@ -1,6 +1,7 @@
 import type { TFunction } from 'i18next';
 import {
   PhotoAccessDeniedError,
+  StorageUploadError,
   VideoTooLargeError,
   VideoTooLongError,
 } from '../features/media/upload';
@@ -22,6 +23,10 @@ export function reasonText(
 export function errorMessage(t: TFunction, err: unknown): string | null {
   if (!err) return null;
   if (err instanceof PhotoAccessDeniedError) return t('states.photoAccessDenied');
+  if (err instanceof StorageUploadError)
+    return err.status === 0
+      ? t('states.uploadUnreachable')
+      : t('states.uploadFailed', { status: err.status });
   if (err instanceof VideoTooLongError) return t('stories.videoTooLong');
   if (err instanceof VideoTooLargeError) return t('stories.videoTooLarge');
   if (err instanceof FirebasePhoneError)
