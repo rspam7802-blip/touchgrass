@@ -4,6 +4,8 @@ const VERSION = '0.1.0';
 /** expo.dev project and the account that owns it (EAS builds, updates and push tokens). */
 const EAS_PROJECT_ID = 'b495bb1b-b225-4328-9f19-c93066bcf72d';
 const EAS_OWNER = 'touchgrass2026s-team';
+/** Kotlin for Android builds (see the expo-build-properties entry below). */
+const ANDROID_KOTLIN_VERSION = '2.4.0';
 /** Host serving share links and /.well-known association files (apps/web in production). */
 const LINK_HOST = process.env.EXPO_PUBLIC_LINK_HOST ?? 'tg.app';
 /** EAS profiles (eas.json) set APP_VARIANT so development and preview builds install beside the store app. */
@@ -130,14 +132,18 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         motionUsagePermission: false,
       },
     ],
-    // Firebase on iOS needs its pods linked as static frameworks.
-    ...(FIREBASE
-      ? [
-          '@react-native-firebase/app',
-          '@react-native-firebase/auth',
-          ['expo-build-properties', { ios: { useFrameworks: 'static' } }] as [string, unknown],
-        ]
-      : []),
+    ...(FIREBASE ? ['@react-native-firebase/app', '@react-native-firebase/auth'] : []),
+    [
+      'expo-build-properties',
+      {
+        // React Native Firebase 27 and the Firebase Android libraries it pulls in are built with Kotlin 2.4;
+        // the Expo default (2.2) cannot read them ("incompatible version of Kotlin"). The Firebase modules
+        // are autolinked even without the Firebase files, so this applies to every Android build.
+        android: { kotlinVersion: ANDROID_KOTLIN_VERSION },
+        // Firebase on iOS needs its pods linked as static frameworks.
+        ...(FIREBASE ? { ios: { useFrameworks: 'static' } } : {}),
+      },
+    ] as [string, unknown],
   ],
   experiments: { typedRoutes: true },
   extra: {
