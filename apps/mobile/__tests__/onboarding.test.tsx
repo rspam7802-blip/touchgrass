@@ -1,6 +1,7 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as Linking from 'expo-linking';
+import { Platform } from 'react-native';
 import * as Location from 'expo-location';
 import * as Notifications from 'expo-notifications';
 import BirthdayStep from '../app/(onboarding)/birthday';
@@ -224,6 +225,22 @@ describe('steps', () => {
       );
     } finally {
       global.fetch = realFetch;
+    }
+  });
+
+  it('photos: Android opens the system picker without asking for library access', async () => {
+    const os = Platform.OS;
+    Platform.OS = 'android';
+    try {
+      (ImagePicker.requestMediaLibraryPermissionsAsync as jest.Mock).mockClear();
+      (ImagePicker.launchImageLibraryAsync as jest.Mock).mockResolvedValueOnce({ canceled: true });
+      await renderWithProviders(<PhotosStep />, { fetchFn: api.fetch });
+      await fireEvent.press(await screen.findByRole('button', { name: 'Add photo' }));
+      await waitFor(() => expect(ImagePicker.launchImageLibraryAsync).toHaveBeenCalled());
+      expect(ImagePicker.requestMediaLibraryPermissionsAsync).not.toHaveBeenCalled();
+      expect(screen.queryByText(/Photo access is off/)).toBeNull();
+    } finally {
+      Platform.OS = os;
     }
   });
 

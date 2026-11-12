@@ -1,3 +1,4 @@
+import { Platform } from 'react-native';
 import { CreateUploadResponse, LIMITS, MediaAsset, type MediaPurpose } from '@touchgrass/shared';
 import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 import * as ImagePicker from 'expo-image-picker';
@@ -28,12 +29,22 @@ export class PhotoAccessDeniedError extends Error {
 }
 
 /**
+ * Android opens the system photo picker, which needs no permission: the person picks, the app only gets what
+ * they picked. The app removes the storage permissions on purpose (app.config.ts), so asking for library access
+ * there always fails. iOS still asks for access to the library.
+ */
+async function ensureLibraryAccess(): Promise<void> {
+  if (Platform.OS === 'android') return;
+  const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+  if (!permission.granted) throw new PhotoAccessDeniedError();
+}
+
+/**
  * Opens the photo library. Returns null when the user cancels, and throws `PhotoAccessDeniedError` when
  * access is declined, so screens can explain it instead of silently doing nothing.
  */
 export async function pickImage(): Promise<string | null> {
-  const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-  if (!permission.granted) throw new PhotoAccessDeniedError();
+  await ensureLibraryAccess();
   const res = await ImagePicker.launchImageLibraryAsync({
     mediaTypes: ['images'],
     quality: 1,
@@ -109,8 +120,7 @@ export class VideoTooLargeError extends Error {
  * removes its location and device details.
  */
 export async function pickStoryMedia(): Promise<StoryMedia | null> {
-  const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-  if (!permission.granted) throw new PhotoAccessDeniedError();
+  await ensureLibraryAccess();
   const res = await ImagePicker.launchImageLibraryAsync({
     mediaTypes: ['images', 'videos'],
     quality: 1,
