@@ -1,6 +1,7 @@
 import { Platform } from 'react-native';
 import { CreateUploadResponse, LIMITS, MediaAsset, type MediaPurpose } from '@touchgrass/shared';
 import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
+import { FileSystemUploadType, uploadAsync } from 'expo-file-system/legacy';
 import * as ImagePicker from 'expo-image-picker';
 import type { ApiClient } from '../../lib/api-client';
 
@@ -55,24 +56,51 @@ export async function pickImage(): Promise<string | null> {
   return res.canceled ? null : (res.assets[0]?.uri ?? null);
 }
 
+/** A storage upload the phone could not complete; `status` is 0 when storage was never reached. */
+export class StorageUploadError extends Error {
+  constructor(readonly status: number) {
+    super(`Upload failed with ${String(status)}`);
+    this.name = 'StorageUploadError';
+  }
+}
+
+/**
+ * Sends a local file straight to object storage with the presigned POST form. The native uploader reads the
+ * file itself: React Native's `fetch` with a `{ uri }` FormData part never reached storage on Android release
+ * builds, so uploads failed before any request was made.
+ */
+async function postToStorage(
+  upload: { url: string; fields: Record<string, string> },
+  fileUri: string,
+  mimeType: string,
+): Promise<void> {
+  let status: number;
+  try {
+    ({ status } = await uploadAsync(upload.url, fileUri, {
+      httpMethod: 'POST',
+      uploadType: FileSystemUploadType.MULTIPART,
+      fieldName: 'file',
+      mimeType,
+      parameters: upload.fields,
+    }));
+  } catch {
+    throw new StorageUploadError(0);
+  }
+  if (status < 200 || status >= 300) throw new StorageUploadError(status);
+}
+
 /** Presigned POST straight to object storage, then tells the API the upload is complete. */
 export async function uploadImage(
   client: ApiClient,
   purpose: MediaPurpose,
   image: LocalImage,
-  fetchFn: typeof fetch = fetch,
 ): Promise<MediaAsset> {
   if (image.sizeBytes > LIMITS.upload.maxImageBytes) throw new Error('Image too large');
   const created = await client.request('/v1/media/uploads', CreateUploadResponse, {
     method: 'POST',
     body: { purpose, contentType: 'image/jpeg', sizeBytes: image.sizeBytes },
   });
-  const form = new FormData();
-  for (const [k, v] of Object.entries(created.upload.fields)) form.append(k, v);
-  // React Native's FormData accepts { uri, name, type } file descriptors.
-  form.append('file', { uri: image.uri, name: 'photo.jpg', type: 'image/jpeg' } as unknown as Blob);
-  const res = await fetchFn(created.upload.url, { method: 'POST', body: form });
-  if (!res.ok) throw new Error(`Upload failed with ${res.status}`);
+  await postToStorage(created.upload, image.uri, 'image/jpeg');
   return client.request(`/v1/media/${created.assetId}/complete`, MediaAsset, { method: 'POST' });
 }
 
@@ -143,18 +171,12 @@ export async function pickStoryMedia(): Promise<StoryMedia | null> {
 export async function uploadVideo(
   client: ApiClient,
   video: Extract<StoryMedia, { kind: 'video' }>,
-  fetchFn: typeof fetch = fetch,
 ): Promise<MediaAsset> {
   if (video.sizeBytes > LIMITS.upload.maxVideoBytes) throw new VideoTooLargeError();
   const created = await client.request('/v1/media/uploads', CreateUploadResponse, {
     method: 'POST',
     body: { purpose: 'story', contentType: video.contentType, sizeBytes: video.sizeBytes },
   });
-  const form = new FormData();
-  for (const [k, v] of Object.entries(created.upload.fields)) form.append(k, v);
-  const name = video.contentType === 'video/quicktime' ? 'clip.mov' : 'clip.mp4';
-  form.append('file', { uri: video.uri, name, type: video.contentType } as unknown as Blob);
-  const res = await fetchFn(created.upload.url, { method: 'POST', body: form });
-  if (!res.ok) throw new Error(`Upload failed with ${res.status}`);
+  await postToStorage(created.upload, video.uri, video.contentType);
   return client.request(`/v1/media/${created.assetId}/complete`, MediaAsset, { method: 'POST' });
 }

@@ -166,6 +166,27 @@ jest.mock('expo-image-manipulator', () => ({
     })),
   },
 }));
+// The native uploader (presigned POST to storage) replayed through the test's fetch, so tests still see
+// the multipart POST to the storage URL and can make it fail.
+jest.mock('expo-file-system/legacy', () => ({
+  FileSystemUploadType: { BINARY_CONTENT: 0, MULTIPART: 1 },
+  uploadAsync: jest.fn(
+    async (
+      url: string,
+      fileUri: string,
+      options: { fieldName?: string; mimeType?: string; parameters?: Record<string, string> },
+    ) => {
+      const form = new FormData();
+      for (const [k, v] of Object.entries(options.parameters ?? {})) form.append(k, v);
+      form.append(options.fieldName ?? 'file', {
+        uri: fileUri,
+        type: options.mimeType,
+      } as unknown as Blob);
+      const res = await fetch(url, { method: 'POST', body: form });
+      return { status: res.status, headers: {}, body: '' };
+    },
+  ),
+}));
 jest.mock('expo-sharing', () => ({
   isAvailableAsync: jest.fn(() => Promise.resolve(true)),
   shareAsync: jest.fn(() => Promise.resolve()),
