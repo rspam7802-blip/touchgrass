@@ -738,3 +738,7 @@ Plot uses our own `DateField` (month calendar, Monday first, days before today i
 ## D-176 The logo is the grass mark alone
 
 The app icon, adaptive icon, splash, in-app logo and website icons show the pixel grass without the "touchgrass" wordmark. The icon change reaches phones with the next build, not an update.
+
+## D-177 The logo is alive
+
+`BrandLogo` draws the grass (`assets/brand/grass.png`) on a lime tile and animates it with React Native's `Animated` on the native driver: it grows up from the ground line when it appears, then sways a few degrees in a slow loop. At launch `LaunchAnimation` covers the app in the splash's lime while the grass grows, then fades to the screen underneath, so the system splash hands over without a jump. Both stand still (and the launch cover is skipped) with Reduce Motion. The home-screen icon itself cannot animate: Android and iOS only allow a still image there.
