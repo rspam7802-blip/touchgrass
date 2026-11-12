@@ -6,6 +6,7 @@ import { EmailSender } from './email/email.port.js';
 import { SesEmailSender } from './email/ses.email.js';
 import { FakeEmailSender } from './email/fake.email.js';
 import { SmtpEmailSender } from './email/smtp.email.js';
+import { BrevoEmailSender } from './email/brevo.email.js';
 import { FakeMapsProvider } from './maps/fake.maps.js';
 import { GoogleMapsProvider } from './maps/google.maps.js';
 import { MapsProvider } from './maps/maps.port.js';
@@ -129,9 +130,11 @@ export function buildAdapters(env: Env): AdapterInstances {
     email:
       env.EMAIL_PROVIDER === 'ses'
         ? new SesEmailSender(env.AWS_REGION, env.EMAIL_FROM)
-        : env.EMAIL_PROVIDER === 'fake'
-          ? new FakeEmailSender()
-          : new SmtpEmailSender(env.SMTP_URL, env.EMAIL_FROM),
+        : env.EMAIL_PROVIDER === 'brevo'
+          ? new BrevoEmailSender(required(env.BREVO_API_KEY, 'BREVO_API_KEY'), env.EMAIL_FROM)
+          : env.EMAIL_PROVIDER === 'fake'
+            ? new FakeEmailSender()
+            : new SmtpEmailSender(env.SMTP_URL, env.EMAIL_FROM),
     phoneAuth:
       env.PHONE_AUTH_PROVIDER === 'firebase'
         ? new FirebasePhoneVerifier(required(env.FIREBASE_PROJECT_ID, 'FIREBASE_PROJECT_ID'))

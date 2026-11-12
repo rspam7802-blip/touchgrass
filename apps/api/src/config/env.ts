@@ -133,7 +133,8 @@ export const EnvSchema = z
     POSTHOG_API_KEY: z.string().optional(),
     POSTHOG_HOST: z.url().default('https://eu.i.posthog.com'),
 
-    EMAIL_PROVIDER: z.enum(['smtp', 'ses', 'fake']).default('smtp'),
+    EMAIL_PROVIDER: z.enum(['smtp', 'brevo', 'ses', 'fake']).default('smtp'),
+    BREVO_API_KEY: z.string().optional(),
     SMTP_URL: z.string().default('smtp://localhost:1025'),
     EMAIL_FROM: z.string().default('TouchGrass <hello@touchgrass.co.in>'),
 
@@ -190,6 +191,7 @@ export const EnvSchema = z
       ['OPENWEATHER_API_KEY'],
       'WEATHER_PROVIDER=openweather',
     );
+    requireKeys(env.EMAIL_PROVIDER === 'brevo', ['BREVO_API_KEY'], 'EMAIL_PROVIDER=brevo');
     requireKeys(
       env.ANALYTICS_PROVIDER === 'posthog',
       ['POSTHOG_API_KEY'],

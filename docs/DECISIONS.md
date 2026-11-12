@@ -718,3 +718,7 @@ Builds carry `expo-updates` pointed at the expo.dev project (`@touchgrass2026s-t
 ## D-171 Staff can use the admin console before finishing a member profile
 
 The first super admin is created by the production bootstrap with no profile, so `ActiveUserGuard` blocked every admin route with `ONBOARDING_INCOMPLETE` and the console failed on every page. A user still onboarding may now call a route marked `@Roles(...)` when they hold one of its roles (`isStaffRoute`); `RolesGuard` still enforces the roles, routes their role doesn't cover stay closed, and member routes still require a finished profile.
+
+## D-172 Email through Brevo's HTTPS API
+
+Railway blocks outbound SMTP on plans below Pro, so waitlist invite emails timed out (`Connection timeout`) after holding the admin's request for about two minutes. `EMAIL_PROVIDER=brevo` sends through Brevo's transactional API (`POST https://api.brevo.com/v3/smtp/email`, `BREVO_API_KEY`, 10 s timeout) instead; the sender comes from `EMAIL_FROM` and must be a verified sender in Brevo. SMTP and SES stay available for hosts that allow them.

@@ -1,5 +1,6 @@
 import { SendEmailCommand, type SESv2Client } from '@aws-sdk/client-sesv2';
 import { describe, expect, it, vi } from 'vitest';
+import { BrevoEmailSender, parseSender } from './brevo.email.js';
 import { FakeEmailSender } from './fake.email.js';
 import { SesEmailSender } from './ses.email.js';
 import { SmtpEmailSender } from './smtp.email.js';
@@ -33,5 +34,40 @@ describe('email senders', () => {
     expect(
       new SmtpEmailSender('smtp://localhost:1025', 'TouchGrass <hello@touchgrass.app>'),
     ).toBeInstanceOf(SmtpEmailSender);
+  });
+
+  it('Brevo posts the message to its API with the key and the parsed sender', async () => {
+    const fetchFn = vi.fn().mockResolvedValue(new Response('{"messageId":"m1"}', { status: 201 }));
+    await new BrevoEmailSender('key-1', 'TouchGrass <hello@touchgrass.co.in>', fetchFn).send(
+      message,
+    );
+    const [url, init] = fetchFn.mock.calls[0] as [string, RequestInit];
+    expect(url).toBe('https://api.brevo.com/v3/smtp/email');
+    expect(new Headers(init.headers).get('api-key')).toBe('key-1');
+    expect(JSON.parse(init.body as string)).toEqual({
+      sender: { name: 'TouchGrass', email: 'hello@touchgrass.co.in' },
+      to: [{ email: 'host@example.com' }],
+      subject: 'Your receipt',
+      htmlContent: '<p>₹499</p>',
+      textContent: '₹499',
+    });
+  });
+
+  it('Brevo turns a rejected send into an error the caller can log', async () => {
+    const fetchFn = vi
+      .fn()
+      .mockResolvedValue(new Response('{"code":"unauthorized"}', { status: 401 }));
+    await expect(
+      new BrevoEmailSender('bad', 'hello@touchgrass.co.in', fetchFn).send(message),
+    ).rejects.toThrow('brevo request failed with status 401');
+  });
+
+  it('reads EMAIL_FROM with or without a display name', () => {
+    expect(parseSender('TouchGrass <hello@touchgrass.co.in>')).toEqual({
+      name: 'TouchGrass',
+      email: 'hello@touchgrass.co.in',
+    });
+    expect(parseSender('"Touch Grass" <a@b.in>')).toEqual({ name: 'Touch Grass', email: 'a@b.in' });
+    expect(parseSender('a@b.in')).toEqual({ email: 'a@b.in' });
   });
 });

@@ -22,7 +22,7 @@ Railway project (Singapore) — one container per service, private network betwe
         │
 Supabase (Mumbai): PostgreSQL + PostGIS only, through the session pooler with TLS. Data API off, tables locked down.
 External services, each behind an adapter (real + fake):
-  Firebase Authentication (phone sign-in) · Expo Push · Google Maps Platform · Google Cloud Vision · SMTP email
+  Firebase Authentication (phone sign-in) · Expo Push · Google Maps Platform · Google Cloud Vision · Brevo email API
   Switched off for launch: Razorpay (no paid plans), MSG91 (no server SMS), weather, analytics
 Observability: Pino JSON logs in Railway · Sentry and OpenTelemetry when their variables are set
 ```
@@ -290,7 +290,7 @@ Namespaces `/chat` and `/events`. JWT checked in namespace middleware on connect
 | `WeatherProvider`       | Open-Meteo; OpenWeather One Call 3.0; `none` shows no weather                                           | `none` (Open-Meteo ready) | deterministic 48 h fixture with a rain window                 | `WEATHER_PROVIDER`    |
 | `ModerationProvider`    | Google Cloud Vision SafeSearch (D-165); Rekognition DetectModerationLabels + CompareFaces               | `google-vision`           | safe, except the `FLAGGED_FIXTURE` bytes                      | `MODERATION_PROVIDER` |
 | `AnalyticsSink`         | PostHog batch API, person profiles off                                                                  | `noop`                    | no-op (still enforces the PII guard)                          | `ANALYTICS_PROVIDER`  |
-| `EmailSender`           | SMTP (any provider); SES v2                                                                             | `smtp`                    | SMTP → Mailpit                                                | `EMAIL_PROVIDER`      |
+| `EmailSender`           | Brevo transactional API over HTTPS (D-172); SMTP (any provider); SES v2                                 | `brevo`                   | SMTP → Mailpit                                                | `EMAIL_PROVIDER`      |
 
 Live settings are in `infra/railway/production-variables.env`. The environment schema refuses fake providers when `NODE_ENV=production`.
 
@@ -318,7 +318,7 @@ Chosen for the lean launch (D-165): a few dollars a month instead of a full AWS 
 - **Edge:** Namecheap DNS points the apex and `api.`, `rt.`, `media.` at Railway custom domains; Railway terminates TLS. `TRUST_PROXY_HOPS=1` for Railway's proxy. There is no WAF; rate limits in Redis are the only abuse control.
 - **Variables:** project Shared Variables, attached to each service as `${{shared.X}}`; `NODE_ENV=production` set on each service. The web service's `API_URL` is `https://api.touchgrass.co.in`.
 - **Sign-in:** Firebase project `touchgrass-e5d1e` (Blaze plan) sends and checks the codes for both the app and the admin console (D-166, D-167).
-- **Email:** SMTP from `hello@touchgrass.co.in`.
+- **Email:** Brevo's HTTPS API from `hello@touchgrass.co.in` (Railway blocks outbound SMTP below the Pro plan, D-172). Incoming mail to `hello@`, `support@`, `safety@` and `grievance@` is forwarded by Namecheap to the team's Gmail.
 
 ### Mobile: EAS
 
