@@ -1,7 +1,9 @@
 name: App update
 
 # Publishes a JavaScript-only update (eas update, D-170) to installed builds on a channel, from a clean
-# checkout of the chosen commit. Native changes still need a new build. Needs the EXPO_TOKEN secret.
+# checkout of the chosen commit. Native changes still need a new build. Android only for now. Needs the
+# secrets EXPO_TOKEN and GOOGLE_SERVICES_JSON: the app reads whether Firebase sign-in is built in from the
+# update's config, so an update made without the Firebase file would turn sign-in off.
 
 on:
   workflow_dispatch:
@@ -31,17 +33,54 @@ jobs:
     env:
       EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
     steps:
+      - name: Write the Firebase file
+        env:
+          GOOGLE_SERVICES: ${{ secrets.GOOGLE_SERVICES_JSON }}
+        run: |
+          if [ -z "$EXPO_TOKEN" ] || [ -z "$GOOGLE_SERVICES" ]; then
+            echo "::error::Add the repository secrets EXPO_TOKEN and GOOGLE_SERVICES_JSON."
+            exit 1
+          fi
+          printf '%s' "$GOOGLE_SERVICES" > "$RUNNER_TEMP/google-services.json"
+          echo "GOOGLE_SERVICES_JSON=$RUNNER_TEMP/google-services.json" >> "$GITHUB_ENV"
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with: { node-version-file: .nvmrc, cache: pnpm }
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter @touchgrass/shared build
+      # eas update does not apply a build profile's env (API addresses etc.); without them the bundle would
+      # point at localhost. Load the matching profile's env, following `extends`, from eas.json.
+      - name: Load the build profile's settings
+        env:
+          PROFILE: ${{ inputs.channel }}
+        run: |
+          node -e '
+            const build = require("./apps/mobile/eas.json").build;
+            const envOf = (name) => {
+              const p = build[name];
+              if (!p) throw new Error("No build profile " + name);
+              return { ...(p.extends ? envOf(p.extends) : {}), ...(p.env ?? {}) };
+            };
+            const env = envOf(process.env.PROFILE);
+            if (!env.EXPO_PUBLIC_API_URL) throw new Error("Profile has no EXPO_PUBLIC_API_URL");
+            for (const [k, v] of Object.entries(env)) console.log(k + "=" + v);
+          ' >> "$GITHUB_ENV"
+          cat "$GITHUB_ENV"
+      - name: Check the update keeps Firebase sign-in on
+        working-directory: apps/mobile
+        run: |
+          npx expo config --json --type public | node -e '
+            const c = JSON.parse(require("fs").readFileSync(0, "utf8"));
+            if (c.extra?.firebasePhoneAuth !== true) throw new Error("firebasePhoneAuth is not on");
+            if (!String(c.extra?.apiUrl).startsWith("https://")) throw new Error("apiUrl is " + c.extra?.apiUrl);
+            console.log("apiUrl", c.extra.apiUrl, "firebasePhoneAuth", c.extra.firebasePhoneAuth);
+          '
       - name: Publish
         working-directory: apps/mobile
         env:
           MESSAGE: ${{ inputs.message }}
         run: >-
-          npx --yes eas-cli@latest update --non-interactive
+          npx --yes eas-cli@latest update --non-interactive --platform android
           --channel ${{ inputs.channel }} --environment ${{ inputs.channel }}
           --message "$MESSAGE"
