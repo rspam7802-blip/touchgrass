@@ -1,3 +1,4 @@
+import { genderOnly } from '@touchgrass/shared';
 import { useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -61,7 +62,7 @@ export default function PlusOneScreen() {
         {t('events.plusOneLabel')}
       </Text>
       <Text tone="muted">{event.data.title}</Text>
-      {event.data.visibility !== 'women_only' ? (
+      {genderOnly(event.data.visibility) === null ? (
         <Button
           label={t('events.plusOneGuest')}
           variant="secondary"

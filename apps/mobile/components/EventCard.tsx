@@ -1,4 +1,4 @@
-import type { EventSummary, FeedItem } from '@touchgrass/shared';
+import { type EventSummary, type FeedItem, genderOnly } from '@touchgrass/shared';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ArrowRight, Calendar, Check, Compass, EyeOff, Heart, Lock, People } from './icons';
@@ -31,10 +31,12 @@ export function EventCard({
   const { t, i18n } = useTranslation();
   const theme = useTheme();
   const status = rsvpLabel(t, event);
-  const womenOnly = event.visibility === 'women_only';
+  // Women-only and men-only plans are marked the same way, each with its own label.
+  const womenOnly = genderOnly(event.visibility) !== null;
+  const onlyLabel = womenOnly ? t(`events.visibility.${event.visibility}`) : null;
   const tags = [
     event.type === 'curated' ? t('share.curated') : null,
-    womenOnly ? t('events.visibility.women_only') : null,
+    onlyLabel,
     event.soloFriendly ? t('events.soloFriendly') : null,
     event.smallGroup ? t('events.smallGroup') : null,
     event.mystery ? t('events.mystery') : null,
@@ -87,7 +89,7 @@ export function EventCard({
       ? theme.colors.onAccent
       : theme.colors.onPrimary;
   const lead = womenOnly
-    ? { label: t('events.visibility.women_only'), tone: 'accent' as const, icon: Heart }
+    ? { label: onlyLabel ?? '', tone: 'accent' as const, icon: Heart }
     : event.type === 'curated'
       ? { label: t('share.curated'), tone: 'primary' as const, icon: undefined }
       : event.category

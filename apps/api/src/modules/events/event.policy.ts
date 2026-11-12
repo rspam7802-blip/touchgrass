@@ -1,4 +1,5 @@
 import {
+  genderOnly,
   type EventStatus,
   type EventVisibility,
   type Gender,
@@ -6,6 +7,7 @@ import {
   LIMITS,
   type RsvpStatus,
 } from '@touchgrass/shared';
+import { AppError } from '../../common/errors/app-error.js';
 import type { Relationship } from '../profiles/profile.policy.js';
 
 export interface EventFacts {
@@ -33,7 +35,13 @@ export interface ViewerFacts {
 }
 
 export type IneligibleReason =
-  'CLOSED' | 'BLOCKED' | 'NOT_INVITED' | 'WOMEN_ONLY' | 'VERIFICATION_REQUIRED' | 'HOST';
+  | 'CLOSED'
+  | 'BLOCKED'
+  | 'NOT_INVITED'
+  | 'WOMEN_ONLY'
+  | 'MEN_ONLY'
+  | 'VERIFICATION_REQUIRED'
+  | 'HOST';
 export type GenderBucket = 'woman' | 'man' | 'other';
 
 const HAS_SEAT: readonly RsvpStatus[] = ['going', 'checked_in'];
@@ -42,8 +50,13 @@ export function holdsSeat(status: RsvpStatus | null): boolean {
   return status !== null && HAS_SEAT.includes(status);
 }
 
-function isVerifiedWoman(v: ViewerFacts): boolean {
-  return v.verified && v.gender === 'woman';
+/** Women-only and men-only plans are for people whose gender a reviewer has verified. */
+export function matchesGenderOnly(
+  visibility: EventVisibility,
+  who: { gender: Gender | null; verified: boolean },
+): boolean {
+  const only = genderOnly(visibility);
+  return only === null || (who.verified && who.gender === only);
 }
 
 /**
@@ -56,7 +69,7 @@ export function canViewEvent(v: ViewerFacts, e: EventFacts): boolean {
   if (e.held) return false;
   if (v.blockedWithHost) return false;
   if (e.status === 'draft') return false;
-  if (e.visibility === 'women_only') return isVerifiedWoman(v);
+  if (genderOnly(e.visibility) !== null) return matchesGenderOnly(e.visibility, v);
   if (v.invited || (v.rsvp !== null && v.rsvp !== 'cancelled')) return true;
   switch (e.visibility) {
     case 'public':
@@ -66,6 +79,9 @@ export function canViewEvent(v: ViewerFacts, e: EventFacts): boolean {
       return v.relationshipToHosts === 'squad' || v.relationshipToHosts === 'friend_of_friend';
     case 'invite_only':
       return false;
+    case 'women_only':
+    case 'men_only':
+      return matchesGenderOnly(e.visibility, v);
   }
 }
 
@@ -79,10 +95,16 @@ export function rsvpEligibility(
   if (v.blockedWithHost) return { ok: false, reason: 'BLOCKED' };
   if (e.status !== 'published' || now.getTime() >= e.endsAt.getTime())
     return { ok: false, reason: 'CLOSED' };
-  if (e.visibility === 'women_only' && !isVerifiedWoman(v)) {
+  const only = genderOnly(e.visibility);
+  if (only !== null && !matchesGenderOnly(e.visibility, v)) {
     return {
       ok: false,
-      reason: v.gender === 'woman' && !v.verified ? 'VERIFICATION_REQUIRED' : 'WOMEN_ONLY',
+      reason:
+        v.gender === only && !v.verified
+          ? 'VERIFICATION_REQUIRED'
+          : only === 'woman'
+            ? 'WOMEN_ONLY'
+            : 'MEN_ONLY',
     };
   }
   if (!canViewEvent(v, e)) return { ok: false, reason: 'NOT_INVITED' };
@@ -159,4 +181,14 @@ export function materialChanges(
   if (before.locationKey !== after.locationKey) changed.push('location');
   if (before.pricePaise !== after.pricePaise) changed.push('price');
   return changed;
+}
+
+/** The refusal for someone a women-only or men-only plan is not for (hosting, co-hosting, +1s). */
+export function genderOnlyError(
+  visibility: EventVisibility,
+  message = 'Women-only and men-only plans are hosted and joined by verified members of that gender',
+): AppError {
+  return new AppError('NOT_ELIGIBLE', message, {
+    reason: genderOnly(visibility) === 'man' ? 'MEN_ONLY' : 'WOMEN_ONLY',
+  });
 }

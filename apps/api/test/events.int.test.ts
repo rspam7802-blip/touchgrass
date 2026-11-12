@@ -12,6 +12,7 @@ import {
   idem,
   outboxFor,
   PLACE,
+  planBody,
   plot,
   rsvp,
   shiftEvent,
@@ -248,6 +249,22 @@ describe('visibility (F-EVT-03, F-SAF-03)', () => {
     await detail(h, host, wo.id).expect(200); // the default test persona is a verified woman
     await detail(h, unverifiedWoman, wo.id).expect(404);
     await detail(h, man, wo.id).expect(404);
+
+    // Men only mirrors women only (D-178): verified men see and join it, and only they can host it.
+    const unverifiedMan = await member(h, { gender: 'man' });
+    const otherMan = await verifiedMember(h, { gender: 'man' });
+    const mo = await plot(h, man, { visibility: 'men_only' });
+    await detail(h, otherMan, mo.id).expect(200);
+    await rsvp(h, otherMan, mo.id).expect(200);
+    await detail(h, unverifiedMan, mo.id).expect(404);
+    await detail(h, woman, mo.id).expect(404);
+    const refused = await request(h.http)
+      .post('/v1/events')
+      .set(...bearer(woman.token))
+      .set(...idem())
+      .send(await planBody(h, { visibility: 'men_only' }));
+    expect(refused.status).toBe(403);
+    expect(refused.body.error.details).toMatchObject({ reason: 'MEN_ONLY' });
 
     await request(h.http)
       .post('/v1/social/blocks')

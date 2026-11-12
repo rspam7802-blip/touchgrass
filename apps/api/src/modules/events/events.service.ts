@@ -9,6 +9,7 @@ import {
   type EventList,
   type EventSummary,
   type EventWhere,
+  genderOnly,
   type GeoPoint,
   LIMITS,
   type ModerationPreview,
@@ -48,7 +49,14 @@ import { FeatureFlagsService } from '../platform/feature-flags.service.js';
 import { SocialGraphService } from '../social/graph/social-graph.service.js';
 import { VenuesService } from '../venues/venues.service.js';
 import { EventAccessService } from './event-access.service.js';
-import { canViewEvent, genderBucket, holdsSeat, materialChanges } from './event.policy.js';
+import {
+  canViewEvent,
+  genderBucket,
+  genderOnlyError,
+  holdsSeat,
+  matchesGenderOnly,
+  materialChanges,
+} from './event.policy.js';
 import { EventHooks } from './event-hooks.js';
 import { type EventCore, EventStore } from './event-store.service.js';
 import { EventViewsService } from './event-views.service.js';
@@ -129,10 +137,7 @@ export class EventsService {
     if (!curated && (await this.flags.isEnabled('require_verification_to_host')) && !ctx.verified)
       throw new AppError('VERIFICATION_REQUIRED', 'Get verified to plot');
     if (body.pricePaise > 0) await this.assertPaidAllowed(userId, body.allowPlusOnes);
-    if (body.visibility === 'women_only' && !(ctx.verified && ctx.gender === 'woman'))
-      throw new AppError('NOT_ELIGIBLE', 'Women-only plans are hosted by verified women', {
-        reason: 'WOMEN_ONLY',
-      });
+    if (!matchesGenderOnly(body.visibility, ctx)) throw genderOnlyError(body.visibility);
     this.assertTiming(new Date(body.startsAt), now);
     await this.assertTaxonomy(body.categoryInterestId, body.interestIds, body.vibeTagIds);
     if (body.coverMediaId) await this.assertCover(userId, body.coverMediaId);
@@ -286,12 +291,9 @@ export class EventsService {
       throw new AppError('VALIDATION_FAILED', 'Balanced events need a ratio cap', [
         { path: 'balancedMaxSharePct', message: 'Required', code: 'custom' },
       ]);
-    if (visibility === 'women_only' && before.visibility !== 'women_only') {
+    if (genderOnly(visibility) !== null && before.visibility !== visibility) {
       const ctx = await this.access.context(before.creatorUserId);
-      if (!(ctx.verified && ctx.gender === 'woman'))
-        throw new AppError('NOT_ELIGIBLE', 'Women-only plans are hosted by verified women', {
-          reason: 'WOMEN_ONLY',
-        });
+      if (!matchesGenderOnly(visibility, ctx)) throw genderOnlyError(visibility);
     }
     const smallGroup = body.smallGroup ?? before.smallGroup;
     const capacity = body.capacity ?? before.capacity;
@@ -720,10 +722,7 @@ export class EventsService {
         reason: 'NOT_CONNECTED',
       });
     if (targetFacts.blockedWithHost) throw AppError.notFound('User');
-    if (core.visibility === 'women_only' && !(target.verified && target.gender === 'woman'))
-      throw new AppError('NOT_ELIGIBLE', 'Women-only plans are hosted by verified women', {
-        reason: 'WOMEN_ONLY',
-      });
+    if (!matchesGenderOnly(core.visibility, target)) throw genderOnlyError(core.visibility);
     await withRedisLock(this.redis, eventLockKey(eventId), () =>
       this.db.transaction(async (tx) => {
         const locked = await this.store.core(eventId, tx, { lock: true });

@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import type { GeoPoint } from '@touchgrass/shared';
+import type { EventVisibility, GeoPoint } from '@touchgrass/shared';
 import { and, eq, inArray, sql } from 'drizzle-orm';
 import type { Redis } from 'ioredis';
 import { DB, type Database } from '../../infra/database/database.module.js';
@@ -36,7 +36,7 @@ export interface EventCore {
   capacity: number;
   minGroupSize: number;
   pricePaise: number;
-  visibility: 'public' | 'friends_of_friends' | 'invite_only' | 'women_only' | 'balanced';
+  visibility: EventVisibility;
   balancedMaxSharePct: number | null;
   soloFriendly: boolean;
   smallGroup: boolean;

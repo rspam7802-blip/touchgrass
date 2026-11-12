@@ -7,8 +7,13 @@ export const EventVisibility = z.enum([
   'friends_of_friends',
   'invite_only',
   'women_only',
+  'men_only',
   'balanced',
 ]);
+/** Plans open to one gender only (verified, F-SAF-01): which one, or null when the plan is open to all. */
+export function genderOnly(visibility: z.infer<typeof EventVisibility>): 'woman' | 'man' | null {
+  return visibility === 'women_only' ? 'woman' : visibility === 'men_only' ? 'man' : null;
+}
 /** `held`: a spot reserved while the person pays (10 minutes); not yet going. */
 export const RsvpStatus = z.enum([
   'going',

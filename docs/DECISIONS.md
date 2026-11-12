@@ -742,3 +742,7 @@ The app icon, adaptive icon, splash, in-app logo and website icons show the pixe
 ## D-177 The logo is alive
 
 `BrandLogo` draws the grass (`assets/brand/grass.png`) on a lime tile and animates it with React Native's `Animated` on the native driver: it grows up from the ground line when it appears, then sways a few degrees in a slow loop. At launch `LaunchAnimation` covers the app in the splash's lime while the grass grows, then fades to the screen underneath, so the system splash hands over without a jump. Both stand still (and the launch cover is skipped) with Reduce Motion. The home-screen icon itself cannot animate: Android and iOS only allow a still image there.
+
+## D-178 Guest preference: everyone, women only or men only
+
+`men_only` joins `women_only` as an event visibility (migration `0019`), and both follow one rule, `genderOnly(visibility)` (shared) with `matchesGenderOnly` in the event policy: only members whose gender a reviewer has verified can see, host, co-host or pull up to such a plan, guest +1s are refused, and the refusal reason is `WOMEN_ONLY` or `MEN_ONLY` (or `VERIFICATION_REQUIRED` for the right gender, unverified). Discovery lists men-only plans only to verified men.

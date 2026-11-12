@@ -79,7 +79,7 @@ export const events = pgTable('events', {
   pricePaise: integer('price_paise').notNull().default(0),
   refundPolicy: jsonb('refund_policy').$type<RefundPolicyJson>(),
   visibility: text('visibility', {
-    enum: ['public', 'friends_of_friends', 'invite_only', 'women_only', 'balanced'],
+    enum: ['public', 'friends_of_friends', 'invite_only', 'women_only', 'men_only', 'balanced'],
   }).notNull(),
   balancedMaxSharePct: integer('balanced_max_share_pct'),
   soloFriendly: boolean('solo_friendly').notNull().default(false),

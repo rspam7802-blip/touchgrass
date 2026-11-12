@@ -123,6 +123,21 @@ describe('rsvpEligibility', () => {
         NOW,
       ),
     ).toEqual({ ok: false, reason: 'WOMEN_ONLY' });
+    // Men only mirrors it (D-178).
+    const menOnly = event({ visibility: 'men_only' });
+    expect(rsvpEligibility(viewer({ gender: 'man', verified: true }), menOnly, NOW)).toEqual({
+      ok: true,
+    });
+    expect(rsvpEligibility(viewer({ gender: 'man' }), menOnly, NOW)).toEqual({
+      ok: false,
+      reason: 'VERIFICATION_REQUIRED',
+    });
+    expect(rsvpEligibility(viewer({ gender: 'woman', verified: true }), menOnly, NOW)).toEqual({
+      ok: false,
+      reason: 'MEN_ONLY',
+    });
+    expect(canViewEvent(viewer({ gender: 'woman', verified: true }), menOnly)).toBe(false);
+    expect(canViewEvent(viewer({ gender: 'man', verified: true }), menOnly)).toBe(true);
     expect(rsvpEligibility(viewer(), event({ visibility: 'invite_only' }), NOW)).toEqual({
       ok: false,
       reason: 'NOT_INVITED',

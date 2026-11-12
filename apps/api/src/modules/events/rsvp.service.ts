@@ -7,7 +7,7 @@ import type {
   RsvpBody,
   RsvpResult,
 } from '@touchgrass/shared';
-import { isPopularPlan } from '@touchgrass/shared';
+import { genderOnly, isPopularPlan } from '@touchgrass/shared';
 import { and, eq, inArray, sql } from 'drizzle-orm';
 import type { Redis } from 'ioredis';
 import { randomToken } from '../../common/auth/hashing.js';
@@ -28,9 +28,11 @@ import {
   balancedAllows,
   canViewEvent,
   genderBucket,
+  genderOnlyError,
   holdsSeat,
   type IneligibleReason,
   isLateCancel,
+  matchesGenderOnly,
   rsvpEligibility,
 } from './event.policy.js';
 import { type EventCore, EventStore } from './event-store.service.js';
@@ -48,6 +50,9 @@ const REASON_ERRORS: Record<IneligibleReason, AppError> = {
   NOT_INVITED: AppError.notFound('Event'),
   WOMEN_ONLY: new AppError('NOT_ELIGIBLE', 'This plan is for verified women', {
     reason: 'WOMEN_ONLY',
+  }),
+  MEN_ONLY: new AppError('NOT_ELIGIBLE', 'This plan is for verified men', {
+    reason: 'MEN_ONLY',
   }),
   VERIFICATION_REQUIRED: new AppError(
     'VERIFICATION_REQUIRED',
@@ -109,10 +114,11 @@ export class RsvpService {
         body.plusOne && 'userId' in body.plusOne
           ? await this.memberPlusOne(ctx, core, body.plusOne.userId)
           : null;
-      if (body.plusOne && 'guest' in body.plusOne && core.visibility === 'women_only')
-        throw new AppError('NOT_ELIGIBLE', 'Guest +1s cannot join women-only plans', {
-          reason: 'WOMEN_ONLY',
-        });
+      if (body.plusOne && 'guest' in body.plusOne && genderOnly(core.visibility) !== null)
+        throw genderOnlyError(
+          core.visibility,
+          'Guest +1s cannot join women-only or men-only plans',
+        );
       outcome = await this.going(
         ctx,
         core,
@@ -617,8 +623,8 @@ export class RsvpService {
     const facts = await this.access.facts(ctx, core.id);
     if (facts.blockedWithHost || ctx.blocked.has(pending.inviterUserId))
       throw AppError.notFound('Claim link');
-    if (core.visibility === 'women_only' && !(ctx.verified && ctx.gender === 'woman'))
-      throw REASON_ERRORS.WOMEN_ONLY;
+    if (!matchesGenderOnly(core.visibility, ctx))
+      throw REASON_ERRORS[genderOnly(core.visibility) === 'man' ? 'MEN_ONLY' : 'WOMEN_ONLY'];
     await this.db.transaction(async (tx) => {
       await this.plusOnes.redeem(token, userId, tx);
       // Their verified gender (if any) now replaces the guest's 'other' bucket for balanced events.

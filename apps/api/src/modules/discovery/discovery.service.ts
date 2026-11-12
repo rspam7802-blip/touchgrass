@@ -194,6 +194,7 @@ export class DiscoveryService {
         squadIds: [...ctx.squad],
         reachableIds: [...ctx.squad, ...fof],
         verifiedWoman: ctx.verified && ctx.gender === 'woman',
+        verifiedMan: ctx.verified && ctx.gender === 'man',
       },
       area,
       filters,

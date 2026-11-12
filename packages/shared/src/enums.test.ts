@@ -9,6 +9,7 @@ describe('enums', () => {
       'friends_of_friends',
       'invite_only',
       'women_only',
+      'men_only',
       'balanced',
     ]);
     expect(RsvpStatus.options).toContain('checked_in');

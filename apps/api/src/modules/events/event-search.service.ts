@@ -11,6 +11,7 @@ export interface CandidateViewer {
   reachableIds: string[];
   squadIds: string[];
   verifiedWoman: boolean;
+  verifiedMan: boolean;
 }
 
 export interface CandidateFilters {
@@ -87,6 +88,7 @@ export class EventSearchService {
       sql`(
         e.visibility IN ('public','balanced')
         OR (e.visibility = 'women_only' AND ${viewer.verifiedWoman})
+        OR (e.visibility = 'men_only' AND ${viewer.verifiedMan})
         OR EXISTS (SELECT 1 FROM event_invites i WHERE i.event_id = e.id AND i.invitee_user_id = ${me})
         OR (e.visibility = 'friends_of_friends' AND EXISTS (
           SELECT 1 FROM event_hosts h WHERE h.event_id = e.id AND h.user_id = ANY(${uuidArrayLiteral(viewer.reachableIds)}::uuid[])))
