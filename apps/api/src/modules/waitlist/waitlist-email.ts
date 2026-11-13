@@ -1,11 +1,6 @@
 import { resources, type SupportedLanguage } from '@touchgrass/shared';
 import type { EmailMessage } from '../../adapters/email/email.port.js';
-
-const escapeHtml = (s: string): string =>
-  s.replace(
-    /[&<>"']/g,
-    (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c] ?? c,
-  );
+import { brandedEmail } from '../../common/email/branded.js';
 
 const fill = (template: string, vars: Record<string, string>): string =>
   template.replace(/\{\{(\w+)\}\}/g, (_, k: string) => vars[k] ?? '');
@@ -20,23 +15,24 @@ export function waitlistInviteEmail(input: {
   language: SupportedLanguage;
 }): EmailMessage {
   const t = resources[input.language].landing.inviteEmail;
-  const lines = [
-    fill(t.greeting, { name: input.name }),
-    t.body,
-    input.code,
-    fill(t.steps, { days: String(input.validDays) }),
-    fill(t.site, { url: input.siteUrl }),
-    t.signoff,
-    resources[input.language].brand.name,
-  ];
-  const [greeting, body, code, steps, site, signoff, brand] = lines.map(escapeHtml);
-  const html = `<!doctype html><html lang="${input.language}"><body style="font-family:sans-serif;color:#111">
-<p>${greeting ?? ''}</p>
-<p>${body ?? ''}</p>
-<p style="font-family:monospace;font-size:24px;font-weight:700;letter-spacing:2px">${code ?? ''}</p>
-<p>${steps ?? ''}</p>
-<p>${site ?? ''}</p>
-<p>${signoff ?? ''}<br>${brand ?? ''}</p>
-</body></html>`;
-  return { to: input.to, subject: t.subject, text: lines.join('\n\n'), html };
+  const brand = resources[input.language].brand.name;
+  const greeting = fill(t.greeting, { name: input.name });
+  const steps = fill(t.steps, { days: String(input.validDays) });
+  const site = fill(t.site, { url: input.siteUrl });
+  const html = brandedEmail({
+    language: input.language,
+    siteUrl: input.siteUrl,
+    preheader: `${t.body} ${input.code}`,
+    blocks: [
+      { kind: 'heading', text: greeting },
+      { kind: 'text', text: t.body },
+      { kind: 'code', text: input.code, label: t.codeLabel },
+      { kind: 'text', text: steps },
+      { kind: 'button', text: t.cta, href: input.siteUrl },
+      { kind: 'text', text: `${t.signoff} ${brand}`, muted: true },
+    ],
+    footer: t.footer,
+  });
+  const text = [greeting, t.body, input.code, steps, site, t.signoff, brand].join('\n\n');
+  return { to: input.to, subject: t.subject, text, html };
 }

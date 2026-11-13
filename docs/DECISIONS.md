@@ -787,3 +787,7 @@ The Telugu was rewritten throughout for meaning rather than word for word: infor
 ## D-186 Every admin form answers
 
 Admin forms used to throw on any refusal from the API, which left an error page with no reason. Every form action now runs inside `guarded()` (`lib/admin-action.ts`): on success it comes back to the same page with "Saved", on a refusal with the API's own reason (or the field problems for invalid input), shown by `AdminNotice` at the top of the console; redirects the work itself makes still happen. Team takes a phone number (any common way of writing an Indian number) or a user ID, and says plainly when nobody has signed up with that number yet.
+
+## D-187 Branded emails
+
+Emails use one layout (`common/email/branded.ts`): a forest header with the logo (served by the website at `/email-logo.png`) and the tagline, a white card with the content, the invite code in a lime-on-forest box, a lime button, and a footer saying why the person got it. Tables and inline styles only, so Gmail, Outlook and phone mail apps show it the same; the plain-text part is still sent. The waitlist invite and the payment receipt use it; any new email should too.

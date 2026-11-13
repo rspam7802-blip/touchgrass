@@ -2207,6 +2207,10 @@ export const en = {
         'Get the TouchGrass app, sign in with your phone number and enter the code when asked. It works once and is valid for {{days}} days.',
       site: 'More about TouchGrass: {{url}}',
       signoff: 'See you out there,',
+      codeLabel: 'Your invite code',
+      cta: 'Get TouchGrass',
+      footer:
+        'TouchGrass helps you meet people in real life, starting in Hyderabad. You got this because you asked to join on our website.',
     },
   },
   a11y: {

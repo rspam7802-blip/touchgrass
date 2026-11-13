@@ -1,5 +1,7 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { eq, isNull, and } from 'drizzle-orm';
+import { ENV } from '../../config/config.module.js';
+import type { Env } from '../../config/env.js';
 import { EmailSender } from '../../adapters/email/email.port.js';
 import { DB, type Database } from '../../infra/database/database.module.js';
 import { payments } from '../../infra/database/schema/index.js';
@@ -26,6 +28,7 @@ export class PaymentsHandlers {
     private readonly refunds: RefundsService,
     private readonly users: UsersService,
     private readonly email: EmailSender,
+    @Inject(ENV) private readonly env: Env,
   ) {}
 
   registerOn(bus: DomainEventBus): void {
@@ -71,7 +74,9 @@ export class PaymentsHandlers {
       .returning({ id: payments.id });
     if (!claimed) return false;
     try {
-      await this.email.send(receiptEmail(user.receiptEmail, receipt, user.language));
+      await this.email.send(
+        receiptEmail(user.receiptEmail, receipt, user.language, this.env.WEB_PUBLIC_URL),
+      );
       return true;
     } catch (err) {
       // Release the claim so the outbox retry sends it.

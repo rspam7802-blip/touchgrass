@@ -1,19 +1,19 @@
 import { formatPaise, type Receipt, resources, type SupportedLanguage } from '@touchgrass/shared';
 import type { EmailMessage } from '../../adapters/email/email.port.js';
+import { brandedEmail } from '../../common/email/branded.js';
 
 const LOCALE: Record<SupportedLanguage, string> = { en: 'en-IN', te: 'te-IN', hi: 'hi-IN' };
-
-const escapeHtml = (s: string): string =>
-  s.replace(
-    /[&<>"']/g,
-    (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c] ?? c,
-  );
 
 const fill = (template: string, vars: Record<string, string>): string =>
   template.replace(/\{\{(\w+)\}\}/g, (_, k: string) => vars[k] ?? '');
 
-/** Receipt email (F-PAY-05) in the buyer's language: plain text plus a minimal, accessible HTML table. */
-export function receiptEmail(to: string, r: Receipt, language: SupportedLanguage): EmailMessage {
+/** Receipt email (F-PAY-05) in the buyer's language: plain text plus the branded HTML layout (D-187). */
+export function receiptEmail(
+  to: string,
+  r: Receipt,
+  language: SupportedLanguage,
+  siteUrl: string,
+): EmailMessage {
   const t = resources[language].payments;
   const money = (p: number): string => formatPaise(p, language);
   const when = new Intl.DateTimeFormat(LOCALE[language], {
@@ -40,15 +40,16 @@ export function receiptEmail(to: string, r: Receipt, language: SupportedLanguage
     '',
     ...rows.map(([a, b]) => (b ? `${a}: ${b}` : a)),
   ].join('\n');
-  const html = `<!doctype html><html lang="${language}"><body style="font-family:sans-serif;color:#111">
-<h1 style="font-size:20px">${escapeHtml(title)}</h1>
-<p>${escapeHtml(when.format(new Date(r.issuedAt)))}</p>
-<table role="presentation" style="border-collapse:collapse">${rows
-    .map(
-      ([a, b]) =>
-        `<tr><th scope="row" style="text-align:left;padding:4px 12px 4px 0;font-weight:600">${escapeHtml(a)}</th><td style="padding:4px 0">${escapeHtml(b)}</td></tr>`,
-    )
-    .join('')}</table>
-</body></html>`;
+  const html = brandedEmail({
+    language,
+    siteUrl,
+    preheader: title,
+    blocks: [
+      { kind: 'heading', text: title },
+      { kind: 'text', text: when.format(new Date(r.issuedAt)), muted: true },
+      { kind: 'rows', rows },
+    ],
+    footer: resources[language].landing.inviteEmail.footer,
+  });
   return { to, subject: `TouchGrass · ${title}`, text, html };
 }

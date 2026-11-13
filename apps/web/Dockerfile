@@ -10,7 +10,8 @@ RUN pnpm install --frozen-lockfile --filter @touchgrass/web... \
  && pnpm --filter @touchgrass/shared build \
  && pnpm --filter @touchgrass/web build \
  && pnpm --filter @touchgrass/web deploy --prod --legacy /out \
- && cp -r apps/web/.next /out/.next
+ && cp -r apps/web/.next /out/.next \
+ && mkdir -p /out/public && cp -r apps/web/public/. /out/public/
 
 FROM public.ecr.aws/docker/library/node:22.21.1-bookworm-slim
 ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1

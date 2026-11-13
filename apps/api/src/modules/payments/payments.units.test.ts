@@ -184,7 +184,7 @@ describe('receipt email (F-PAY-05)', () => {
     sellerGstin: '36ABCDE1234F1Z5',
   };
   it('renders text and escaped HTML in the buyer’s language', () => {
-    const en = receiptEmail('p@example.com', r, 'en');
+    const en = receiptEmail('p@example.com', r, 'en', 'https://touchgrass.co.in');
     expect(en.subject).toBe('TouchGrass · Receipt TG-2026-000042');
     expect(en.text).toContain('Refunded: − ₹250');
     expect(en.text).toContain('UPI');
@@ -195,6 +195,7 @@ describe('receipt email (F-PAY-05)', () => {
       'p@example.com',
       { ...r, method: null, sellerGstin: null, netPaidPaise: 50_000 },
       'te',
+      'https://touchgrass.co.in',
     );
     expect(te.html).toContain('lang="te"');
     expect(te.text).not.toContain('UPI');

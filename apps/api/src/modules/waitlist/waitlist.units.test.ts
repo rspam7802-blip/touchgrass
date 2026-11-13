@@ -66,5 +66,9 @@ describe('waitlist invite email', () => {
     expect(mail.html).toContain('&lt;Asha&gt;');
     expect(mail.html).not.toContain('<Asha>');
     expect(mail.html).toContain('lang="hi"');
+    // Branded layout (D-187): logo from the website, the code in its own box, a button to the site.
+    expect(mail.html).toContain('https://touchgrass.co.in/email-logo.png');
+    expect(mail.html).toContain('ABCD-EFGH');
+    expect(mail.html).toContain('href="https://touchgrass.co.in"');
   });
 });
