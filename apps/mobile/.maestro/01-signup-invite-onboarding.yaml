@@ -31,18 +31,29 @@ env:
 - inputText: Maestro Tester
 - tapOn: 'Continue'
 - assertVisible: 'Add your photos'
-- tapOn: 'Add photo'
-- tapOn:
-    text: '.*'
-    index: 0
-    optional: true
-- tapOn:
-    text: 'Crop|Done|Choose'
-    optional: true
+# Three photos are needed to continue (D-173): the same test picture three times.
+- repeat:
+    times: 3
+    commands:
+      - tapOn: 'Add photo'
+      - tapOn:
+          text: '.*'
+          index: 0
+          optional: true
+      - tapOn:
+          text: 'Crop|Done|Choose'
+          optional: true
+      - extendedWaitUntil:
+          visible:
+            id: onboarding-primary
+          timeout: 30000
 - extendedWaitUntil:
     visible:
-      id: remove-photo-1
+      id: remove-photo-3
     timeout: 30000
+- tapOn: 'Continue'
+# The selfie step (D-181). CI switches the requirement off (a camera can't be scripted), so it steps aside.
+- assertVisible: "Show it's really you"
 - tapOn: 'Continue'
 - tapOn:
     id: dob-day

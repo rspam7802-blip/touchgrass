@@ -22,9 +22,13 @@ name: Plot a plan and manage it
 - tapOn:
     id: plot-title
 - inputText: 'Maestro chai walk'
+# Category is a field that opens a searchable list (D-189).
 - tapOn:
-    id: 'plot-category-.*'
-    index: 0
+    id: plot-category
+- tapOn:
+    id: plot-category-search
+- inputText: 'Chai'
+- tapOn: '.*Chai runs.*'
 - tapOn:
     id: plot-place-search
 - inputText: 'mall'
