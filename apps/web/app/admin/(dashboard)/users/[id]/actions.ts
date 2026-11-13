@@ -27,7 +27,7 @@ async function call(userId: string, path: string, body: unknown): Promise<void> 
     error = err.code;
   }
   revalidatePath(`/admin/users/${userId}`);
-  redirect(error ? `/admin/users/${userId}?error=${error}` : `/admin/users/${userId}`);
+  redirect(error ? `/admin/users/${userId}?error=${error}` : `/admin/users/${userId}?saved=1`);
 }
 
 const Sanction = z.object({

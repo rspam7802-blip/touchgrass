@@ -802,3 +802,7 @@ The website has an About page (`/about`, linked from the home page header and ev
 - **"Who can come" on Plot** is a vertical list of all seven options instead of a sideways row.
 - **Start a vote** has a title, a one-line explanation and sections (the idea, who votes, when voting closes).
 - **Chat:** the message box stays above the keyboard (`KeyboardAvoidingView`, offset by the header), and is a rounded input between a round photo button and a round send button, instead of two text buttons and a labelled field that wrapped onto several lines.
+
+## D-190 Live smoke tests
+
+`apps/web/e2e-live` is a read-only Playwright suite against the real site (`playwright.live.config.ts`, `LIVE_URL` to point it elsewhere). It checks that the home page loads in all three languages, About lists both founders, every legal page and the admin sign-in page load without script errors, an unknown share link is a clean 404, the app-link files and the email logo are served, the API's health checks pass, and photo storage answers. The `Live smoke` workflow runs it every three hours, eight minutes after each push to `main` (time for Railway to deploy), and on demand, and keeps the HTML report for 14 days. It never signs in or changes data. The local suite gains `buttons-admin.spec.ts` for the admin buttons nothing else exercised (adding a neighbourhood and a refused duplicate, template wording and reset, verifying a user, saving a partner venue, dismissing the notice).
