@@ -470,7 +470,6 @@ export const hi: Translation = {
       queueWaitlist: 'वेटलिस्ट, अभी इनवाइट नहीं हुए',
       lastDays: 'पिछले {{count}} दिन',
       allNumbers: 'सारे आँकड़े',
-      allSections: 'सारे सेक्शन',
       groups: {
         overview: 'ओवरव्यू',
         people: 'लोग',

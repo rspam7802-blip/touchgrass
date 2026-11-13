@@ -480,7 +480,6 @@ export const te: Translation = {
       queueWaitlist: 'వెయిట్‌లిస్ట్, ఇంకా ఇన్వైట్ చేయనివాళ్ళు',
       lastDays: 'గత {{count}} రోజులు',
       allNumbers: 'అన్ని నంబర్లు',
-      allSections: 'అన్ని సెక్షన్లు',
       groups: {
         overview: 'ఓవర్‌వ్యూ',
         people: 'మనుషులు',

@@ -471,7 +471,6 @@ export const en = {
       queueWaitlist: 'Waitlist, not invited yet',
       lastDays: 'Last {{count}} days',
       allNumbers: 'All numbers',
-      allSections: 'All sections',
       groups: {
         overview: 'Overview',
         people: 'People',

@@ -10,7 +10,7 @@ import {
 } from '@touchgrass/shared';
 import Link from 'next/link';
 import type { z } from 'zod';
-import { canOpen, navFor } from '../../../lib/admin-nav';
+import { canOpen } from '../../../lib/admin-nav';
 import { adminApi } from '../../../lib/admin-session';
 
 const t = resources.en.admin;
@@ -42,7 +42,7 @@ export default async function AdminHome() {
     canOpen('hostApplications'),
     canOpen('waitlist'),
   ]);
-  const [me, overview, verifications, reports, hosts, waitlist, nav] = await Promise.all([
+  const [me, overview, verifications, reports, hosts, waitlist] = await Promise.all([
     adminApi('/v1/me', MeResponse),
     canAnalytics
       ? adminApi(`/v1/admin/analytics/overview?days=${String(DAYS)}`, AnalyticsOverview)
@@ -63,7 +63,6 @@ export default async function AdminHome() {
       `/v1/admin/waitlist?status=waiting&limit=${String(QUEUE_PAGE)}`,
       paginated(LaunchWaitlistEntry),
     ),
-    navFor(),
   ]);
   const queues = [
     { label: s.queueVerifications, count: verifications, href: '/admin/verifications' },
@@ -87,7 +86,6 @@ export default async function AdminHome() {
       ]
     : [];
   const peak = overview ? Math.max(1, ...overview.daily.map((d) => d.pulledUp + d.signedUp)) : 1;
-  const sections = nav.filter((n) => n.href !== '/admin');
 
   return (
     <>
@@ -168,21 +166,6 @@ export default async function AdminHome() {
         </section>
       ) : null}
 
-      <section aria-labelledby="sections" className="flex flex-col gap-3">
-        <h2 id="sections">{s.allSections}</h2>
-        <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {sections.map(({ href, label }) => (
-            <li key={href}>
-              <Link
-                href={href}
-                className="admin-card flex min-h-14 items-center font-bold hover:border-primary"
-              >
-                {label}
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </section>
     </>
   );
 }
