@@ -251,6 +251,16 @@ export class InvitesService {
     return rows.map((r) => ({ userId: r.userId, redeemedAt: r.at.toISOString() }));
   }
 
+  /** When this person redeemed the invite code that let them in, if they used one. */
+  async redeemedAt(userId: string): Promise<Date | null> {
+    const [row] = await this.db
+      .select({ at: inviteRedemptions.createdAt })
+      .from(inviteRedemptions)
+      .where(eq(inviteRedemptions.userId, userId))
+      .limit(1);
+    return row?.at ?? null;
+  }
+
   private async insertUnique(
     tx: DbOrTx,
     values: Omit<typeof inviteCodes.$inferInsert, 'id' | 'code'>,

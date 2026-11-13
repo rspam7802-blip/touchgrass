@@ -4,6 +4,8 @@ import {
   type AdminEventPage,
   type AdminEventQuery,
   type AdminEventRow,
+  type CustomerPlanRsvp,
+  type CustomerPlanStats,
   decodeCursor,
   encodeCursor,
   type FeatureEventBody,
@@ -27,7 +29,7 @@ import { AuditService } from '../../common/audit/audit.service.js';
 import { type CityScope, inScope } from '../../common/auth/admin-scope.js';
 import { AppError } from '../../common/errors/app-error.js';
 import { DB, type Database } from '../../infra/database/database.module.js';
-import { events } from '../../infra/database/schema/index.js';
+import { eventHosts, events, rsvps } from '../../infra/database/schema/index.js';
 import { CitiesService } from '../cities/cities.service.js';
 import { ProfilesService } from '../profiles/profiles.service.js';
 import { EventStore } from './event-store.service.js';
@@ -228,4 +230,105 @@ export class AdminEventsService {
       );
     return new Map(rows.flatMap((r) => (r.rank === null ? [] : [[r.id, r.rank] as const])));
   }
+
+  /**
+   * Every plan one person pulled up to or hosted, newest first, with their counts (Customer 360, D-192). Plus-one
+   * guests are their inviter's seats, so they are left out. No location is read.
+   */
+  async participation(
+    userId: string,
+    now: Date = new Date(),
+  ): Promise<{ plans: ParticipationRow[]; stats: CustomerPlanStats }> {
+    const cols = {
+      id: events.id,
+      title: events.title,
+      startsAt: events.startsAt,
+      endsAt: events.endsAt,
+      status: events.status,
+      cityId: events.cityId,
+    };
+    const [guestRows, hostRows] = await Promise.all([
+      this.db
+        .select({ e: cols, r: rsvps })
+        .from(rsvps)
+        .innerJoin(events, eq(events.id, rsvps.eventId))
+        .where(and(eq(rsvps.userId, userId), isNull(rsvps.plusOneOf))),
+      this.db
+        .select({ e: cols, role: eventHosts.role })
+        .from(eventHosts)
+        .innerJoin(events, eq(events.id, eventHosts.eventId))
+        .where(eq(eventHosts.userId, userId)),
+    ]);
+    const byId = new Map<string, ParticipationRow>();
+    for (const { e, r } of guestRows) {
+      const ended = e.endsAt <= now && e.status !== 'cancelled' && e.status !== 'draft';
+      byId.set(e.id, {
+        eventId: e.id,
+        title: e.title,
+        startsAt: e.startsAt,
+        endsAt: e.endsAt,
+        eventStatus: e.status,
+        cityId: e.cityId,
+        role: 'guest',
+        rsvp: r.status,
+        pulledUpAt: r.createdAt,
+        checkedInAt: r.checkedInAt,
+        cancelledAt: r.cancelledAt,
+        lateCancel: r.lateCancel,
+        noShow: ended && r.status === 'going',
+      });
+    }
+    for (const { e, role } of hostRows) {
+      const guest = byId.get(e.id);
+      byId.set(e.id, {
+        ...(guest ?? {
+          eventId: e.id,
+          title: e.title,
+          startsAt: e.startsAt,
+          endsAt: e.endsAt,
+          eventStatus: e.status,
+          cityId: e.cityId,
+          rsvp: null,
+          pulledUpAt: null,
+          checkedInAt: null,
+          cancelledAt: null,
+          lateCancel: false,
+        }),
+        role,
+        noShow: false,
+      });
+    }
+    const plans = [...byId.values()].sort((a, b) => b.startsAt.getTime() - a.startsAt.getTime());
+    const guest = plans.filter((p) => p.role === 'guest');
+    const live = (p: ParticipationRow) =>
+      p.eventStatus !== 'cancelled' && p.eventStatus !== 'draft';
+    return {
+      plans,
+      stats: {
+        pulledUp: guest.filter((p) => p.rsvp === 'going' || p.rsvp === 'checked_in').length,
+        checkedIn: guest.filter((p) => p.rsvp === 'checked_in').length,
+        upcoming: plans.filter((p) => live(p) && p.endsAt > now && p.rsvp !== 'cancelled').length,
+        cancelled: guest.filter((p) => p.rsvp === 'cancelled').length,
+        lateCancels: guest.filter((p) => p.lateCancel).length,
+        noShows: guest.filter((p) => p.noShow).length,
+        hosted: plans.filter((p) => p.role !== 'guest' && p.eventStatus !== 'draft').length,
+      },
+    };
+  }
+}
+
+export interface ParticipationRow {
+  eventId: string;
+  title: string;
+  startsAt: Date;
+  endsAt: Date;
+  eventStatus: AdminEventRow['status'];
+  cityId: string;
+  role: 'host' | 'co_host' | 'welcome_host' | 'guest';
+  rsvp: CustomerPlanRsvp | null;
+  pulledUpAt: Date | null;
+  checkedInAt: Date | null;
+  cancelledAt: Date | null;
+  lateCancel: boolean;
+  noShow: boolean;
 }

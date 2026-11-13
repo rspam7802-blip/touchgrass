@@ -38,3 +38,4 @@ export * from './schemas/notifications';
 export * from './schemas/stories';
 export * from './schemas/comments';
 export * from './schemas/waitlist';
+export * from './schemas/customer';

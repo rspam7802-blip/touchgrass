@@ -122,6 +122,15 @@ export class ReportsService {
     return row?.n ?? 0;
   }
 
+  /** How many reports one person has filed (Customer 360, D-192). */
+  async countBy(reporterId: string): Promise<number> {
+    const [row] = await this.db
+      .select({ n: sql<number>`count(*)::int` })
+      .from(reports)
+      .where(eq(reports.reporterId, reporterId));
+    return row?.n ?? 0;
+  }
+
   async exportFor(userId: string): Promise<unknown[]> {
     const rows = await this.db.select().from(reports).where(eq(reports.reporterId, userId));
     return rows.map((r) => ({

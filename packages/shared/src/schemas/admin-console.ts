@@ -12,6 +12,8 @@ import { LocalizedName } from './catalog';
 export const ADMIN_SECTIONS = {
   dashboard: ['admin', 'moderator', 'city_curator', 'support'],
   users: ['admin', 'moderator', 'support'],
+  /** Customer 360 (D-192): support gets the lighter view, see `customerAccessFor`. */
+  customers: ['admin', 'support'],
   verifications: ['admin', 'moderator'],
   moderation: ['admin', 'moderator', 'support'],
   events: ['admin', 'city_curator'],

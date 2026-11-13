@@ -28,6 +28,7 @@ export default async function UserDetailPage({
   if (!z.uuid().safeParse(id).success) notFound();
   const u = await adminApi(`/v1/admin/users/${id}`, AdminUserDetail, {}, `/admin/users/${id}`);
   const error = ErrorCode.safeParse(sp.error);
+  const show360 = await canOpen('customers');
   const now = Date.now();
   return (
     <>
@@ -35,6 +36,15 @@ export default async function UserDetailPage({
         ← {t.users}
       </Link>
       <h1 className="text-3xl font-extrabold">{u.displayName ?? u.id}</h1>
+      {show360 ? (
+        <Link
+          href={`/admin/customers/${u.id}`}
+          className="flex min-h-11 items-center self-start rounded-full bg-primary px-6 font-bold text-on-primary"
+          data-testid="open-customer-360"
+        >
+          {t.customer.open}
+        </Link>
+      ) : null}
       {error.success ? (
         <p role="alert" className="font-semibold text-[var(--tg-danger)]">
           {error.data === 'FORBIDDEN'

@@ -465,6 +465,15 @@ export class PayoutsService {
   }
 
   /** Account data: KYC details are the provider's; we keep only what payouts need, anonymised on erasure. */
+  /** Net paid out to one host so far (Customer 360, D-192). */
+  async earnedBy(hostId: string): Promise<number> {
+    const [row] = await this.db
+      .select({ n: sql<number>`coalesce(sum(${payouts.netPaise}), 0)::int` })
+      .from(payouts)
+      .where(and(eq(payouts.hostUserId, hostId), eq(payouts.status, 'paid')));
+    return row?.n ?? 0;
+  }
+
   async exportFor(userId: string): Promise<Record<string, unknown>> {
     const rows = await this.db.select().from(payouts).where(eq(payouts.hostUserId, userId));
     return { hostAccount: await this.account(userId), payouts: await this.views(rows) };

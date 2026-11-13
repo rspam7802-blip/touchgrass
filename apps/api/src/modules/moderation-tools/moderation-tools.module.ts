@@ -26,7 +26,7 @@ import { SanctionsService } from './sanctions.service.js';
   ],
   controllers: [ModerationToolsController],
   providers: [ModerationToolsService, SanctionsService, AdminUsersService],
-  exports: [SanctionsService],
+  exports: [SanctionsService, AdminUsersService],
 })
 export class ModerationToolsModule implements OnModuleInit {
   constructor(

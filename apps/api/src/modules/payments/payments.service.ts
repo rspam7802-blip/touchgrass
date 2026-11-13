@@ -597,6 +597,40 @@ export class PaymentsService {
 
   // ---------- account data (DPDP) ----------
 
+  /** What one person has paid, per plan and in total (Customer 360, D-192). */
+  async spendOf(userId: string): Promise<{
+    paidPaise: number;
+    refundedPaise: number;
+    payments: number;
+    lastPaidAt: Date | null;
+    byEvent: Map<string, number>;
+  }> {
+    const rows = await this.db
+      .select({
+        eventId: payments.eventId,
+        amount: payments.amountPaise,
+        refunded: payments.refundedPaise,
+        at: payments.capturedAt,
+      })
+      .from(payments)
+      .where(
+        and(
+          eq(payments.userId, userId),
+          inArray(payments.status, ['captured', 'refunded', 'partially_refunded']),
+        ),
+      );
+    const byEvent = new Map<string, number>();
+    for (const r of rows) byEvent.set(r.eventId, (byEvent.get(r.eventId) ?? 0) + r.amount);
+    const last = rows.reduce<Date | null>((m, r) => (r.at && (!m || r.at > m) ? r.at : m), null);
+    return {
+      paidPaise: rows.reduce((n, r) => n + r.amount, 0),
+      refundedPaise: rows.reduce((n, r) => n + r.refunded, 0),
+      payments: rows.length,
+      lastPaidAt: last,
+      byEvent,
+    };
+  }
+
   async exportFor(userId: string): Promise<Record<string, unknown>> {
     const rows = await this.db.select().from(payments).where(eq(payments.userId, userId));
     return {

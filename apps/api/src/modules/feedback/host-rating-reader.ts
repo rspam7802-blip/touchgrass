@@ -1,8 +1,8 @@
 import { Inject, Injectable, Module } from '@nestjs/common';
 import { averageRating, type HostRatingSummary, LIMITS } from '@touchgrass/shared';
-import { inArray, sql } from 'drizzle-orm';
+import { eq, inArray, sql } from 'drizzle-orm';
 import { DB_REPLICA, type Database } from '../../infra/database/database.module.js';
-import { hostRatings } from '../../infra/database/schema/index.js';
+import { eventFeedback, hostRatings } from '../../infra/database/schema/index.js';
 
 /**
  * Host ratings (F-AFT-05) for profiles and discovery ranking. No module dependencies, so profiles and
@@ -30,6 +30,15 @@ export class HostRatingReader {
         count: r.n,
       });
     return out;
+  }
+
+  /** Stars one person gave each plan afterwards (Customer 360, D-192). */
+  async feedbackBy(userId: string): Promise<Map<string, number>> {
+    const rows = await this.replica
+      .select({ eventId: eventFeedback.eventId, rating: eventFeedback.rating })
+      .from(eventFeedback)
+      .where(eq(eventFeedback.userId, userId));
+    return new Map(rows.map((r) => [r.eventId, r.rating]));
   }
 }
 

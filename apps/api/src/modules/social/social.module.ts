@@ -38,7 +38,13 @@ import { SocialService } from './social.service.js';
     ActivityHandlers,
     { provide: SharedEventsReader, useExisting: EventSharedEvents },
   ],
-  exports: [ReportTargetRegistry, ActivityService, ActivityHandlers, SharedEventsReader],
+  exports: [
+    ReportTargetRegistry,
+    ReportsService,
+    ActivityService,
+    ActivityHandlers,
+    SharedEventsReader,
+  ],
 })
 export class SocialModule implements OnModuleInit {
   constructor(

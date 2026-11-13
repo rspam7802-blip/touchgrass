@@ -396,6 +396,30 @@ export class SafetyService {
 
   // ---------- account data ----------
 
+  /** SOS count and trusted-contact count only: never where they were or who the contacts are (D-192). */
+  async summaryFor(
+    userId: string,
+  ): Promise<{ sosCount: number; lastSosAt: Date | null; trustedContacts: number; sosAt: Date[] }> {
+    const [sos, contacts] = await Promise.all([
+      this.db
+        .select({ at: liveLocationShares.sosAt })
+        .from(liveLocationShares)
+        .where(and(eq(liveLocationShares.userId, userId), isNotNull(liveLocationShares.sosAt)))
+        .orderBy(desc(liveLocationShares.sosAt)),
+      this.db
+        .select({ n: sql<number>`count(*)::int` })
+        .from(trustedContacts)
+        .where(eq(trustedContacts.userId, userId)),
+    ]);
+    const sosAt = sos.flatMap((r) => (r.at ? [r.at] : []));
+    return {
+      sosCount: sosAt.length,
+      lastSosAt: sosAt[0] ?? null,
+      trustedContacts: contacts[0]?.n ?? 0,
+      sosAt,
+    };
+  }
+
   async exportFor(userId: string): Promise<Record<string, unknown>> {
     const [contacts, shares] = await Promise.all([
       this.contacts(userId),
