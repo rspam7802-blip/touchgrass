@@ -771,3 +771,7 @@ Profiles never reads verification's tables: modules register named requirements 
 Migration `0021` adds 80 Indian cities on the waitlist (centre and a rough ±0.12° box each; admins refine bounds before opening one) and 46 more interests across the existing categories, never overwriting a slug that exists. Hyderabad stays the only open city.
 
 Dozens of chips made profile setup crowded, so cities and interests now use `PickList`: one choice per row, a search box for long lists, and headings (open cities before those opening soon; interests under their category). Short single-choice lists (gender, neighbourhood, vibes) keep chips.
+
+## D-183 Search starts with suggestions
+
+The search screen used to be blank until two letters were typed. It now opens with the person's last six searches (kept on the phone only, with a Clear button) and a dozen interests to tap; the same suggestions follow a search that finds nothing. Tapping one searches at once. A search is remembered when it is submitted, picked from a suggestion, or leads to opening a plan or a person.

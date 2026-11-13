@@ -2,6 +2,7 @@ import { fireEvent, screen, waitFor } from '@testing-library/react-native';
 import type { FeedItem } from '@touchgrass/shared';
 import * as Location from 'expo-location';
 import DiscoverScreen from '../app/(app)/(tabs)/discover';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import SearchScreen from '../app/(app)/search';
 import {
   activeFilterCount,
@@ -476,5 +477,35 @@ describe('Search (F-DSC-09)', () => {
     await renderWithProviders(<SearchScreen />, { fetchFn: api.fetch });
     await fireEvent.changeText(screen.getByTestId('search-input'), 'zzz');
     expect(await screen.findByText('No results for "zzz".')).toBeOnTheScreen();
+    // A dead end still offers somewhere to go.
+    expect(screen.getByTestId('search-suggestions')).toBeOnTheScreen();
+  });
+
+  it('suggests interests before typing, remembers searches and clears them (D-183)', async () => {
+    await AsyncStorage.removeItem('search:recent');
+    api.on('GET', '/v1/discover/search', {
+      status: 200,
+      body: { events: [], people: [], venues: [] },
+    });
+    const first = await renderWithProviders(<SearchScreen />, { fetchFn: api.fetch });
+    const idea = 'Interest 0';
+    await fireEvent.press(await screen.findByTestId(`search-idea-${idea}`));
+    // Tapping a suggestion searches for it straight away.
+    await waitFor(() =>
+      expect(
+        api
+          .callsTo('GET', '/v1/discover/search')
+          .some((c) => c.url.includes(encodeURIComponent(idea))),
+      ).toBe(true),
+    );
+    expect(screen.getByTestId('search-input').props.value).toBe(idea);
+    await first.unmount();
+
+    // Next time the screen opens, that search is offered again, until it is cleared.
+    await renderWithProviders(<SearchScreen />, { fetchFn: api.fetch });
+    expect(await screen.findByTestId(`search-recent-${idea}`)).toBeOnTheScreen();
+    await fireEvent.press(screen.getByTestId('search-clear-recent'));
+    expect(screen.queryByTestId(`search-recent-${idea}`)).toBeNull();
+    expect(await AsyncStorage.getItem('search:recent')).toBeNull();
   });
 });
