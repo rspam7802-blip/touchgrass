@@ -314,6 +314,26 @@ export const te: Translation = {
     events: 'ప్లాన్లు',
   },
   admin: {
+    shell: {
+      menu: 'మెనూ',
+      welcome: 'హలో, {{name}}',
+      needsAttention: 'ఇవి చూడాలి',
+      queueVerifications: 'చూడాల్సిన సెల్ఫీలు',
+      queueReports: 'రిపోర్ట్‌లు, ఆపిన కంటెంట్',
+      queueHosts: 'హోస్ట్ అప్లికేషన్లు',
+      queueWaitlist: 'వెయిట్‌లిస్ట్, ఇంకా ఇన్వైట్ చేయనివాళ్ళు',
+      lastDays: 'గత {{count}} రోజులు',
+      allNumbers: 'అన్ని నంబర్లు',
+      allSections: 'అన్ని సెక్షన్లు',
+      groups: {
+        overview: 'ఓవర్‌వ్యూ',
+        people: 'మనుషులు',
+        plans: 'ప్లాన్‌లు, చోట్లు',
+        content: 'కంటెంట్',
+        growth: 'గ్రోత్',
+        system: 'సిస్టమ్',
+      },
+    },
     waitlist: {
       title: 'వెయిట్‌లిస్ట్',
       intro:

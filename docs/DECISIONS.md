@@ -775,3 +775,7 @@ Dozens of chips made profile setup crowded, so cities and interests now use `Pic
 ## D-183 Search starts with suggestions
 
 The search screen used to be blank until two letters were typed. It now opens with the person's last six searches (kept on the phone only, with a Clear button) and a dozen interests to tap; the same suggestions follow a search that finds nothing. Tapping one searches at once. A search is remembered when it is submitted, picked from a suggestion, or leads to opening a plan or a person.
+
+## D-184 A console that looks the part
+
+The admin console gets a proper shell: a sidebar with its sections grouped under headings (Overview, People, Plans and places, Content, Growth, System), the current section highlighted, and the menu folding under a button on phones. The home page is now an overview: queue counts that need someone today (selfies to review, reports and held content, host applications, waitlist not yet invited), the last 30 days' numbers with a daily chart, then every section the person can open. Each block appears only for roles that can open its section. Shared styles under `.admin-main` give every existing page the same cards, tables and form controls without rewriting them one by one.

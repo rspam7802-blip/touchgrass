@@ -39,3 +39,71 @@ body {
     transition-duration: 0.01ms !important;
   }
 }
+
+/*
+ * Admin console (D-184). One look for every section without restyling each page: headings, cards, tables,
+ * form controls and status notes inside `.admin-main`. Unlayered on purpose, so it wins over the utility
+ * classes the pages already carry.
+ */
+.admin-main h1 {
+  font-size: 1.75rem;
+  line-height: 2.25rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+.admin-main h2 {
+  font-size: 1.125rem;
+  line-height: 1.75rem;
+  font-weight: 700;
+}
+.admin-card {
+  border: 1px solid var(--tg-border);
+  border-radius: 14px;
+  background: var(--tg-surface);
+  padding: 1rem 1.125rem;
+}
+.admin-main table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.9375rem;
+  background: var(--tg-surface);
+  border: 1px solid var(--tg-border);
+  border-radius: 14px;
+  overflow: hidden;
+}
+.admin-main thead th {
+  background: var(--tg-surface-alt);
+  color: var(--tg-text-muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.admin-main th,
+.admin-main td {
+  padding: 0.75rem 1rem;
+  vertical-align: middle;
+  text-align: left;
+}
+.admin-main tr {
+  border: 0;
+}
+.admin-main tbody tr > * {
+  border-top: 1px solid var(--tg-border);
+}
+.admin-main tbody tr:hover > * {
+  background: var(--tg-surface-alt);
+}
+.admin-main input:not([type='checkbox']):not([type='radio']),
+.admin-main select,
+.admin-main textarea {
+  border-width: 1px;
+  border-radius: 10px;
+}
+.admin-main [role='alert'],
+.admin-main [role='status'] {
+  border-width: 1px;
+  border-radius: 14px;
+}

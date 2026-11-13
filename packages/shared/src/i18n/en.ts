@@ -314,6 +314,26 @@ export const en = {
     events: 'Plans',
   },
   admin: {
+    shell: {
+      menu: 'Menu',
+      welcome: 'Hello, {{name}}',
+      needsAttention: 'Needs attention',
+      queueVerifications: 'Selfies to review',
+      queueReports: 'Reports and held content',
+      queueHosts: 'Host applications',
+      queueWaitlist: 'Waitlist, not invited yet',
+      lastDays: 'Last {{count}} days',
+      allNumbers: 'All numbers',
+      allSections: 'All sections',
+      groups: {
+        overview: 'Overview',
+        people: 'People',
+        plans: 'Plans and places',
+        content: 'Content',
+        growth: 'Growth',
+        system: 'System',
+      },
+    },
     waitlist: {
       title: 'Waitlist',
       intro:

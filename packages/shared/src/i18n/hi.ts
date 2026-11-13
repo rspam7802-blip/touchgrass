@@ -313,6 +313,26 @@ export const hi: Translation = {
     events: 'प्लान',
   },
   admin: {
+    shell: {
+      menu: 'मेन्यू',
+      welcome: 'नमस्ते, {{name}}',
+      needsAttention: 'इन पर ध्यान दो',
+      queueVerifications: 'जाँचने वाली सेल्फ़ी',
+      queueReports: 'रिपोर्ट और रोका गया कंटेंट',
+      queueHosts: 'होस्ट आवेदन',
+      queueWaitlist: 'वेटलिस्ट, अभी इनवाइट नहीं हुए',
+      lastDays: 'पिछले {{count}} दिन',
+      allNumbers: 'सारे आँकड़े',
+      allSections: 'सारे सेक्शन',
+      groups: {
+        overview: 'ओवरव्यू',
+        people: 'लोग',
+        plans: 'प्लान और जगहें',
+        content: 'कंटेंट',
+        growth: 'ग्रोथ',
+        system: 'सिस्टम',
+      },
+    },
     waitlist: {
       title: 'वेटलिस्ट',
       intro:

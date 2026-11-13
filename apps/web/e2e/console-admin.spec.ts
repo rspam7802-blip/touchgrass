@@ -33,7 +33,8 @@ test('cities: seeded cities, the waitlist and asked-for places (F-GRW-03)', asyn
   await expect(page.getByTestId('city-visakhapatnam')).toContainText('Waitlist');
   await expect(page.getByTestId('city-visakhapatnam')).toContainText(/\d+ waiting/);
   await expect(page.getByRole('heading', { name: 'Asked for, not a city yet' })).toBeVisible();
-  await expect(page.getByText(/^Warangal/)).toBeVisible();
+  // Warangal is now a listed city too (D-182); the asked-for entry is the last mention.
+  await expect(page.getByText(/^Warangal/).last()).toBeVisible();
   await axeClean(page);
 });
 
