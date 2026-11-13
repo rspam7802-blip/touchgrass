@@ -1,10 +1,11 @@
 import { LIMITS } from '@touchgrass/shared';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ChipGroup } from '../../components/ChipGroup';
+import { interestOptions } from '../../components/interest-options';
+import { PickList } from '../../components/PickList';
 import { OnboardingStep } from '../../components/OnboardingStep';
 import { ErrorState, LoadingState, Text } from '../../components/ui';
-import { localized, useInterests } from '../../src/features/catalog/api';
+import { useInterests } from '../../src/features/catalog/api';
 import { useMe, useSetInterests } from '../../src/features/me/api';
 import { useStepNav } from '../../src/features/me/use-step-nav';
 import { errorMessage } from '../../src/lib/errors';
@@ -28,14 +29,12 @@ export default function InterestsStep() {
     );
   else {
     content = (
-      <ChipGroup
+      <PickList
         label={t('onboarding.interestsTitle')}
+        searchLabel={t('onboarding.interestsSearch')}
         mode="multi"
         max={LIMITS.profile.maxInterests}
-        options={interests.data.items.map((i) => ({
-          id: i.id,
-          label: localized(i.name, i18n.language),
-        }))}
+        options={interestOptions(interests.data.items, t, i18n.language)}
         selected={selected}
         onChange={setSelected}
         testIDPrefix="interest"

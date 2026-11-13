@@ -1,7 +1,7 @@
 import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ChipGroup } from '../../components/ChipGroup';
+import { PickList } from '../../components/PickList';
 import { OnboardingStep } from '../../components/OnboardingStep';
 import { Button, ErrorState, LoadingState, TextField } from '../../components/ui';
 import { useCities, useCityWaitlist, useJoinCityWaitlist } from '../../src/features/catalog/api';
@@ -51,14 +51,21 @@ export default function CityStep() {
       />
     );
   else {
-    const options = cities.data.items.map((c) => ({
+    // Open cities first, then the ones still to come, each in alphabetical order.
+    const byName = [...cities.data.items].sort((a, b) => a.name.localeCompare(b.name));
+    const options = [
+      ...byName.filter((c) => c.launchStatus !== 'waitlist'),
+      ...byName.filter((c) => c.launchStatus === 'waitlist'),
+    ].map((c) => ({
       id: c.id,
-      label: c.launchStatus === 'waitlist' ? `${c.name} · ${t('onboarding.cityWaitlist')}` : c.name,
+      label: c.name,
+      group: c.launchStatus === 'waitlist' ? t('onboarding.cityComing') : t('onboarding.cityOpen'),
     }));
     content = (
       <>
-        <ChipGroup
+        <PickList
           label={t('onboarding.cityTitle')}
+          searchLabel={t('onboarding.citySearch')}
           mode="single"
           options={options}
           selected={current}

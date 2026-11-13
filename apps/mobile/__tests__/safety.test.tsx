@@ -578,7 +578,10 @@ describe('getting verified (F-SAF-01)', () => {
   it('profile setup: the selfie step steps aside when the team has switched it off', async () => {
     api.on('GET', '/v1/verification', { status: 200, body: verification() });
     await renderWithProviders(<VerifyStep />, { fetchFn: api.fetch });
-    await fireEvent.press(await screen.findByRole('button', { name: 'Continue' }));
+    // Wait for the step to load: until then its button is disabled.
+    await screen.findByText(/Only our review team sees your selfie/);
+    await waitFor(() => expect(screen.getByTestId('onboarding-primary')).not.toBeDisabled());
+    await fireEvent.press(screen.getByRole('button', { name: 'Continue' }));
     expect(mockRouter.push).toHaveBeenCalledWith('/birthday');
     expect(api.callsTo('POST', '/v1/verification/challenge')).toHaveLength(0);
   });

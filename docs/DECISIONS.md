@@ -765,3 +765,9 @@ People going to a plan and its hosts get an SOS button on the plan screen while 
 After adding photos, a new member copies a random pose in a selfie (the existing F-SAF-01 flow) before they can finish setup. Sending it is enough: the account goes live while a reviewer compares the selfie with the photos, and the verified badge (and what depends on it: hosting, women-only and men-only plans) follows on approval. A rejected selfie before setup is finished must be retaken; members who finished setup earlier are not sent back.
 
 Profiles never reads verification's tables: modules register named requirements with `OnboardingChecks` (profiles), and `onboardingState.verification` is true when the check passes. The check is on while the `require_verification_to_join` flag is (default on), so the team can switch the step off from the admin console if reviews back up; the app's step then steps aside. The verification routes are `@AllowOnboarding()`.
+
+## D-182 Every Indian city in the list, more interests, and lists instead of tiles
+
+Migration `0021` adds 80 Indian cities on the waitlist (centre and a rough ±0.12° box each; admins refine bounds before opening one) and 46 more interests across the existing categories, never overwriting a slug that exists. Hyderabad stays the only open city.
+
+Dozens of chips made profile setup crowded, so cities and interests now use `PickList`: one choice per row, a search box for long lists, and headings (open cities before those opening soon; interests under their category). Short single-choice lists (gender, neighbourhood, vibes) keep chips.

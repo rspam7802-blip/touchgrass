@@ -5,6 +5,8 @@ import { Controller, useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { z } from 'zod';
 import { ChipGroup } from '../../components/ChipGroup';
+import { interestOptions } from '../../components/interest-options';
+import { PickList } from '../../components/PickList';
 import { PhotoGrid } from '../../components/PhotoGrid';
 import { Button, ErrorState, LoadingState, Screen, Text, TextField } from '../../components/ui';
 import { localized, useInterests, useVibeTags } from '../../src/features/catalog/api';
@@ -162,14 +164,12 @@ export default function ProfileEditScreen() {
         )}
       />
       <Text variant="heading">{t('profile.interests')}</Text>
-      <ChipGroup
+      <PickList
         label={t('profile.interests')}
+        searchLabel={t('onboarding.interestsSearch')}
         mode="multi"
         max={P.maxInterests}
-        options={interests.data.items.map((i) => ({
-          id: i.id,
-          label: localized(i.name, i18n.language),
-        }))}
+        options={interestOptions(interests.data.items, t, i18n.language)}
         selected={currentInterests}
         onChange={setInterestIds}
         testIDPrefix="edit-interest"

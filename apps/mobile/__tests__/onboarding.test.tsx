@@ -331,7 +331,7 @@ describe('steps', () => {
 
   it('city: a city that isn’t open yet joins its waitlist instead (F-GRW-03)', async () => {
     await renderWithProviders(<CityStep />, { fetchFn: api.fetch });
-    await fireEvent.press(await screen.findByRole('radio', { name: 'Pune · Coming soon' }));
+    await fireEvent.press(await screen.findByRole('radio', { name: 'Pune' }));
     const primary = screen.getByTestId('onboarding-primary');
     expect(within(primary).getByText('Join the waitlist')).toBeTruthy();
     await fireEvent.press(primary);
