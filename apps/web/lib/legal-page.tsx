@@ -45,6 +45,7 @@ export function LegalPage({ doc, children }: { doc: LegalDocument; children?: Re
 
 export function LegalFooter() {
   const links = [
+    { href: '/about', label: 'About us' },
     { href: '/privacy', label: 'Privacy' },
     { href: '/terms', label: 'Terms' },
     { href: '/refunds', label: 'Refunds' },

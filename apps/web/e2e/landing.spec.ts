@@ -179,3 +179,21 @@ test.describe('landing page sections and forms (D-169)', () => {
     await expect(page.getByRole('button', { name: 'वेटलिस्ट में जुड़ो' })).toBeVisible();
   });
 });
+
+test('about us: vision, mission, goals and both founders, in every language (D-188)', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await page.getByRole('link', { name: 'About us' }).first().click();
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('About TouchGrass');
+  await expect(page.getByRole('heading', { name: 'Our vision' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Our mission' })).toBeVisible();
+  await expect(page.getByTestId('founders')).toContainText('Raghuram Srivatsa');
+  await expect(page.getByTestId('founders')).toContainText('Narain Malladi');
+  const results = await new AxeBuilder({ page })
+    .withTags(['wcag2a', 'wcag2aa', 'wcag21aa'])
+    .analyze();
+  expect(results.violations).toEqual([]);
+  await page.getByRole('link', { name: 'తెలుగు' }).click();
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText(/[ఀ-౿]/);
+});

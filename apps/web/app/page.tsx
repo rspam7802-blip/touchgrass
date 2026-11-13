@@ -84,6 +84,12 @@ export default async function Home({ searchParams }: PageProps) {
     >
       <header className="flex flex-wrap items-center justify-between gap-3">
         <span className="text-xl font-extrabold tracking-tight text-primary">{BRAND.name}</span>
+        <Link
+          href={`/about?lang=${language}`}
+          className="inline-flex min-h-11 items-center rounded-full px-3 text-sm font-semibold underline"
+        >
+          {l.about.nav}
+        </Link>
         <nav aria-label={t.settings.language} className="flex flex-wrap gap-2">
           {SUPPORTED_LANGUAGES.map((code) => (
             <Link

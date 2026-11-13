@@ -1,4 +1,7 @@
 /** Brand and product-wide constants. Values that admins can tune live in feature flags / config tables instead. */
+/** The people behind TouchGrass (D-188), shown on the website's About page. */
+export const FOUNDERS = [{ name: 'Raghuram Srivatsa' }, { name: 'Narain Malladi' }] as const;
+
 export const BRAND = {
   name: 'TouchGrass',
   tagline: 'Log off. Pull up.',

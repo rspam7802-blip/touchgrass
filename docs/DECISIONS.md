@@ -791,3 +791,7 @@ Admin forms used to throw on any refusal from the API, which left an error page 
 ## D-187 Branded emails
 
 Emails use one layout (`common/email/branded.ts`): a forest header with the logo (served by the website at `/email-logo.png`) and the tagline, a white card with the content, the invite code in a lime-on-forest box, a lime button, and a footer saying why the person got it. Tables and inline styles only, so Gmail, Outlook and phone mail apps show it the same; the plain-text part is still sent. The waitlist invite and the payment receipt use it; any new email should too.
+
+## D-188 About us
+
+The website has an About page (`/about`, linked from the home page header and every page's footer) in English, Telugu and Hindi: why TouchGrass exists, the vision, the mission, four goals (start well in Hyderabad, safety first, free to join, open city by city across India) and the co-founders, Raghuram Srivatsa and Narain Malladi (`FOUNDERS` in shared constants). Copy lives under `landing.about`.

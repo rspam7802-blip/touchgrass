@@ -2088,6 +2088,34 @@ export const en = {
     cachedNotice: 'You are offline. Showing what you last saw.',
   },
   landing: {
+    about: {
+      nav: 'About us',
+      title: 'About TouchGrass',
+      intro:
+        'We built TouchGrass because making new friends as an adult is hard, and our phones made it harder. We want the easiest thing to do on a free evening to be meeting real people, nearby, over something you both enjoy.',
+      visionTitle: 'Our vision',
+      vision:
+        'A country where nobody feels alone in their own city: where meeting new people in person is as easy as scrolling, and every neighbourhood has something to pull up to.',
+      missionTitle: 'Our mission',
+      mission:
+        'Help people in India meet in real life through small, safe, local plans: easy to find, easy to start, and built so that showing up feels natural.',
+      goalsTitle: 'What we are working towards',
+      goals: {
+        launch:
+          'Start well in Hyderabad: an invite-only community where plans are small, nearby and actually happen.',
+        safety:
+          'Safety first, always: verified profiles, women-only and men-only plans, SOS to trusted contacts, and fast action on reports.',
+        free: 'Keep TouchGrass free to join, so money is never the reason someone stays home.',
+        cities:
+          'Open city by city across India, in the languages people speak, once each city has hosts ready.',
+      },
+      foundersTitle: 'The founders',
+      foundersIntro:
+        'Two friends from Hyderabad who wanted more evenings out and fewer evenings on a screen.',
+      founderRole: 'Co-founder',
+      contact: 'Say hello: {{email}}',
+      back: 'Back to home',
+    },
     heroBody:
       'TouchGrass is an invite-only app for meeting people in person in Hyderabad. Find a small plan nearby or Plot your own, then spend the evening with real people instead of a screen.',
     checkCta: 'Check an invite code',
