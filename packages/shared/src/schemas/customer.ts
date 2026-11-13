@@ -149,3 +149,95 @@ export const CustomerView = z.object({
   timeline: z.array(CustomerTimelineItem),
 });
 export type CustomerView = z.infer<typeof CustomerView>;
+
+// ---------- invite network (D-193) ----------
+
+/** How someone got in: a team (admin) code, a member's code, or without any code (seeded, gate off). */
+export const NetworkEntry = z.enum(['team', 'member', 'open']);
+export type NetworkEntry = z.infer<typeof NetworkEntry>;
+
+export const NetworkNode = z.object({
+  id: z.uuid(),
+  name: z.string().nullable(),
+  status: z.string(),
+  joinedAt: z.iso.datetime(),
+  entry: NetworkEntry,
+  inviterId: z.uuid().nullable(),
+  /** The team code's label (or the code itself) for generation 1. */
+  codeLabel: z.string().nullable(),
+  /** 1 = came in through us (or with no code); 2 = invited by a generation-1 member; and so on. */
+  generation: z.number().int().min(1),
+  direct: z.number().int(),
+  descendants: z.number().int(),
+});
+export type NetworkNode = z.infer<typeof NetworkNode>;
+
+export const InviteNetworkQuery = z.object({
+  /** Only people who joined up to the end of this IST day (the time slider). */
+  until: z.iso.date().optional(),
+  /** Show one family: this person and everyone they brought in, at any depth. */
+  root: z.uuid().optional(),
+});
+export type InviteNetworkQuery = z.infer<typeof InviteNetworkQuery>;
+
+export const InviteNetwork = z.object({
+  nodes: z.array(NetworkNode),
+  truncated: z.boolean(),
+  firstJoinedAt: z.iso.datetime().nullable(),
+  stats: z.object({
+    people: z.number().int(),
+    team: z.number().int(),
+    member: z.number().int(),
+    open: z.number().int(),
+    deepest: z.number().int(),
+    byGeneration: z.array(z.object({ generation: z.number().int(), count: z.number().int() })),
+    topInviters: z.array(
+      z.object({
+        id: z.uuid(),
+        name: z.string().nullable(),
+        direct: z.number().int(),
+        descendants: z.number().int(),
+      }),
+    ),
+  }),
+});
+export type InviteNetwork = z.infer<typeof InviteNetwork>;
+
+export interface NetworkPerson {
+  id: string;
+  joinedAt: Date;
+  inviterId: string | null;
+  entry: NetworkEntry;
+}
+
+/**
+ * Generations and family sizes for the invite forest. Roots are people nobody invited (or whose inviter is not
+ * in the list); cycles cannot happen (an inviter joined first) but are cut defensively.
+ */
+export function inviteForest(
+  people: readonly NetworkPerson[],
+): Map<string, { generation: number; direct: number; descendants: number }> {
+  const byId = new Map(people.map((p) => [p.id, p]));
+  const children = new Map<string, string[]>();
+  for (const p of people)
+    if (p.inviterId && byId.has(p.inviterId) && p.inviterId !== p.id)
+      children.set(p.inviterId, [...(children.get(p.inviterId) ?? []), p.id]);
+  const out = new Map<string, { generation: number; direct: number; descendants: number }>();
+  const roots = people.filter(
+    (p) => !p.inviterId || !byId.has(p.inviterId) || p.inviterId === p.id,
+  );
+  const visit = (id: string, generation: number, seen: Set<string>): number => {
+    if (seen.has(id)) return 0;
+    seen.add(id);
+    const kids = children.get(id) ?? [];
+    let descendants = 0;
+    for (const k of kids) descendants += 1 + visit(k, generation + 1, seen);
+    out.set(id, { generation, direct: kids.length, descendants });
+    return descendants;
+  };
+  const seen = new Set<string>();
+  for (const r of roots) visit(r.id, 1, seen);
+  // Anything left sits on a cycle: treat it as a root.
+  for (const p of people) if (!seen.has(p.id)) visit(p.id, 1, seen);
+  return out;
+}

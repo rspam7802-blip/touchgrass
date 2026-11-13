@@ -1,10 +1,18 @@
-import { CustomerView } from '@touchgrass/shared';
+import { CustomerView, InviteNetwork } from '@touchgrass/shared';
 import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { UsersService } from '../src/modules/users/users.service.js';
 import { SEED_ADMIN_PHONE } from '../src/seed/seed.js';
 import { plot, rsvp, shiftEvent, verifiedMember } from './event-helpers.js';
-import { bearer, createHarness, type Harness, member, type Member, signIn } from './harness.js';
+import {
+  bearer,
+  createHarness,
+  type Harness,
+  member,
+  type Member,
+  onboard,
+  signIn,
+} from './harness.js';
 
 let h: Harness;
 let admin: string;
@@ -117,5 +125,80 @@ describe('Customer 360 (D-192)', () => {
     await view(await staff('moderator'), guest.id).expect(403);
     await view(flake.token, guest.id).expect(403);
     await view(admin, '0190a4c2-0000-7000-8000-000000000000').expect(404);
+  });
+});
+
+describe('invite network (D-193)', () => {
+  /** A new member let in by `code`, who then makes a code of their own to pass on. */
+  async function joinWith(code: string): Promise<{ id: string; code: string }> {
+    const s = await signIn(h, undefined, { inviteCode: code });
+    await onboard(h, s.accessToken);
+    const mine = await request(h.http)
+      .post('/v1/me/invites')
+      .set(...bearer(s.accessToken))
+      .set('Idempotency-Key', `inv-${s.user.id}`)
+      .expect(201);
+    return { id: s.user.id, code: (mine.body as { code: string }).code };
+  }
+
+  it('traces our first invitee to the nth generation, with dates and family sizes', async () => {
+    const team = `NET-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
+    await h.pool.query(
+      `INSERT INTO invite_codes (id, code, source, max_uses, label) VALUES (gen_random_uuid(), $1, 'admin', 5, 'Launch party')`,
+      [team],
+    );
+    const a = await joinWith(team);
+    const b = await joinWith(a.code);
+    const c = await joinWith(b.code);
+
+    const res = await request(h.http)
+      .get(`/v1/admin/network?root=${a.id}`)
+      .set(...bearer(admin))
+      .expect(200);
+    const net = InviteNetwork.parse(res.body);
+    const byId = new Map(net.nodes.map((n) => [n.id, n]));
+    expect(byId.get(a.id)).toMatchObject({
+      generation: 1,
+      entry: 'team',
+      codeLabel: 'Launch party',
+      direct: 1,
+      descendants: 2,
+      inviterId: null,
+    });
+    expect(byId.get(b.id)).toMatchObject({ generation: 2, entry: 'member', inviterId: a.id });
+    expect(byId.get(c.id)).toMatchObject({ generation: 3, inviterId: b.id, descendants: 0 });
+    expect(net.stats).toMatchObject({ people: 3, deepest: 3, team: 1, member: 2 });
+    expect(net.stats.topInviters[0]?.id).toBe(a.id);
+
+    // The whole network includes them too; the time slider leaves out anyone who joined later.
+    const all = InviteNetwork.parse(
+      (
+        await request(h.http)
+          .get('/v1/admin/network')
+          .set(...bearer(admin))
+          .expect(200)
+      ).body,
+    );
+    expect(all.nodes.some((n) => n.id === c.id)).toBe(true);
+    const before = InviteNetwork.parse(
+      (
+        await request(h.http)
+          .get('/v1/admin/network?until=2020-01-01')
+          .set(...bearer(admin))
+          .expect(200)
+      ).body,
+    );
+    expect(before.nodes.some((n) => n.id === a.id)).toBe(false);
+  });
+
+  it('is for admins only, and checks its filters', async () => {
+    await request(h.http)
+      .get('/v1/admin/network')
+      .set(...bearer(await staff('support')))
+      .expect(403);
+    await request(h.http)
+      .get('/v1/admin/network?until=yesterday')
+      .set(...bearer(admin))
+      .expect(400);
   });
 });

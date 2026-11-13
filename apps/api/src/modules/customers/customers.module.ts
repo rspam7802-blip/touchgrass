@@ -16,6 +16,7 @@ import { SocialModule } from '../social/social.module.js';
 import { UsersModule } from '../users/users.module.js';
 import { CustomersController } from './customers.controller.js';
 import { CustomersService } from './customers.service.js';
+import { NetworkService } from './network.service.js';
 
 /** Staff views across modules (D-192). A leaf: nothing imports it. */
 @Module({
@@ -37,6 +38,6 @@ import { CustomersService } from './customers.service.js';
     UsersModule,
   ],
   controllers: [CustomersController],
-  providers: [CustomersService],
+  providers: [CustomersService, NetworkService],
 })
 export class CustomersModule {}

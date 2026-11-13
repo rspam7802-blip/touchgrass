@@ -84,7 +84,8 @@ export default async function CustomerPage({ params }: { params: Promise<{ id: s
   const { id } = await params;
   if (!z.uuid().safeParse(id).success) notFound();
   const v = await adminApi(`/v1/admin/customers/${id}`, CustomerView, {}, `/admin/customers/${id}`);
-  const name = v.user.displayName ?? t.deletedUser;
+  const name = v.user.displayName ?? (v.user.status === 'deleted' ? t.deletedUser : t.noName);
+  const showNetwork = v.invitees.length > 0 && (await canOpen('network'));
   const p = v.profile;
   const sections = [
     ['overview', t.sections.overview],
@@ -325,6 +326,15 @@ export default async function CustomerPage({ params }: { params: Promise<{ id: s
               {t.social.invitees} ({v.invitees.length})
             </h3>
             {v.invitees.length === 0 ? <p className="text-sm text-muted">{t.none}</p> : null}
+            {showNetwork ? (
+              <Link
+                href={`/admin/network?root=${v.user.id}`}
+                className="font-semibold underline"
+                data-testid="customer-network"
+              >
+                {resources.en.admin.network.showFamily}
+              </Link>
+            ) : null}
             <ul className="flex flex-col gap-1">
               {v.invitees.map((i) => (
                 <li key={i.id}>

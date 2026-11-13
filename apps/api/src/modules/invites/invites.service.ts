@@ -261,6 +261,29 @@ export class InvitesService {
     return row?.at ?? null;
   }
 
+  /** For each of these people, the code that let them in: when, whose kind of code, and its label. */
+  async entriesOf(
+    userIds: readonly string[],
+  ): Promise<Map<string, { at: Date; source: 'user' | 'admin'; label: string }>> {
+    const out = new Map<string, { at: Date; source: 'user' | 'admin'; label: string }>();
+    for (let i = 0; i < userIds.length; i += 1000) {
+      const rows = await this.db
+        .select({
+          userId: inviteRedemptions.userId,
+          at: inviteRedemptions.createdAt,
+          source: inviteCodes.source,
+          label: inviteCodes.label,
+          code: inviteCodes.code,
+        })
+        .from(inviteRedemptions)
+        .innerJoin(inviteCodes, eq(inviteCodes.id, inviteRedemptions.inviteCodeId))
+        .where(inArray(inviteRedemptions.userId, userIds.slice(i, i + 1000)));
+      for (const r of rows)
+        out.set(r.userId, { at: r.at, source: r.source, label: r.label ?? r.code });
+    }
+    return out;
+  }
+
   private async insertUnique(
     tx: DbOrTx,
     values: Omit<typeof inviteCodes.$inferInsert, 'id' | 'code'>,

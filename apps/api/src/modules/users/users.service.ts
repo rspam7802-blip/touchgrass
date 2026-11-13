@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { hashPhoneE164, type SupportedLanguage, type UserStatus } from '@touchgrass/shared';
-import { and, asc, eq, inArray, isNotNull, isNull } from 'drizzle-orm';
+import { and, asc, eq, inArray, isNotNull, isNull, lte } from 'drizzle-orm';
 import type { Redis } from 'ioredis';
 import { uuidv7 } from 'uuidv7';
 import { DB, type Database } from '../../infra/database/database.module.js';
@@ -156,6 +156,26 @@ export class UsersService {
       .from(users)
       .where(inArray(users.id, ids));
     return new Map(rows.map((r) => [r.id, r.language]));
+  }
+
+  /** Everyone who joined up to `until`, with who invited them (invite network, D-193). Oldest first. */
+  async inviteEdges(
+    until: Date | null,
+    limit: number,
+  ): Promise<
+    { id: string; status: UserRow['status']; createdAt: Date; inviterId: string | null }[]
+  > {
+    return this.db
+      .select({
+        id: users.id,
+        status: users.status,
+        createdAt: users.createdAt,
+        inviterId: users.invitedByUserId,
+      })
+      .from(users)
+      .where(until ? lte(users.createdAt, until) : undefined)
+      .orderBy(asc(users.createdAt), asc(users.id))
+      .limit(limit);
   }
 
   async byIds(ids: string[]): Promise<UserRow[]> {

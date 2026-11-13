@@ -49,6 +49,7 @@ export const ADMIN_NAV: {
   { group: 'plans', section: 'payments', href: '/admin/payments', label: t.payments },
   { group: 'growth', section: 'inviteCodes', href: '/admin/invite-codes', label: t.inviteCodes },
   { group: 'growth', section: 'waitlist', href: '/admin/waitlist', label: t.waitlist.title },
+  { group: 'growth', section: 'network', href: '/admin/network', label: t.network.title },
   { group: 'growth', section: 'weights', href: '/admin/weights', label: c.weights },
   {
     group: 'content',

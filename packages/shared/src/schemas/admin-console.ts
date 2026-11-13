@@ -14,6 +14,8 @@ export const ADMIN_SECTIONS = {
   users: ['admin', 'moderator', 'support'],
   /** Customer 360 (D-192): support gets the lighter view, see `customerAccessFor`. */
   customers: ['admin', 'support'],
+  /** Who invited whom, generation by generation (D-193). */
+  network: ['admin'],
   verifications: ['admin', 'moderator'],
   moderation: ['admin', 'moderator', 'support'],
   events: ['admin', 'city_curator'],
