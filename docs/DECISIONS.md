@@ -783,3 +783,7 @@ The admin console gets a proper shell: a sidebar with its sections grouped under
 ## D-185 Telugu that sounds like people talk
 
 The Telugu was rewritten throughout for meaning rather than word for word: informal singular to the person (నువ్వు, చెయ్), the English loanwords Hyderabad actually uses written in Telugu script (ప్లాన్, ఫోటో, పేమెంట్, క్యాన్సిల్, డిలీట్) instead of literary words (చెల్లింపు, తొలగించు, ఐచ్ఛికం), and consistent app terms (ప్లాన్ వెయ్ for Plot, జ్ఞాపకాలు for Lore). Safety copy stays plain and calm; venue-staff strings keep the polite form. Keys and placeholders are unchanged (checked against English). Tests now read Telugu from the resources instead of repeating it, so copy edits don't break them.
+
+## D-186 Every admin form answers
+
+Admin forms used to throw on any refusal from the API, which left an error page with no reason. Every form action now runs inside `guarded()` (`lib/admin-action.ts`): on success it comes back to the same page with "Saved", on a refusal with the API's own reason (or the field problems for invalid input), shown by `AdminNotice` at the top of the console; redirects the work itself makes still happen. Team takes a phone number (any common way of writing an Indian number) or a user ID, and says plainly when nobody has signed up with that number yet.

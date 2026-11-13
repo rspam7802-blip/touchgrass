@@ -1,5 +1,7 @@
 'use server';
 
+import { guarded } from '../../../../lib/admin-action';
+
 import { HostApplication } from '@touchgrass/shared';
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
@@ -12,12 +14,14 @@ const Review = z.object({
 });
 
 export async function reviewAction(form: FormData): Promise<void> {
-  const { id, decision, note } = Review.parse(Object.fromEntries(form));
-  await adminApi(
-    `/v1/admin/host-applications/${id}/review`,
-    HostApplication,
-    { method: 'POST', body: JSON.stringify({ decision, note }) },
-    '/admin/host-applications',
-  );
-  revalidatePath('/admin/host-applications');
+  await guarded(async () => {
+    const { id, decision, note } = Review.parse(Object.fromEntries(form));
+    await adminApi(
+      `/v1/admin/host-applications/${id}/review`,
+      HostApplication,
+      { method: 'POST', body: JSON.stringify({ decision, note }) },
+      '/admin/host-applications',
+    );
+    revalidatePath('/admin/host-applications');
+  });
 }

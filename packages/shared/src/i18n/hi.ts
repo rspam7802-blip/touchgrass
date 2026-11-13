@@ -314,6 +314,9 @@ export const hi: Translation = {
   },
   admin: {
     shell: {
+      failed: 'ये नहीं हो पाया',
+      saved: 'सेव हो गया',
+      dismiss: 'हटाओ',
       menu: 'मेन्यू',
       welcome: 'नमस्ते, {{name}}',
       needsAttention: 'इन पर ध्यान दो',
@@ -362,6 +365,7 @@ export const hi: Translation = {
       keep: 'रहने दो',
     },
     console: {
+      userOrPhone: 'फ़ोन नंबर या यूज़र ID',
       placeName: 'जगह का नाम',
       address: 'पता',
       soloFriendly: 'अकेले आने लायक',

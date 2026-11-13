@@ -315,6 +315,9 @@ export const en = {
   },
   admin: {
     shell: {
+      failed: "That didn't go through",
+      saved: 'Saved',
+      dismiss: 'Dismiss',
       menu: 'Menu',
       welcome: 'Hello, {{name}}',
       needsAttention: 'Needs attention',
@@ -363,6 +366,7 @@ export const en = {
       keep: 'Keep',
     },
     console: {
+      userOrPhone: 'Phone number or user ID',
       placeName: 'Place name',
       address: 'Address',
       soloFriendly: 'Solo-friendly',

@@ -1,5 +1,7 @@
 'use server';
 
+import { guarded } from '../../../../lib/admin-action';
+
 import { LaunchWaitlistInviteResult } from '@touchgrass/shared';
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
@@ -44,7 +46,9 @@ export async function inviteAction(_prev: InviteState, form: FormData): Promise<
 
 /** Data-deletion requests: deletes the entry for good (audited by the API). */
 export async function removeAction(form: FormData): Promise<void> {
-  const id = z.uuid().parse(form.get('id'));
-  await adminApi(`/v1/admin/waitlist/${id}`, z.undefined(), { method: 'DELETE' }, PATH);
-  revalidatePath(PATH);
+  await guarded(async () => {
+    const id = z.uuid().parse(form.get('id'));
+    await adminApi(`/v1/admin/waitlist/${id}`, z.undefined(), { method: 'DELETE' }, PATH);
+    revalidatePath(PATH);
+  });
 }

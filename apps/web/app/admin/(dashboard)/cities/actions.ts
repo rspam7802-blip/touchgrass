@@ -1,5 +1,7 @@
 'use server';
 
+import { guarded } from '../../../../lib/admin-action';
+
 import { UpsertCityBody, UpsertNeighbourhoodBody } from '@touchgrass/shared';
 import { randomUUID } from 'node:crypto';
 import { revalidatePath } from 'next/cache';
@@ -27,38 +29,42 @@ function cityFrom(form: FormData): z.infer<typeof UpsertCityBody> {
 }
 
 export async function saveCityAction(form: FormData): Promise<void> {
-  const id = z.union([z.literal(''), z.uuid()]).parse(form.get('id') ?? '');
-  const body = cityFrom(form);
-  await adminApi(
-    id ? `/v1/admin/cities/${id}` : '/v1/admin/cities',
-    z.object({ id: z.uuid() }),
-    {
-      method: id ? 'PUT' : 'POST',
-      body: JSON.stringify(body),
-      headers: id ? {} : { 'idempotency-key': `admin-city-${randomUUID()}` },
-    },
-    PATH,
-  );
-  revalidatePath(PATH);
+  await guarded(async () => {
+    const id = z.union([z.literal(''), z.uuid()]).parse(form.get('id') ?? '');
+    const body = cityFrom(form);
+    await adminApi(
+      id ? `/v1/admin/cities/${id}` : '/v1/admin/cities',
+      z.object({ id: z.uuid() }),
+      {
+        method: id ? 'PUT' : 'POST',
+        body: JSON.stringify(body),
+        headers: id ? {} : { 'idempotency-key': `admin-city-${randomUUID()}` },
+      },
+      PATH,
+    );
+    revalidatePath(PATH);
+  });
 }
 
 export async function addNeighbourhoodAction(form: FormData): Promise<void> {
-  const cityId = z.uuid().parse(form.get('cityId'));
-  const body = UpsertNeighbourhoodBody.parse({
-    slug: form.get('slug'),
-    name: form.get('name'),
-    centroid: { lat: num.parse(form.get('lat')), lng: num.parse(form.get('lng')) },
-    radiusKm: num.parse(form.get('radiusKm')),
+  await guarded(async () => {
+    const cityId = z.uuid().parse(form.get('cityId'));
+    const body = UpsertNeighbourhoodBody.parse({
+      slug: form.get('slug'),
+      name: form.get('name'),
+      centroid: { lat: num.parse(form.get('lat')), lng: num.parse(form.get('lng')) },
+      radiusKm: num.parse(form.get('radiusKm')),
+    });
+    await adminApi(
+      `/v1/admin/cities/${cityId}/neighbourhoods`,
+      z.object({ id: z.uuid() }),
+      {
+        method: 'POST',
+        body: JSON.stringify(body),
+        headers: { 'idempotency-key': `admin-hood-${randomUUID()}` },
+      },
+      PATH,
+    );
+    revalidatePath(PATH);
   });
-  await adminApi(
-    `/v1/admin/cities/${cityId}/neighbourhoods`,
-    z.object({ id: z.uuid() }),
-    {
-      method: 'POST',
-      body: JSON.stringify(body),
-      headers: { 'idempotency-key': `admin-hood-${randomUUID()}` },
-    },
-    PATH,
-  );
-  revalidatePath(PATH);
 }

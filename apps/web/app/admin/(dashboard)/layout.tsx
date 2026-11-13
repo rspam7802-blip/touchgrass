@@ -1,7 +1,8 @@
 import { BRAND, resources } from '@touchgrass/shared';
 import { cookies } from 'next/headers';
 import Link from 'next/link';
-import type { ReactNode } from 'react';
+import { type ReactNode, Suspense } from 'react';
+import { AdminNotice } from '../../../components/admin/AdminNotice';
 import { SidebarNav } from '../../../components/admin/SidebarNav';
 import { ADMIN_NAV_GROUPS, navFor } from '../../../lib/admin-nav';
 import { ACCESS_COOKIE, rolesFromToken } from '../../../lib/admin-session';
@@ -48,7 +49,12 @@ export default async function DashboardLayout({ children }: { children: ReactNod
         </div>
       </aside>
       <main className="admin-main flex min-w-0 flex-1 flex-col gap-6 px-5 py-6 md:px-10 md:py-8">
-        <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">{children}</div>
+        <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
+          <Suspense fallback={null}>
+            <AdminNotice />
+          </Suspense>
+          {children}
+        </div>
       </main>
     </div>
   );

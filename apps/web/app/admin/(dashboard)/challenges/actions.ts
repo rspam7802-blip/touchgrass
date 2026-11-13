@@ -1,5 +1,7 @@
 'use server';
 
+import { guarded } from '../../../../lib/admin-action';
+
 import { AdminChallenge, AdminChallengeList, UpsertChallengeBody } from '@touchgrass/shared';
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
@@ -88,27 +90,29 @@ export async function createChallengeAction(
 }
 
 export async function toggleChallengeAction(form: FormData): Promise<void> {
-  const id = z.uuid().parse(form.get('id'));
-  const active = z.enum(['true', 'false']).parse(form.get('active')) === 'true';
-  const list = await adminApi('/v1/admin/challenges', AdminChallengeList, {}, PATH);
-  const c = list.items.find((x) => x.id === id);
-  if (!c) return;
-  const body: UpsertChallengeBody = {
-    title: c.title,
-    description: c.description,
-    emoji: c.emoji,
-    startsAt: c.startsAt,
-    endsAt: c.endsAt,
-    mode: c.mode,
-    criteria: c.criteria,
-    rewardBadgeId: c.rewardBadgeId,
-    active,
-  };
-  await adminApi(
-    `/v1/admin/challenges/${id}`,
-    AdminChallenge,
-    { method: 'PUT', body: JSON.stringify(body) },
-    PATH,
-  );
-  revalidatePath(PATH);
+  await guarded(async () => {
+    const id = z.uuid().parse(form.get('id'));
+    const active = z.enum(['true', 'false']).parse(form.get('active')) === 'true';
+    const list = await adminApi('/v1/admin/challenges', AdminChallengeList, {}, PATH);
+    const c = list.items.find((x) => x.id === id);
+    if (!c) return;
+    const body: UpsertChallengeBody = {
+      title: c.title,
+      description: c.description,
+      emoji: c.emoji,
+      startsAt: c.startsAt,
+      endsAt: c.endsAt,
+      mode: c.mode,
+      criteria: c.criteria,
+      rewardBadgeId: c.rewardBadgeId,
+      active,
+    };
+    await adminApi(
+      `/v1/admin/challenges/${id}`,
+      AdminChallenge,
+      { method: 'PUT', body: JSON.stringify(body) },
+      PATH,
+    );
+    revalidatePath(PATH);
+  });
 }

@@ -317,6 +317,9 @@ export const te: Translation = {
   },
   admin: {
     shell: {
+      failed: 'అది అవ్వలేదు',
+      saved: 'సేవ్ అయింది',
+      dismiss: 'మూసేయ్',
       menu: 'మెనూ',
       welcome: 'హలో, {{name}}',
       needsAttention: 'ఇవి చూడాలి',
@@ -365,6 +368,7 @@ export const te: Translation = {
       keep: 'ఉంచు',
     },
     console: {
+      userOrPhone: 'ఫోన్ నంబర్ లేదా యూజర్ ID',
       placeName: 'ప్రదేశం పేరు',
       address: 'చిరునామా',
       soloFriendly: 'ఒంటరిగా రావచ్చు',

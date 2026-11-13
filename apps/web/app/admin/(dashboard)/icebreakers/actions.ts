@@ -1,5 +1,7 @@
 'use server';
 
+import { guarded } from '../../../../lib/admin-action';
+
 import {
   IcebreakerCard,
   IcebreakerCategory,
@@ -45,17 +47,19 @@ export async function createAction(_prev: ActionState, form: FormData): Promise<
 
 /** Turns a card on or off; the rest of the card is sent back unchanged. */
 export async function toggleAction(form: FormData): Promise<void> {
-  const id = z.uuid().parse(form.get('id'));
-  const active = z.enum(['true', 'false']).parse(form.get('active')) === 'true';
-  const deck = await adminApi('/v1/admin/icebreakers', IcebreakerDeck, {}, PATH);
-  const card = deck.items.find((c) => c.id === id);
-  if (!card) return;
-  const body: UpsertIcebreakerBody = { prompt: card.prompt, category: card.category, active };
-  await adminApi(
-    `/v1/admin/icebreakers/${id}`,
-    IcebreakerCard,
-    { method: 'PUT', body: JSON.stringify(body) },
-    PATH,
-  );
-  revalidatePath(PATH);
+  await guarded(async () => {
+    const id = z.uuid().parse(form.get('id'));
+    const active = z.enum(['true', 'false']).parse(form.get('active')) === 'true';
+    const deck = await adminApi('/v1/admin/icebreakers', IcebreakerDeck, {}, PATH);
+    const card = deck.items.find((c) => c.id === id);
+    if (!card) return;
+    const body: UpsertIcebreakerBody = { prompt: card.prompt, category: card.category, active };
+    await adminApi(
+      `/v1/admin/icebreakers/${id}`,
+      IcebreakerCard,
+      { method: 'PUT', body: JSON.stringify(body) },
+      PATH,
+    );
+    revalidatePath(PATH);
+  });
 }

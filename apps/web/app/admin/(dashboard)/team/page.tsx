@@ -68,8 +68,16 @@ export default async function TeamPage() {
           aria-labelledby="grant"
         >
           <label className={labelClass} htmlFor="userId">
-            {c.userId}
-            <input id="userId" name="userId" required className={inputClass} />
+            {c.userOrPhone}
+            <input
+              id="userId"
+              name="userId"
+              required
+              inputMode="tel"
+              autoComplete="off"
+              placeholder="+91 98765 43210"
+              className={inputClass}
+            />
           </label>
           <label className={labelClass} htmlFor="role">
             {c.role}

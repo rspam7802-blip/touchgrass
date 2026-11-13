@@ -108,6 +108,30 @@ test('templates, analytics and team pages show their data and pass axe', async (
   await axeClean(page);
 });
 
+test('team: give and take a role by phone number, with a clear answer either way (D-186)', async ({
+  page,
+}) => {
+  await page.goto('/admin/team');
+  const form = page.getByRole('form', { name: 'Give role' });
+  // Someone who has not signed up: the page explains instead of breaking.
+  await form.getByLabel('Phone number or user ID').fill('98765 00000');
+  await form.getByLabel('Role').selectOption('support');
+  await form.getByRole('button', { name: 'Give role' }).click();
+  await expect(page.getByTestId('admin-failed')).toContainText(
+    'Nobody has signed up with +919876500000',
+  );
+  // A seeded member, typed the way people write numbers.
+  await form.getByLabel('Phone number or user ID').fill('090000 10012');
+  await form.getByLabel('Role').selectOption('support');
+  await form.getByRole('button', { name: 'Give role' }).click();
+  await expect(page.getByTestId('admin-saved')).toBeVisible();
+  const row = page.getByRole('row').filter({ hasText: 'Support' }).last();
+  await expect(row).toBeVisible();
+  await row.getByRole('button', { name: /^Remove Support from/ }).click();
+  await expect(page.getByTestId('admin-saved')).toBeVisible();
+  await axeClean(page);
+});
+
 test('a city curator only sees their sections and their city', async ({ browser }) => {
   const context = await browser.newContext({ storageState: { cookies: [], origins: [] } });
   const page = await context.newPage();

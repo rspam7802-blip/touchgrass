@@ -1,5 +1,7 @@
 'use server';
 
+import { guarded } from '../../../../lib/admin-action';
+
 import { VenuePerk } from '@touchgrass/shared';
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
@@ -15,21 +17,23 @@ const Partner = z.object({
 });
 
 export async function partnerAction(form: FormData): Promise<void> {
-  const v = Partner.parse(Object.fromEntries(form));
-  await adminApi(
-    `/v1/admin/venues/${v.id}/partner`,
-    z.undefined(),
-    {
-      method: 'PUT',
-      body: JSON.stringify({
-        isPartner: v.isPartner,
-        description: v.description,
-        ...(v.staffPin ? { staffPin: v.staffPin } : {}),
-      }),
-    },
-    PATH,
-  );
-  revalidatePath(PATH);
+  await guarded(async () => {
+    const v = Partner.parse(Object.fromEntries(form));
+    await adminApi(
+      `/v1/admin/venues/${v.id}/partner`,
+      z.undefined(),
+      {
+        method: 'PUT',
+        body: JSON.stringify({
+          isPartner: v.isPartner,
+          description: v.description,
+          ...(v.staffPin ? { staffPin: v.staffPin } : {}),
+        }),
+      },
+      PATH,
+    );
+    revalidatePath(PATH);
+  });
 }
 
 const NewPerk = z.object({
@@ -41,24 +45,26 @@ const NewPerk = z.object({
 });
 
 export async function createPerkAction(form: FormData): Promise<void> {
-  const p = NewPerk.parse(Object.fromEntries(form));
-  await adminApi(
-    `/v1/admin/venues/${p.venueId}/perks`,
-    VenuePerk,
-    {
-      method: 'POST',
-      body: JSON.stringify({
-        title: p.title,
-        description: p.description,
-        minGroupSize: p.minGroupSize,
-        // End of the chosen day in IST.
-        validUntil: p.validUntil ? `${p.validUntil}T18:29:59.000Z` : null,
-        active: true,
-      }),
-    },
-    PATH,
-  );
-  revalidatePath(PATH);
+  await guarded(async () => {
+    const p = NewPerk.parse(Object.fromEntries(form));
+    await adminApi(
+      `/v1/admin/venues/${p.venueId}/perks`,
+      VenuePerk,
+      {
+        method: 'POST',
+        body: JSON.stringify({
+          title: p.title,
+          description: p.description,
+          minGroupSize: p.minGroupSize,
+          // End of the chosen day in IST.
+          validUntil: p.validUntil ? `${p.validUntil}T18:29:59.000Z` : null,
+          active: true,
+        }),
+      },
+      PATH,
+    );
+    revalidatePath(PATH);
+  });
 }
 
 const TogglePerk = z.object({
@@ -71,21 +77,23 @@ const TogglePerk = z.object({
 });
 
 export async function togglePerkAction(form: FormData): Promise<void> {
-  const p = TogglePerk.parse(Object.fromEntries(form));
-  await adminApi(
-    `/v1/admin/venues/perks/${p.id}`,
-    VenuePerk,
-    {
-      method: 'PUT',
-      body: JSON.stringify({
-        title: p.title,
-        description: p.description,
-        minGroupSize: p.minGroupSize,
-        validUntil: p.validUntil || null,
-        active: p.active,
-      }),
-    },
-    PATH,
-  );
-  revalidatePath(PATH);
+  await guarded(async () => {
+    const p = TogglePerk.parse(Object.fromEntries(form));
+    await adminApi(
+      `/v1/admin/venues/perks/${p.id}`,
+      VenuePerk,
+      {
+        method: 'PUT',
+        body: JSON.stringify({
+          title: p.title,
+          description: p.description,
+          minGroupSize: p.minGroupSize,
+          validUntil: p.validUntil || null,
+          active: p.active,
+        }),
+      },
+      PATH,
+    );
+    revalidatePath(PATH);
+  });
 }

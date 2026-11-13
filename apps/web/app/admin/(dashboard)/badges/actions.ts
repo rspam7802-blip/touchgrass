@@ -1,5 +1,7 @@
 'use server';
 
+import { guarded } from '../../../../lib/admin-action';
+
 import {
   AdminBadge,
   AdminBadgeList,
@@ -84,24 +86,26 @@ export async function createBadgeAction(
 
 /** Turns a badge on or off; everything else is sent back unchanged. */
 export async function toggleBadgeAction(form: FormData): Promise<void> {
-  const id = z.uuid().parse(form.get('id'));
-  const active = z.enum(['true', 'false']).parse(form.get('active')) === 'true';
-  const list = await adminApi('/v1/admin/badges', AdminBadgeList, {}, PATH);
-  const b = list.items.find((x) => x.id === id);
-  if (!b) return;
-  const body: UpsertBadgeBody = {
-    key: b.key,
-    name: b.name,
-    description: b.description,
-    emoji: b.emoji,
-    rule: b.rule,
-    active,
-  };
-  await adminApi(
-    `/v1/admin/badges/${id}`,
-    AdminBadge,
-    { method: 'PUT', body: JSON.stringify(body) },
-    PATH,
-  );
-  revalidatePath(PATH);
+  await guarded(async () => {
+    const id = z.uuid().parse(form.get('id'));
+    const active = z.enum(['true', 'false']).parse(form.get('active')) === 'true';
+    const list = await adminApi('/v1/admin/badges', AdminBadgeList, {}, PATH);
+    const b = list.items.find((x) => x.id === id);
+    if (!b) return;
+    const body: UpsertBadgeBody = {
+      key: b.key,
+      name: b.name,
+      description: b.description,
+      emoji: b.emoji,
+      rule: b.rule,
+      active,
+    };
+    await adminApi(
+      `/v1/admin/badges/${id}`,
+      AdminBadge,
+      { method: 'PUT', body: JSON.stringify(body) },
+      PATH,
+    );
+    revalidatePath(PATH);
+  });
 }

@@ -1,5 +1,7 @@
 'use server';
 
+import { guarded } from '../../../../../lib/admin-action';
+
 import { randomUUID } from 'node:crypto';
 import { AdminUserDetail, SanctionKind } from '@touchgrass/shared';
 import { revalidatePath } from 'next/cache';
@@ -37,27 +39,33 @@ const Sanction = z.object({
 
 /** Warn, mute, suspend or ban (F-SAF-05); audited by the API. */
 export async function sanctionAction(form: FormData): Promise<void> {
-  const f = Sanction.parse(Object.fromEntries(form));
-  const timed = f.kind === 'mute' || f.kind === 'suspend';
-  await call(f.userId, `/v1/admin/users/${f.userId}/sanctions`, {
-    kind: f.kind,
-    days: timed ? Number(f.days) || 1 : null,
-    reason: f.reason,
+  await guarded(async () => {
+    const f = Sanction.parse(Object.fromEntries(form));
+    const timed = f.kind === 'mute' || f.kind === 'suspend';
+    await call(f.userId, `/v1/admin/users/${f.userId}/sanctions`, {
+      kind: f.kind,
+      days: timed ? Number(f.days) || 1 : null,
+      reason: f.reason,
+    });
   });
 }
 
 const Lift = z.object({ userId: z.uuid(), sanctionId: z.uuid() });
 
 export async function liftAction(form: FormData): Promise<void> {
-  const f = Lift.parse(Object.fromEntries(form));
-  await call(f.userId, `/v1/admin/sanctions/${f.sanctionId}/lift`, {});
+  await guarded(async () => {
+    const f = Lift.parse(Object.fromEntries(form));
+    await call(f.userId, `/v1/admin/sanctions/${f.sanctionId}/lift`, {});
+  });
 }
 
 const Verify = z.object({ userId: z.uuid(), verified: z.enum(['true', 'false']) });
 
 export async function setVerifiedAction(form: FormData): Promise<void> {
-  const f = Verify.parse(Object.fromEntries(form));
-  await call(f.userId, `/v1/admin/users/${f.userId}/verification`, {
-    verified: f.verified === 'true',
+  await guarded(async () => {
+    const f = Verify.parse(Object.fromEntries(form));
+    await call(f.userId, `/v1/admin/users/${f.userId}/verification`, {
+      verified: f.verified === 'true',
+    });
   });
 }

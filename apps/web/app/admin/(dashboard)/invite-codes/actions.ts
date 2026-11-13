@@ -1,5 +1,7 @@
 'use server';
 
+import { guarded } from '../../../../lib/admin-action';
+
 import { InviteCode } from '@touchgrass/shared';
 import { randomUUID } from 'node:crypto';
 import { revalidatePath } from 'next/cache';
@@ -47,12 +49,14 @@ export async function bulkCreateAction(_prev: ActionState, form: FormData): Prom
 }
 
 export async function revokeAction(form: FormData): Promise<void> {
-  const id = z.uuid().parse(form.get('id'));
-  await adminApi(
-    `/v1/admin/invite-codes/${id}/revoke`,
-    InviteCode,
-    { method: 'POST' },
-    '/admin/invite-codes',
-  );
-  revalidatePath('/admin/invite-codes');
+  await guarded(async () => {
+    const id = z.uuid().parse(form.get('id'));
+    await adminApi(
+      `/v1/admin/invite-codes/${id}/revoke`,
+      InviteCode,
+      { method: 'POST' },
+      '/admin/invite-codes',
+    );
+    revalidatePath('/admin/invite-codes');
+  });
 }
