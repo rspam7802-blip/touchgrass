@@ -12,6 +12,7 @@ import * as Linking from 'expo-linking';
 import { Alert, type AlertButton } from 'react-native';
 import ContactsScreen from '../app/(app)/safety/contacts';
 import SafetyScreen from '../app/(app)/safety/index';
+import VerifyStep from '../app/(onboarding)/verify';
 import { SosButton } from '../components/SosButton';
 import ShareScreen from '../app/(app)/safety/share';
 import VerificationScreen from '../app/(app)/verification';
@@ -501,6 +502,85 @@ describe('getting verified (F-SAF-01)', () => {
   const realFetch = global.fetch;
   afterEach(() => {
     global.fetch = realFetch;
+  });
+
+  it('profile setup: the selfie step gets a pose, sends the selfie, then lets you continue (D-181)', async () => {
+    let state = verification();
+    let me = meFixture({ status: 'onboarding' });
+    me = { ...me, onboarding: { ...me.onboarding, verification: false, complete: false } };
+    api
+      .on('GET', '/v1/me', () => ({ status: 200, body: me }))
+      .on('GET', '/v1/verification', () => ({ status: 200, body: state }))
+      .on('POST', '/v1/verification/challenge', () => {
+        state = verification({
+          attemptsLeftToday: 2,
+          challenge: {
+            id: CHALLENGE,
+            pose: 'wave',
+            expiresAt: new Date(Date.now() + 900_000).toISOString(),
+          },
+        });
+        return { status: 200, body: state };
+      })
+      .on('POST', '/v1/media/uploads', {
+        status: 201,
+        body: {
+          assetId: ids.asset,
+          upload: {
+            url: 'https://s3.test/bucket',
+            fields: { key: 'uploads/k' },
+            expiresAt: '2026-11-01T01:00:00.000Z',
+          },
+        },
+      })
+      .on('POST', '/bucket', { status: 204 })
+      .on('POST', `/v1/media/${ids.asset}/complete`, {
+        status: 200,
+        body: {
+          id: ids.asset,
+          purpose: 'verification_selfie',
+          status: 'ready',
+          width: 900,
+          height: 1200,
+          urls: null,
+        },
+      })
+      .on('POST', '/v1/verification/submit', () => {
+        state = verification({ status: 'pending', submittedAt: new Date().toISOString() });
+        me = { ...me, onboarding: { ...me.onboarding, verification: true } };
+        return { status: 200, body: state };
+      });
+    global.fetch = (input: string | URL | Request, init?: RequestInit) =>
+      (typeof input === 'string'
+        ? input
+        : input instanceof URL
+          ? input.href
+          : input.url
+      ).startsWith('file:')
+        ? Promise.resolve(new Response('x'.repeat(4096)))
+        : api.fetch(input, init);
+    await renderWithProviders(<VerifyStep />, { fetchFn: api.fetch });
+    const primary = await screen.findByRole('button', { name: 'Get a pose' });
+    await fireEvent.press(primary);
+    expect(await screen.findByTestId('verify-pose')).toHaveTextContent('Wave');
+    // Nothing moves on until the selfie has been sent.
+    expect(mockRouter.push).not.toHaveBeenCalled();
+    await fireEvent.press(screen.getByRole('button', { name: 'Take selfie' }));
+    expect(await screen.findByTestId('verify-sent')).toHaveTextContent(/Selfie sent/);
+    expect(api.callsTo('POST', '/v1/verification/submit')[0]?.body).toEqual({
+      challengeId: CHALLENGE,
+      mediaId: ids.asset,
+    });
+    await fireEvent.press(screen.getByRole('button', { name: 'Continue' }));
+    expect(mockRouter.push).toHaveBeenCalledWith('/birthday');
+  });
+
+  it('profile setup: the selfie step steps aside when the team has switched it off', async () => {
+    api.on('GET', '/v1/verification', { status: 200, body: verification() });
+    await renderWithProviders(<VerifyStep />, { fetchFn: api.fetch });
+    await fireEvent.press(await screen.findByRole('button', { name: 'Continue' }));
+    expect(mockRouter.push).toHaveBeenCalledWith('/birthday');
+    expect(api.callsTo('POST', '/v1/verification/challenge')).toHaveLength(0);
   });
 
   it('gets a pose, takes a selfie, uploads it and waits for review', async () => {

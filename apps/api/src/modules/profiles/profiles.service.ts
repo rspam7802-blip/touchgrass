@@ -33,6 +33,7 @@ import { MediaService } from '../media/media.service.js';
 import { type AfterCommit, GONE } from '../moderation/moderation-targets.js';
 import { ModerationService } from '../moderation/moderation.service.js';
 import { UsersService } from '../users/users.service.js';
+import { OnboardingChecks } from './onboarding-checks.js';
 import { profileAccess } from './profile.policy.js';
 import { ProfileStatsReader } from './profile-stats.port.js';
 import { HostRatingReader } from '../feedback/host-rating-reader.js';
@@ -55,6 +56,7 @@ export class ProfilesService {
     private readonly stats: ProfileStatsReader,
     private readonly hostRatings: HostRatingReader,
     private readonly moderation: ModerationService,
+    private readonly onboardingChecks: OnboardingChecks,
   ) {}
 
   async ensure(userId: string, tx: DbOrTx): Promise<void> {
@@ -277,10 +279,11 @@ export class ProfilesService {
   }
 
   async onboardingState(userId: string): Promise<OnboardingState> {
-    const [profile, photos, interestIds] = await Promise.all([
+    const [profile, photos, interestIds, verification] = await Promise.all([
       this.getOrThrow(userId),
       this.photos(userId, true),
       this.interestIdsOf(userId),
+      this.onboardingChecks.passes('verification', userId),
     ]);
     const state = {
       name: Boolean(profile.displayName),
@@ -289,6 +292,7 @@ export class ProfilesService {
         profile.onboardingCompletedAt !== null ||
         photos.filter((p) => p.status === 'ready' || p.status === 'processing').length >=
           LIMITS.profile.minPhotos,
+      verification: profile.onboardingCompletedAt !== null || verification,
       dateOfBirth: profile.dateOfBirth !== null,
       city: profile.cityId !== null,
       interests: interestIds.length >= LIMITS.profile.minInterests,

@@ -49,6 +49,8 @@ export type ProfileStats = z.infer<typeof ProfileStats>;
 export const OnboardingState = z.object({
   name: z.boolean(),
   photos: z.boolean(),
+  /** A verification selfie is in review or approved, or none is required (D-181). */
+  verification: z.boolean(),
   dateOfBirth: z.boolean(),
   city: z.boolean(),
   interests: z.boolean(),

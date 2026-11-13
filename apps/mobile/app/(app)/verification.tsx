@@ -1,5 +1,4 @@
 import type { MyVerification } from '@touchgrass/shared';
-import * as ImagePicker from 'expo-image-picker';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
@@ -11,22 +10,10 @@ import {
   useStartVerification,
   useSubmitVerification,
 } from '../../src/features/safety/api';
+import { takeSelfie } from '../../src/features/safety/selfie';
 import { errorMessage } from '../../src/lib/errors';
 import { useApi } from '../../src/providers/api-context';
 import { useTheme } from '../../src/theme/theme';
-
-/** Opens the front camera. Null when the person cancels or declines access. */
-async function takeSelfie(): Promise<string | null> {
-  const permission = await ImagePicker.requestCameraPermissionsAsync();
-  if (!permission.granted) return null;
-  const res = await ImagePicker.launchCameraAsync({
-    mediaTypes: ['images'],
-    cameraType: ImagePicker.CameraType.front,
-    quality: 1,
-    exif: false,
-  });
-  return res.canceled ? null : (res.assets[0]?.uri ?? null);
-}
 
 function statusBody(t: ReturnType<typeof useTranslation>['t'], v: MyVerification): string | null {
   if (v.status === 'pending') return t('verification.pendingBody');

@@ -153,6 +153,7 @@ export function meFixture(overrides: Record<string, unknown> = {}) {
     onboarding: {
       name: true,
       photos: true,
+      verification: true,
       dateOfBirth: true,
       city: true,
       interests: true,

@@ -187,6 +187,11 @@ export const en = {
     step: 'Step {{current}} of {{total}}',
     nameTitle: 'What should people call you?',
     nameLabel: 'Your name',
+    verifyTitle: "Show it's really you",
+    verifyBody:
+      'Take a quick selfie copying a pose. Our team checks it against your photos, so everyone here is who they say they are.',
+    verifySent:
+      "Selfie sent. You can carry on while we check it; your badge shows up once it's approved.",
     photosTitle: 'Add your photos',
     photosBody:
       'Add at least {{min}}, up to {{max}}. Clear face photos help people find you at the meetup.',

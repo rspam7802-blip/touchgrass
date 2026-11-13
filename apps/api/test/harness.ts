@@ -41,6 +41,10 @@ export async function createHarness(
   });
   // Bind once so nested supertest calls never race on auto-listen/close of an unbound server.
   await app.listen(0, '127.0.0.1');
+  // Test members are onboarded without the verification selfie; the tests for it switch this back on.
+  await app
+    .get(FeatureFlagsService)
+    .set('require_verification_to_join', false, 'Off for tests that onboard members');
   const pool = new pg.Pool({ connectionString: env.DATABASE_URL, max: 3 });
   return {
     app,

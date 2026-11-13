@@ -9,7 +9,7 @@ import {
   ReviewVerificationBody,
   SubmitVerificationBody,
 } from '@touchgrass/shared';
-import { CurrentUser, Roles } from '../../common/auth/decorators.js';
+import { AllowOnboarding, CurrentUser, Roles } from '../../common/auth/decorators.js';
 import type { AuthPrincipal } from '../../common/http/request-context.js';
 import { Idempotent } from '../../common/idempotency/idempotency.js';
 import { ApiZodBody, ApiZodQuery, ApiZodResponse } from '../../common/openapi/zod-openapi.js';
@@ -20,6 +20,8 @@ import { VerificationService } from './verification.service.js';
 /** Selfie verification (F-SAF-01). */
 @ApiTags('safety')
 @ApiBearerAuth()
+// Reachable during profile setup: the selfie is one of its steps (D-181).
+@AllowOnboarding()
 @Controller({ path: 'verification', version: '1' })
 export class VerificationController {
   constructor(private readonly verification: VerificationService) {}

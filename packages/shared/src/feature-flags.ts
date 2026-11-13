@@ -3,6 +3,8 @@ export const FEATURE_FLAG_DEFAULTS = {
   invite_gate: true,
   /** Hosting needs a verified profile (F-HST-01, F-SAF-01). Ops can relax it while verification capacity ramps up. */
   require_verification_to_host: true,
+  /** New members send a verification selfie during profile setup (D-181). Ops can switch it off if reviews back up. */
+  require_verification_to_join: true,
   paid_events: true,
   live_location: true,
   free_now: true,

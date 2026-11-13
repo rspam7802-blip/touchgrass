@@ -5,6 +5,7 @@ import { ONBOARDING_STEPS, type OnboardingStepName } from '../../../components/O
 export function resumeStep(state: OnboardingState): OnboardingStepName {
   if (!state.name) return 'name';
   if (!state.photos) return 'photos';
+  if (!state.verification) return 'verify';
   if (!state.dateOfBirth) return 'birthday';
   if (!state.city) return 'city';
   if (!state.interests) return 'interests';

@@ -39,6 +39,7 @@ describe('onboarding (F-ACC-04)', () => {
     expect(me0.body.onboarding).toEqual({
       name: false,
       photos: false,
+      verification: true,
       dateOfBirth: false,
       city: false,
       interests: false,

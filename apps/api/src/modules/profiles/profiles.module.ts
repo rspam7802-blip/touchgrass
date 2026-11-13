@@ -11,6 +11,7 @@ import { EventStatsModule } from '../events/stats/event-stats.module.js';
 import { EventProfileStats } from '../events/stats/event-stats.service.js';
 import { ProfileStatsReader } from './profile-stats.port.js';
 import { ProfilesController, PublicProfilesController } from './profiles.controller.js';
+import { OnboardingChecks } from './onboarding-checks.js';
 import { ProfilesService } from './profiles.service.js';
 import { HostRatingReaderModule } from '../feedback/host-rating-reader.js';
 
@@ -29,9 +30,10 @@ import { HostRatingReaderModule } from '../feedback/host-rating-reader.js';
   providers: [
     ProfilesService,
     PeopleService,
+    OnboardingChecks,
     { provide: ProfileStatsReader, useExisting: EventProfileStats },
   ],
-  exports: [ProfilesService, PeopleService, ProfileStatsReader],
+  exports: [ProfilesService, PeopleService, ProfileStatsReader, OnboardingChecks],
 })
 export class ProfilesModule implements OnModuleInit {
   constructor(

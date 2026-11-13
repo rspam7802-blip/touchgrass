@@ -8,6 +8,7 @@ import { useTheme } from '../src/theme/theme';
 export const ONBOARDING_STEPS = [
   'name',
   'photos',
+  'verify',
   'birthday',
   'gender',
   'city',

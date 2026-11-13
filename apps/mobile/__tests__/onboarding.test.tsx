@@ -36,6 +36,7 @@ import { mockRouter, renderWithProviders, resetStores } from '../test-utils';
 const incomplete = {
   name: false,
   photos: false,
+  verification: false,
   dateOfBirth: false,
   city: false,
   interests: false,
@@ -92,15 +93,17 @@ describe('resume logic', () => {
   it('resumes at the first unfinished required step', () => {
     expect(resumeStep(incomplete)).toBe('name');
     expect(resumeStep({ ...incomplete, name: true })).toBe('photos');
-    expect(resumeStep({ ...incomplete, name: true, photos: true })).toBe('birthday');
-    expect(resumeStep({ ...incomplete, name: true, photos: true, dateOfBirth: true })).toBe('city');
-    expect(
-      resumeStep({ ...incomplete, name: true, photos: true, dateOfBirth: true, city: true }),
-    ).toBe('interests');
+    // The selfie comes straight after the photos it is checked against (D-181).
+    expect(resumeStep({ ...incomplete, name: true, photos: true })).toBe('verify');
+    const shown = { ...incomplete, name: true, photos: true, verification: true };
+    expect(resumeStep(shown)).toBe('birthday');
+    expect(resumeStep({ ...shown, dateOfBirth: true })).toBe('city');
+    expect(resumeStep({ ...shown, dateOfBirth: true, city: true })).toBe('interests');
     expect(
       resumeStep({
         name: true,
         photos: true,
+        verification: true,
         dateOfBirth: true,
         city: true,
         interests: true,
@@ -143,7 +146,7 @@ describe('resume logic', () => {
 describe('steps', () => {
   it('name: requires 2+ characters and saves name and pronouns', async () => {
     await renderWithProviders(<NameStep />, { fetchFn: api.fetch });
-    expect(screen.getByRole('progressbar', { name: 'Step 1 of 11' })).toBeOnTheScreen();
+    expect(screen.getByRole('progressbar', { name: 'Step 1 of 12' })).toBeOnTheScreen();
     expect(screen.getByTestId('onboarding-primary')).toBeDisabled();
     await fireEvent.changeText(screen.getByTestId('name-input'), ' Priya R. ');
     await fireEvent.changeText(screen.getByTestId('pronouns-input'), 'she/her');

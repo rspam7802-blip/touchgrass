@@ -140,6 +140,42 @@ const resolve = (itemId: string, body: object) =>
 // ---------- F-SAF-01 ----------
 
 describe('verified profiles (F-SAF-01)', () => {
+  it('profile setup waits for a verification selfie while the flag is on (D-181)', async () => {
+    const flags = h.app.get(FeatureFlagsService);
+    await flags.set('require_verification_to_join', true);
+    try {
+      const s = await signIn(h);
+      const me: Member = { id: s.user.id, token: s.accessToken, phone: s.phone };
+      // Everything else done, the account still cannot go live without the selfie.
+      await expect(onboard(h, s.accessToken)).rejects.toThrow();
+      const before = (await api(me).get('/v1/me').expect(200)).body as {
+        status: string;
+        onboarding: Record<string, boolean>;
+      };
+      expect(before.status).toBe('onboarding');
+      expect(before.onboarding).toMatchObject({
+        photos: true,
+        verification: false,
+        complete: false,
+      });
+      // The verification routes work during setup, and a selfie in review is enough to continue.
+      const started = (await api(me).post('/v1/verification/challenge').expect(200))
+        .body as MyVerification;
+      const selfie = await upload(me, 'verification_selfie');
+      await api(me)
+        .post('/v1/verification/submit', { challengeId: started.challenge?.id, mediaId: selfie })
+        .expect(200);
+      const done = (await api(me).post('/v1/me/onboarding/complete').expect(200)).body as {
+        status: string;
+        onboarding: Record<string, boolean>;
+      };
+      expect(done.status).toBe('active');
+      expect(done.onboarding).toMatchObject({ verification: true, complete: true });
+    } finally {
+      await flags.set('require_verification_to_join', false);
+    }
+  });
+
   it('pose challenge → selfie → face match → review queue → approve; the selfie is deleted', async () => {
     const m = await member(h);
     const empty = (await api(m).get('/v1/verification').expect(200)).body as MyVerification;

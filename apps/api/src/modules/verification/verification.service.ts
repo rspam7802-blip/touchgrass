@@ -80,6 +80,16 @@ export class VerificationService {
     return row?.n ?? 0;
   }
 
+  /** A selfie is in review or was approved: what profile setup asks for (D-181). */
+  async hasSubmitted(userId: string): Promise<boolean> {
+    const [user, last] = await Promise.all([this.users.findById(userId), this.latest(userId)]);
+    return (
+      (user?.verifiedAt ?? null) !== null ||
+      last?.status === 'pending' ||
+      last?.status === 'approved'
+    );
+  }
+
   async mine(userId: string, now: Date = new Date()): Promise<MyVerification> {
     const [user, last, used] = await Promise.all([
       this.users.findById(userId),

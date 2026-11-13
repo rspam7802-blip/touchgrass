@@ -759,3 +759,9 @@ A plan with visibility `approval` shows its basics (title, time, area, hosts, ho
 ## D-180 SOS from the plan
 
 People going to a plan and its hosts get an SOS button on the plan screen while it is published. It does what SOS always does (one confirmation, dials 112, starts a live share, F-SAF-04) and the text to their trusted contacts (up to three) also names the plan, when it is, and where: the place and address with a maps link when this person can see the exact spot, otherwise only the area. Because the server sends no SMS (D-166), the phone's Messages app now opens by itself with every contact and the message filled in; the button stays for a second try. With no trusted contacts saved, the plan screen says so and links to adding them.
+
+## D-181 A verification selfie is part of profile setup
+
+After adding photos, a new member copies a random pose in a selfie (the existing F-SAF-01 flow) before they can finish setup. Sending it is enough: the account goes live while a reviewer compares the selfie with the photos, and the verified badge (and what depends on it: hosting, women-only and men-only plans) follows on approval. A rejected selfie before setup is finished must be retaken; members who finished setup earlier are not sent back.
+
+Profiles never reads verification's tables: modules register named requirements with `OnboardingChecks` (profiles), and `onboardingState.verification` is true when the check passes. The check is on while the `require_verification_to_join` flag is (default on), so the team can switch the step off from the admin console if reviews back up; the app's step then steps aside. The verification routes are `@AllowOnboarding()`.
