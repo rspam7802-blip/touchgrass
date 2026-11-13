@@ -76,9 +76,9 @@ export function canViewEvent(v: ViewerFacts, e: EventFacts): boolean {
   if (genderOnly(e.visibility) !== null) return matchesGenderOnly(e.visibility, v);
   if (v.invited || (v.rsvp !== null && v.rsvp !== 'cancelled')) return true;
   switch (e.visibility) {
+    // Private (`approval`) plans show their basics to everyone; the spot, guest list and chat wait.
     case 'public':
     case 'balanced':
-    // Private plans show their basics to everyone; the spot, guest list and chat wait for approval.
     case 'approval':
       return true;
     case 'friends_of_friends':
