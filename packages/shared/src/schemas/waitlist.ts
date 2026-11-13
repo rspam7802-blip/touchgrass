@@ -16,6 +16,12 @@ export function waitlistCitySlug(raw: string): string {
 }
 
 /** Public launch waitlist (D-169): people without an invite leave a contact so the team can invite them. */
+/** utm_source as stored: lower-case letters, digits, - and _, at most 32; anything else is no source. */
+export function normalizeWaitlistSource(raw: string | null | undefined): string | null {
+  const v = (raw ?? '').trim().toLowerCase();
+  return /^[a-z0-9_-]{1,32}$/.test(v) ? v : null;
+}
+
 export const LaunchWaitlistBody = z
   .object({
     name: z.string().trim().min(1).max(60),
@@ -62,6 +68,22 @@ export const LaunchWaitlistBody = z
       .optional()
       .transform((v) => (v ? v : null)),
     language: z.enum(SUPPORTED_LANGUAGES).default('en'),
+    /** Where they came from (D-191): the link's utm_source, normalised; anything odd is dropped. */
+    source: z
+      .string()
+      .trim()
+      .toLowerCase()
+      .max(64)
+      .optional()
+      .transform((v) => normalizeWaitlistSource(v)),
+    /** A friend's referral code from the link (?ref=), if any; checked by the API. */
+    ref: z
+      .string()
+      .trim()
+      .toUpperCase()
+      .max(32)
+      .optional()
+      .transform((v) => (v ? v : null)),
     consent: z.literal(true),
   })
   .refine((b) => b.phone !== null || b.email !== null, {
@@ -88,6 +110,10 @@ export const LaunchWaitlistEntry = z.object({
   createdAt: z.iso.datetime(),
   invitedAt: z.iso.datetime().nullable(),
   inviteCode: z.string().nullable(),
+  /** Where they came from (D-191), null when unknown. */
+  source: z.string().nullable().optional(),
+  /** The member whose referral link brought them. */
+  referrer: z.object({ id: z.uuid(), name: z.string() }).nullable().optional(),
 });
 export type LaunchWaitlistEntry = z.infer<typeof LaunchWaitlistEntry>;
 
@@ -108,3 +134,45 @@ export const LaunchWaitlistInviteResult = z.object({
   emailError: z.string().nullable().optional(),
 });
 export type LaunchWaitlistInviteResult = z.infer<typeof LaunchWaitlistInviteResult>;
+
+/** Waitlist insights (D-191): over the last 7, 30 or 90 days. */
+export const WaitlistInsightsQuery = z.object({
+  days: z.coerce
+    .number()
+    .int()
+    .refine((d) => [7, 30, 90].includes(d), 'Use 7, 30 or 90')
+    .default(30),
+});
+export type WaitlistInsightsQuery = z.infer<typeof WaitlistInsightsQuery>;
+
+const Count = z.object({ key: z.string(), count: z.number().int() });
+export const WaitlistInsights = z.object({
+  days: z.number().int(),
+  totals: z.object({
+    allTime: z.number().int(),
+    inPeriod: z.number().int(),
+    today: z.number().int(),
+    last7Days: z.number().int(),
+    waiting: z.number().int(),
+  }),
+  /** Per day in IST, oldest first: sign-ups and invites sent that day. */
+  daily: z.array(
+    z.object({ day: z.iso.date(), signedUp: z.number().int(), invited: z.number().int() }),
+  ),
+  byCity: z.array(Count),
+  byLanguage: z.array(Count),
+  /** `unknown` for entries without a source. */
+  bySource: z.array(Count),
+  /** phone, email or both. */
+  byContact: z.array(Count),
+  /** Members whose referral links brought people, most first. */
+  byReferrer: z.array(z.object({ id: z.uuid(), name: z.string(), count: z.number().int() })),
+  /** People who signed up in the period, and how far they got. */
+  funnel: z.object({
+    signedUp: z.number().int(),
+    invited: z.number().int(),
+    joinedApp: z.number().int(),
+    finishedProfile: z.number().int(),
+  }),
+});
+export type WaitlistInsights = z.infer<typeof WaitlistInsights>;

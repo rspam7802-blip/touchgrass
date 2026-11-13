@@ -90,6 +90,8 @@ export async function joinWaitlistAction(
   const body = {
     ...values,
     language: isSupportedLanguage(language) ? language : 'en',
+    source: text(form, 'source').slice(0, 64) || undefined,
+    ref: text(form, 'ref').slice(0, 32) || undefined,
   };
   const parsed = LaunchWaitlistBody.safeParse(body);
   if (!parsed.success) {

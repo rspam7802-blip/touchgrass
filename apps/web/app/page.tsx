@@ -1,4 +1,9 @@
-import { BRAND, isReferralCode, SUPPORTED_LANGUAGES } from '@touchgrass/shared';
+import {
+  BRAND,
+  isReferralCode,
+  normalizeWaitlistSource,
+  SUPPORTED_LANGUAGES,
+} from '@touchgrass/shared';
 import { headers } from 'next/headers';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
@@ -9,7 +14,7 @@ import { StoreLinks } from './_landing/store-links';
 import { WaitlistForm } from './_landing/waitlist-form';
 
 interface PageProps {
-  searchParams: Promise<{ lang?: string; ref?: string }>;
+  searchParams: Promise<{ lang?: string; ref?: string; utm_source?: string }>;
 }
 
 function Section({
@@ -50,7 +55,9 @@ function Card({ title, body, step }: { title: string; body: string; step?: numbe
 
 /** Public home page (D-169): what TouchGrass is, how it works, safety, invite check and the waitlist. */
 export default async function Home({ searchParams }: PageProps) {
-  const { lang, ref } = await searchParams;
+  const { lang, ref, utm_source: utmSource } = await searchParams;
+  // Where the visitor came from (D-191): kept with their waitlist entry.
+  const source = normalizeWaitlistSource(utmSource);
   // A friend's referral link (F-GRW-01): show their code to enter at sign-up; anything else is ignored.
   const referral = ref && isReferralCode(ref) ? ref.trim().toUpperCase() : null;
   const language = resolveLanguage(lang, (await headers()).get('accept-language'));
@@ -94,7 +101,7 @@ export default async function Home({ searchParams }: PageProps) {
           {SUPPORTED_LANGUAGES.map((code) => (
             <Link
               key={code}
-              href={`/?lang=${code}${referral ? `&ref=${referral}` : ''}`}
+              href={`/?lang=${code}${referral ? `&ref=${referral}` : ''}${source ? `&utm_source=${source}` : ''}`}
               hrefLang={code}
               aria-current={code === language ? 'true' : undefined}
               className="min-h-11 min-w-11 rounded-full border border-border px-3 py-2 text-sm font-semibold aria-[current=true]:bg-primary aria-[current=true]:text-on-primary"
@@ -180,7 +187,13 @@ export default async function Home({ searchParams }: PageProps) {
           <InviteCheck t={l.check} errors={errors} playUrl={playUrl} appStoreUrl={appStoreUrl} />
         </Section>
         <Section id="waitlist" title={l.waitlist.title} intro={l.waitlist.body}>
-          <WaitlistForm t={l.waitlist} errors={errors} language={language} />
+          <WaitlistForm
+            t={l.waitlist}
+            errors={errors}
+            language={language}
+            source={source}
+            referral={referral}
+          />
         </Section>
       </div>
 

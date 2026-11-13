@@ -225,6 +225,22 @@ export class InvitesService {
     return new Map(rows.map((r) => [r.id, r.code]));
   }
 
+  /** Who used each of these codes and when (waitlist funnel, D-191). */
+  async redemptionsByCodeIds(
+    ids: readonly string[],
+  ): Promise<Map<string, { userId: string; at: Date }>> {
+    if (ids.length === 0) return new Map();
+    const rows = await this.db
+      .select({
+        codeId: inviteRedemptions.inviteCodeId,
+        userId: inviteRedemptions.userId,
+        at: inviteRedemptions.createdAt,
+      })
+      .from(inviteRedemptions)
+      .where(inArray(inviteRedemptions.inviteCodeId, [...ids]));
+    return new Map(rows.map((r) => [r.codeId, { userId: r.userId, at: r.at }]));
+  }
+
   /** Invite tree: who was invited by this user (and through which code). */
   async inviteesOf(userId: string): Promise<{ userId: string; redeemedAt: string }[]> {
     const rows = await this.db

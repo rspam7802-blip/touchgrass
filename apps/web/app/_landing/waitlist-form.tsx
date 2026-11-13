@@ -12,10 +12,16 @@ export function WaitlistForm({
   t,
   errors,
   language,
+  source = null,
+  referral = null,
 }: {
   t: Translation['landing']['waitlist'];
   errors: { RATE_LIMITED: string; INTERNAL: string };
   language: SupportedLanguage;
+  /** The link's utm_source (D-191), e.g. instagram. */
+  source?: string | null;
+  /** A friend's referral code from the link (?ref=). */
+  referral?: string | null;
 }) {
   const [state, action, pending] = useActionState<WaitlistState, FormData>(joinWaitlistAction, {
     done: false,
@@ -46,6 +52,8 @@ export function WaitlistForm({
   return (
     <form action={action} className="flex flex-col gap-4" noValidate>
       <input type="hidden" name="language" value={language} />
+      {source ? <input type="hidden" name="source" value={source} /> : null}
+      {referral ? <input type="hidden" name="ref" value={referral} /> : null}
       {state.fields.length > 0 || state.error ? (
         <p role="alert" className="font-semibold text-[var(--tg-danger)]">
           {state.error

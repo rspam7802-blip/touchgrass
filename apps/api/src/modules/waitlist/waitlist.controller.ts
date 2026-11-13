@@ -19,6 +19,8 @@ import {
   LaunchWaitlistQuery,
   LaunchWaitlistResponse,
   paginated,
+  WaitlistInsights,
+  WaitlistInsightsQuery,
 } from '@touchgrass/shared';
 import { CurrentUser, Public, Roles } from '../../common/auth/decorators.js';
 import type { AuthPrincipal } from '../../common/http/request-context.js';
@@ -64,6 +66,16 @@ export class WaitlistAdminController {
     @Query(new ZodPipe(LaunchWaitlistQuery)) q: Dto.LaunchWaitlistQuery,
   ): Promise<Dto.Paginated<Dto.LaunchWaitlistEntry>> {
     return this.waitlist.list(q);
+  }
+
+  @Get('insights')
+  @Roles(...ADMIN_SECTIONS.waitlist)
+  @ApiZodQuery(WaitlistInsightsQuery)
+  @ApiZodResponse(200, WaitlistInsights)
+  insights(
+    @Query(new ZodPipe(WaitlistInsightsQuery)) q: Dto.WaitlistInsightsQuery,
+  ): Promise<Dto.WaitlistInsights> {
+    return this.waitlist.insights(q);
   }
 
   /** Creating codes is the invite-codes section's power, so only its roles may invite. */

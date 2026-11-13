@@ -66,3 +66,41 @@ test('invites a waitlisted person and removes another, both audited', async ({ p
   for (const action of ['waitlist.invite', 'waitlist.remove'])
     await expect(page.getByRole('cell', { name: action }).first()).toBeVisible();
 });
+
+test('insights: a sign-up from an Instagram link is counted, labelled and exported (D-191)', async ({
+  page,
+  browser,
+}) => {
+  const name = `Insta ${String(Date.now())}${String(Math.random()).slice(2, 6)}`;
+  // A visitor arrives from the Instagram bio link and joins.
+  const visitor = await browser.newContext({ storageState: { cookies: [], origins: [] } });
+  const site = await visitor.newPage();
+  await site.goto('/?lang=en&utm_source=instagram');
+  const form = site.locator('#waitlist');
+  await form.getByLabel('Your name').fill(name);
+  await form.getByLabel('Email').fill(`insta-${String(Date.now())}@example.com`);
+  await form.getByRole('checkbox').check();
+  await form.getByRole('button', { name: 'Join the waitlist' }).click();
+  await expect(site.getByTestId('waitlist-done')).toBeVisible();
+  await visitor.close();
+
+  await page.goto('/admin/waitlist');
+  await expect(page.getByRole('heading', { name: 'Insights' })).toBeVisible();
+  await expect(page.getByTestId('waitlist-totals')).toContainText('Today');
+  await expect(page.getByTestId('waitlist-sources')).toContainText('Instagram');
+  await expect(page.getByTestId('waitlist-funnel')).toContainText('Joined the app');
+  await expect(page.getByRole('row', { name: new RegExp(name) })).toContainText('From instagram');
+  await page.getByRole('link', { name: 'Last 90 days' }).click();
+  await expect(page).toHaveURL(/days=90/);
+  const results = await new AxeBuilder({ page })
+    .withTags(['wcag2a', 'wcag2aa', 'wcag21aa'])
+    .analyze();
+  expect(results.violations).toEqual([]);
+
+  const csv = await page.request.get('/admin/waitlist/export?status=all');
+  expect(csv.headers()['content-type']).toContain('text/csv');
+  const text = await csv.text();
+  expect(text).toContain('"Source"');
+  expect(text).toContain(name);
+  expect(text).toContain('"instagram"');
+});

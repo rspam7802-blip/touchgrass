@@ -1,8 +1,14 @@
-import { LaunchWaitlistInviteResult, paginated, LaunchWaitlistEntry } from '@touchgrass/shared';
+import {
+  LaunchWaitlistEntry,
+  LaunchWaitlistInviteResult,
+  paginated,
+  WaitlistInsights,
+} from '@touchgrass/shared';
 import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { FakeEmailSender } from '../src/adapters/email/fake.email.js';
 import { UpstreamError } from '../src/adapters/http/http-client.js';
+import { ReferralCodesService } from '../src/modules/referrals/referral-codes.service.js';
 import { UsersService } from '../src/modules/users/users.service.js';
 import { SEED_ADMIN_PHONE } from '../src/seed/seed.js';
 import {
@@ -38,6 +44,8 @@ async function rows(where: string, params: unknown[]) {
     note: string | null;
     invited_at: Date | null;
     invite_code_id: string | null;
+    source: string | null;
+    referrer_user_id: string | null;
   }>(`SELECT * FROM launch_waitlist WHERE ${where}`, params);
   return found;
 }
@@ -317,5 +325,67 @@ describe('admin waitlist (F-WEB-03, D-169)', () => {
       .post(`/v1/admin/waitlist/${unknown}/invite`)
       .set(...bearer(admin))
       .expect(404);
+  });
+});
+
+describe('waitlist insights (D-191)', () => {
+  it('records where people came from and who referred them, and counts them', async () => {
+    const friend = await member(h);
+    const code = await h.app.get(ReferralCodesService).codeFor(friend.id);
+    const tag = String(Date.now());
+    await join({
+      name: 'From Insta',
+      email: `insta-${tag}@example.com`,
+      source: 'Instagram',
+    }).expect(200);
+    await join({ name: 'From WA', email: `wa-${tag}@example.com`, source: 'whatsapp' }).expect(200);
+    await join({ name: 'From a friend', email: `ref-${tag}@example.com`, ref: code }).expect(200);
+    // Junk sources and codes are ignored, never an error.
+    await join({
+      name: 'Odd',
+      email: `odd-${tag}@example.com`,
+      source: '<b>x</b>',
+      ref: 'NOPE',
+    }).expect(200);
+    const [insta] = await rows('email = $1', [`insta-${tag}@example.com`]);
+    const [viaFriend] = await rows('email = $1', [`ref-${tag}@example.com`]);
+    const [odd] = await rows('email = $1', [`odd-${tag}@example.com`]);
+    expect(insta?.source).toBe('instagram');
+    expect(viaFriend).toMatchObject({ source: 'referral', referrer_user_id: friend.id });
+    expect(odd).toMatchObject({ source: null, referrer_user_id: null });
+
+    const list = paginated(LaunchWaitlistEntry).parse(
+      (
+        await request(h.http)
+          .get('/v1/admin/waitlist?status=all&limit=100')
+          .set(...bearer(admin))
+          .expect(200)
+      ).body,
+    );
+    const shown = list.items.find((e) => e.email === `ref-${tag}@example.com`);
+    expect(shown?.referrer?.id).toBe(friend.id);
+
+    const insights = WaitlistInsights.parse(
+      (
+        await request(h.http)
+          .get('/v1/admin/waitlist/insights?days=30')
+          .set(...bearer(admin))
+          .expect(200)
+      ).body,
+    );
+    expect(insights.daily).toHaveLength(30);
+    expect(insights.totals.inPeriod).toBeGreaterThanOrEqual(4);
+    const sources = Object.fromEntries(insights.bySource.map((s) => [s.key, s.count]));
+    expect(sources.instagram).toBeGreaterThanOrEqual(1);
+    expect(sources.whatsapp).toBeGreaterThanOrEqual(1);
+    expect(sources.referral).toBeGreaterThanOrEqual(1);
+    expect(insights.byReferrer.find((r) => r.id === friend.id)?.count).toBe(1);
+    expect(insights.funnel.signedUp).toBe(insights.totals.inPeriod);
+    expect(insights.daily.reduce((n, d) => n + d.signedUp, 0)).toBeGreaterThanOrEqual(4);
+
+    await request(h.http)
+      .get('/v1/admin/waitlist/insights?days=14')
+      .set(...bearer(admin))
+      .expect(400);
   });
 });

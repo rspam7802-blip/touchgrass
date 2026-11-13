@@ -14,6 +14,10 @@ export const launchWaitlist = pgTable('launch_waitlist', {
   language: text('language', { enum: ['en', 'te', 'hi'] }).notNull(),
   invitedAt: ts('invited_at'),
   inviteCodeId: uuid('invite_code_id'),
+  /** The link's utm_source (D-191), e.g. instagram or whatsapp; null when unknown. */
+  source: text('source'),
+  /** The member whose referral link brought them, if any. */
+  referrerUserId: uuid('referrer_user_id'),
   createdAt: ts('created_at').notNull().defaultNow(),
   updatedAt: ts('updated_at').notNull().defaultNow(),
 });

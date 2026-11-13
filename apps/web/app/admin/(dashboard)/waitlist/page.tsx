@@ -1,8 +1,15 @@
-import { canAccessSection, LaunchWaitlistEntry, paginated, resources } from '@touchgrass/shared';
+import {
+  canAccessSection,
+  LaunchWaitlistEntry,
+  paginated,
+  resources,
+  WaitlistInsights,
+} from '@touchgrass/shared';
 import Link from 'next/link';
 import { canOpen, currentRoles } from '../../../../lib/admin-nav';
 import { adminApi } from '../../../../lib/admin-session';
 import { inputClass, NoAccess, secondaryButton } from '../../../../lib/admin-ui';
+import { WaitlistInsightsPanel } from './insights';
 import { InviteButton, RemoveButton } from './row-actions';
 
 const t = resources.en.admin.waitlist;
@@ -12,23 +19,34 @@ const fmt = new Intl.DateTimeFormat('en-IN', { dateStyle: 'medium', timeZone: 'A
 export default async function WaitlistPage({
   searchParams,
 }: {
-  searchParams: Promise<{ cursor?: string; status?: string }>;
+  searchParams: Promise<{ cursor?: string; status?: string; days?: string }>;
 }) {
   if (!(await canOpen('waitlist'))) return <NoAccess />;
   const canInvite = canAccessSection(await currentRoles(), 'inviteCodes');
-  const { cursor, status: rawStatus } = await searchParams;
+  const { cursor, status: rawStatus, days: rawDays } = await searchParams;
+  const days = [7, 30, 90].find((d) => String(d) === rawDays) ?? 30;
   const status = rawStatus === 'all' ? 'all' : 'waiting';
   const qs = new URLSearchParams({ limit: '50', status, ...(cursor ? { cursor } : {}) });
-  const page = await adminApi(
-    `/v1/admin/waitlist?${qs.toString()}`,
-    paginated(LaunchWaitlistEntry),
-    {},
-    `/admin/waitlist?status=${status}`,
-  );
+  const [page, insights] = await Promise.all([
+    adminApi(
+      `/v1/admin/waitlist?${qs.toString()}`,
+      paginated(LaunchWaitlistEntry),
+      {},
+      `/admin/waitlist?status=${status}`,
+    ),
+    adminApi(
+      `/v1/admin/waitlist/insights?days=${String(days)}`,
+      WaitlistInsights,
+      {},
+      `/admin/waitlist?status=${status}`,
+    ),
+  ]);
   return (
     <>
       <h1 className="text-3xl font-extrabold">{t.title}</h1>
       <p className="max-w-2xl">{t.intro}</p>
+      <WaitlistInsightsPanel data={insights} status={status} />
+      <h2>{t.people}</h2>
       <form className="flex flex-wrap items-end gap-3">
         <label htmlFor="waitlist-status" className="flex flex-col gap-1 font-semibold">
           {t.show}
@@ -83,7 +101,16 @@ export default async function WaitlistPage({
                     {e.phone ? <div className="font-mono">{e.phone}</div> : null}
                     {e.email ? <div>{e.email}</div> : null}
                   </td>
-                  <td className="p-2">{e.city}</td>
+                  <td className="p-2">
+                    <div>{e.city}</div>
+                    {e.source || e.referrer ? (
+                      <div className="text-sm text-muted" data-testid={`waitlist-source-${e.id}`}>
+                        {e.referrer
+                          ? t.referredBy.replace('{{name}}', e.referrer.name)
+                          : t.from.replace('{{source}}', e.source ?? '')}
+                      </div>
+                    ) : null}
+                  </td>
                   <td className="max-w-xs p-2 [overflow-wrap:anywhere]">{e.note ?? ''}</td>
                   <td className="p-2">{fmt.format(new Date(e.createdAt))}</td>
                   <td className="p-2">
