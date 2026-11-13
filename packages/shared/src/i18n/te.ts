@@ -16,6 +16,7 @@ export const te: Translation = {
     crew: 'క్రూ',
   },
   common: {
+    choose: 'ఎంచుకోవడానికి నొక్కు',
     search: 'వెతుకు',
     noMatches: 'ఏమీ దొరకలేదు. వేరే పదంతో వెతుకు.',
     continue: 'ముందుకు',
@@ -869,6 +870,7 @@ export const te: Translation = {
     endTime: 'అయిపోయే టైమ్',
     dateLabel: 'డేట్',
     timeLabel: 'టైమ్',
+    pickCategory: 'కేటగిరీ ఎంచుకో',
     pickDate: 'డేట్ ఎంచుకో',
     pickTime: 'టైమ్ ఎంచుకో',
     prevMonth: 'ముందు నెల',
@@ -1672,6 +1674,11 @@ export const te: Translation = {
     describeOther: 'కస్టమ్ షెడ్యూల్',
   },
   proposals: {
+    newIntro:
+      'నీ స్క్వాడ్‌కి ఒక ఐడియా చెప్పు. వాళ్ళు టైమ్, ప్లేస్‌కి ఓటు వేస్తారు, గెలిచింది ప్లాన్ అవుతుంది.',
+    sectionIdea: 'ఐడియా',
+    sectionWho: 'ఎవరు ఓటు వేస్తారు',
+    sectionWhen: 'ఓటింగ్ ఎప్పుడు ముగుస్తుంది',
     title: 'ప్లాన్‌కి ఓటు వెయ్',
     create: 'ఓటింగ్ మొదలుపెట్టు',
     list: 'ఓటింగ్‌లో ఉన్నవి',

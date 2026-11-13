@@ -627,6 +627,7 @@ describe('collaborative plans (F-ENG-03)', () => {
 
     await renderWithProviders(<NewProposalScreen />, { fetchFn: api.fetch });
     await fireEvent.changeText(screen.getByTestId('proposal-title'), 'Board games?');
+    await fireEvent.press(await screen.findByTestId('proposal-category'));
     await fireEvent.press(await screen.findByRole('radio', { name: 'Interest 0' }));
     await fireEvent.press(await screen.findByRole('checkbox', { name: 'Kiran' }));
     await fireEvent.press(screen.getByRole('radio', { name: '6 hours' }));

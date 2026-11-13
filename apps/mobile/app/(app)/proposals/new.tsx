@@ -4,8 +4,10 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ChipGroup } from '../../../components/ChipGroup';
 import { SquadPicker } from '../../../components/engagement/SquadPicker';
+import { interestOptions } from '../../../components/interest-options';
+import { SelectField } from '../../../components/SelectField';
 import { Button, Screen, SwitchRow, Text, TextField } from '../../../components/ui';
-import { localized, useInterests } from '../../../src/features/catalog/api';
+import { useInterests } from '../../../src/features/catalog/api';
 import { useCreateProposal } from '../../../src/features/engagement/api';
 import { errorMessage } from '../../../src/lib/errors';
 
@@ -42,6 +44,13 @@ export default function NewProposalScreen() {
   };
   return (
     <Screen testID="proposal-new">
+      <Text variant="title" accessibilityRole="header">
+        {t('proposals.create')}
+      </Text>
+      <Text tone="muted">{t('proposals.newIntro')}</Text>
+      <Text variant="heading" accessibilityRole="header">
+        {t('proposals.sectionIdea')}
+      </Text>
       <TextField
         label={t('proposals.titleLabel')}
         value={title}
@@ -49,25 +58,27 @@ export default function NewProposalScreen() {
         maxLength={LIMITS.proposals.titleMaxLength}
         testID="proposal-title"
       />
-      <ChipGroup
+      <SelectField
         label={t('events.categoryLabel')}
-        mode="single"
-        options={(interests.data?.items ?? []).map((i) => ({
-          id: i.id,
-          label: localized(i.name, i18n.language),
-        }))}
-        selected={category ? [category] : []}
-        onChange={(next) => {
-          setCategory(next[0] ?? null);
-        }}
-        testIDPrefix="proposal-category"
+        placeholder={t('events.pickCategory')}
+        searchLabel={t('onboarding.interestsSearch')}
+        options={interestOptions(interests.data?.items ?? [], t, i18n.language)}
+        value={category}
+        onChange={setCategory}
+        testID="proposal-category"
       />
+      <Text variant="heading" accessibilityRole="header">
+        {t('proposals.sectionWho')}
+      </Text>
       <SquadPicker
         label={t('proposals.invitees')}
         selected={invitees}
         onChange={setInvitees}
         max={LIMITS.proposals.maxInvitees}
       />
+      <Text variant="heading" accessibilityRole="header">
+        {t('proposals.sectionWhen')}
+      </Text>
       <ChipGroup
         label={t('proposals.deadline')}
         mode="single"

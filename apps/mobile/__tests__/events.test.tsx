@@ -147,6 +147,14 @@ function freezeToday(): void {
   });
 }
 
+/** Opens the category list and picks the nth fixture interest. */
+async function pickCategory(n: number): Promise<void> {
+  await fireEvent.press(await screen.findByTestId('plot-category'));
+  await fireEvent.press(
+    await screen.findByTestId(`plot-category-${interestsFixture[n]?.id ?? ''}`),
+  );
+}
+
 /** Picks Tuesday 3 Nov 2026, 6:00 pm from the calendar and time sheets. */
 async function pickWhen(): Promise<void> {
   await fireEvent.press(screen.getByTestId('plot-date'));
@@ -570,9 +578,7 @@ describe('Plot flow (F-EVT-01/02)', () => {
   it('needs a place, then publishes with IST times and the chosen venue', async () => {
     await renderWithProviders(<PlotScreen />, { fetchFn: api.fetch });
     await fireEvent.changeText(screen.getByTestId('plot-title'), 'Sunset frisbee');
-    await fireEvent.press(
-      await screen.findByTestId(`plot-category-${interestsFixture[0]?.id ?? ''}`),
-    );
+    await pickCategory(0);
     await pickWhen();
     await fireEvent.press(screen.getByTestId('plot-submit'));
     expect(await screen.findByText('Pick a place first')).toBeOnTheScreen();
@@ -610,9 +616,7 @@ describe('Plot flow (F-EVT-01/02)', () => {
     });
     await renderWithProviders(<PlotScreen />, { fetchFn: api.fetch });
     await fireEvent.changeText(screen.getByTestId('plot-title'), 'Sunset frisbee');
-    await fireEvent.press(
-      await screen.findByTestId(`plot-category-${interestsFixture[0]?.id ?? ''}`),
-    );
+    await pickCategory(0);
     await pickWhen();
     await fireEvent.changeText(screen.getByTestId('plot-place-search'), 'lake');
     await fireEvent.press(await screen.findByTestId('place-fx_lake'));
@@ -635,9 +639,7 @@ describe('Plot flow (F-EVT-01/02)', () => {
     });
     await renderWithProviders(<PlotScreen />, { fetchFn: api.fetch });
     await fireEvent.changeText(screen.getByTestId('plot-title'), 'Sunset frisbee');
-    await fireEvent.press(
-      await screen.findByTestId(`plot-category-${interestsFixture[0]?.id ?? ''}`),
-    );
+    await pickCategory(0);
     await pickWhen();
     await fireEvent.changeText(screen.getByTestId('plot-place-search'), 'lake');
     await fireEvent.press(await screen.findByTestId('place-fx_lake'));
@@ -658,9 +660,7 @@ describe('Plot flow (F-EVT-01/02)', () => {
     });
     await renderWithProviders(<PlotScreen />, { fetchFn: api.fetch });
     await fireEvent.changeText(screen.getByTestId('plot-title'), 'Chai');
-    await fireEvent.press(
-      await screen.findByTestId(`plot-category-${interestsFixture[0]?.id ?? ''}`),
-    );
+    await pickCategory(0);
     await fireEvent.changeText(screen.getByTestId('plot-place-search'), 'lake');
     await fireEvent.press(await screen.findByTestId('place-fx_lake'));
     await fireEvent.press(screen.getByTestId('plot-submit'));
@@ -686,9 +686,7 @@ describe('Plot flow: pin, advanced options and edits', () => {
     mockRouteParams.current = {};
     await renderWithProviders(<PlotScreen />, { fetchFn: api.fetch });
     await fireEvent.changeText(screen.getByTestId('plot-title'), 'Mystery chai');
-    await fireEvent.press(
-      await screen.findByTestId(`plot-category-${interestsFixture[1]?.id ?? ''}`),
-    );
+    await pickCategory(1);
     await fireEvent.press(screen.getByRole('button', { name: 'Pick on map' }));
     await fireEvent(screen.getByTestId('plot-map'), 'press', {
       nativeEvent: { coordinate: { latitude: 17.44, longitude: 78.35 } },

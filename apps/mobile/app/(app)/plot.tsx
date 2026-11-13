@@ -20,6 +20,9 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 import MapView, { Marker, type MapPressEvent } from 'react-native-maps';
 import { ChipGroup } from '../../components/ChipGroup';
 import { DateField, TimeField } from '../../components/DateTimeFields';
+import { interestOptions } from '../../components/interest-options';
+import { PickList } from '../../components/PickList';
+import { SelectField } from '../../components/SelectField';
 import { SegmentedTabs } from '../../components/SegmentedTabs';
 import {
   Button,
@@ -419,10 +422,7 @@ function PlotForm({
     })),
   ].slice(0, SUGGESTIONS_MAX);
 
-  const categoryOptions = (interests.data?.items ?? []).map((i) => ({
-    id: i.id,
-    label: localized(i.name, i18n.language),
-  }));
+  const categoryOptions = interestOptions(interests.data?.items ?? [], t, i18n.language);
 
   return (
     <Screen testID="plot-screen">
@@ -444,18 +444,18 @@ function PlotForm({
         error={errors.title || null}
         testID="plot-title"
       />
-      <ChipGroup
+      <SelectField
         label={t('events.categoryLabel')}
+        placeholder={t('events.pickCategory')}
+        searchLabel={t('onboarding.interestsSearch')}
         options={categoryOptions}
-        selected={form.categoryId ? [form.categoryId] : []}
-        onChange={(ids) => {
-          set('categoryId', ids[0] ?? null);
+        value={form.categoryId}
+        onChange={(id) => {
+          set('categoryId', id);
         }}
-        mode="single"
-        scroll
-        testIDPrefix="plot-category"
+        error={errors.categoryId || null}
+        testID="plot-category"
       />
-      {errors.categoryId ? <Text tone="danger">{errors.categoryId}</Text> : null}
 
       <Text variant="heading" accessibilityRole="header">
         {t('events.where')}
@@ -750,7 +750,8 @@ function PlotForm({
           ) : null}
         </>
       ) : null}
-      <ChipGroup
+      <Text variant="label">{t('events.visibilityLabel')}</Text>
+      <PickList
         label={t('events.visibilityLabel')}
         options={VISIBILITIES.map((v) => ({ id: v, label: t(`events.visibility.${v}`) }))}
         selected={[form.visibility]}
@@ -759,7 +760,6 @@ function PlotForm({
           if (v) set('visibility', v);
         }}
         mode="single"
-        scroll
         testIDPrefix="plot-visibility"
       />
       {form.visibility === 'balanced' ? (

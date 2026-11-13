@@ -79,6 +79,8 @@ export const GLYPHS = {
   flower:
     '<circle cx="12" cy="7" r="3.25"/><circle cx="17" cy="12" r="3.25"/><circle cx="12" cy="17" r="3.25"/><circle cx="7" cy="12" r="3.25"/><circle cx="12" cy="12" r="1.75" fill="CURRENT" stroke="none"/>',
   wave: '<path d="M3 9.5c2.25 0 2.25-2.5 4.5-2.5s2.25 2.5 4.5 2.5 2.25-2.5 4.5-2.5 2.25 2.5 4.5 2.5M3 16c2.25 0 2.25-2.5 4.5-2.5S9.75 16 12 16s2.25-2.5 4.5-2.5S18.75 16 21 16"/>',
+  photo:
+    '<rect x="3.5" y="4.5" width="17" height="15" rx="3"/><circle cx="9" cy="10" r="1.75"/><path d="M20.5 15.5 15.25 10.25 6.5 19"/>',
   // Stories
   send: '<path d="M20.5 3.5 10.25 13.75"/><path d="M20.5 3.5 14 20.5l-3.75-6.75L3.5 10Z"/>',
   eye: '<path d="M2.5 12s3.5-6.5 9.5-6.5 9.5 6.5 9.5 6.5-3.5 6.5-9.5 6.5S2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="2.75"/><circle cx="12" cy="12" r="1.1" fill="ACCENT" stroke="none"/>',

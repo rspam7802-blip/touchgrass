@@ -20,6 +20,7 @@ export const en = {
   },
   common: {
     continue: 'Continue',
+    choose: 'Tap to choose',
     search: 'Search',
     noMatches: 'Nothing matches. Try another word.',
     cancel: 'Cancel',
@@ -858,6 +859,7 @@ export const en = {
     endTime: 'Ends',
     dateLabel: 'Date',
     timeLabel: 'Time',
+    pickCategory: 'Choose a category',
     pickDate: 'Pick a date',
     pickTime: 'Pick a time',
     prevMonth: 'Previous month',
@@ -1659,6 +1661,11 @@ export const en = {
     describeOther: 'Custom schedule',
   },
   proposals: {
+    newIntro:
+      'Float an idea to your squad. They vote on times and places, and the winner becomes a plan.',
+    sectionIdea: 'The idea',
+    sectionWho: 'Who votes',
+    sectionWhen: 'When voting closes',
     title: 'Vote on a plan',
     create: 'Start a vote',
     list: 'Up for a vote',

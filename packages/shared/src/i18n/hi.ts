@@ -16,6 +16,7 @@ export const hi: Translation = {
     crew: 'क्रू',
   },
   common: {
+    choose: 'चुनने के लिए दबाओ',
     search: 'खोजो',
     noMatches: 'कुछ नहीं मिला. कोई और शब्द आज़माओ.',
     continue: 'आगे बढ़ो',
@@ -856,6 +857,7 @@ export const hi: Translation = {
     endTime: 'खत्म',
     dateLabel: 'तारीख',
     timeLabel: 'समय',
+    pickCategory: 'कैटेगरी चुनो',
     pickDate: 'तारीख चुनो',
     pickTime: 'समय चुनो',
     prevMonth: 'पिछला महीना',
@@ -1659,6 +1661,11 @@ export const hi: Translation = {
     describeOther: 'कस्टम शेड्यूल',
   },
   proposals: {
+    newIntro:
+      'अपने स्क्वाड को एक आइडिया दो. वो समय और जगह पर वोट करेंगे, और जो जीते वो प्लान बन जाएगा.',
+    sectionIdea: 'आइडिया',
+    sectionWho: 'कौन वोट करेगा',
+    sectionWhen: 'वोटिंग कब बंद होगी',
     title: 'प्लान पर वोट',
     create: 'वोटिंग शुरू करो',
     list: 'वोटिंग में',

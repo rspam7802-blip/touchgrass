@@ -1,10 +1,10 @@
 import { type ReactNode, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Modal, Pressable, StyleSheet, View } from 'react-native';
+import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../src/theme/theme';
 import { ArrowLeft, ArrowRight, Calendar } from './icons';
-import { Button, Chip, Icon, Text } from './ui';
+import { Button, Chip, type GlyphIcon, Icon, Text } from './ui';
 
 /** IST has no daylight saving: a fixed +05:30 offset. */
 const IST_OFFSET_MS = 330 * 60_000;
@@ -65,17 +65,27 @@ function useFormatters(language: string) {
   }, [language]);
 }
 
-interface FieldShellProps {
+export interface FieldShellProps {
   label: string;
   display: string;
   error?: string | null;
   onOpen: () => void;
   testID?: string;
   hint: string;
+  /** Defaults to the calendar. */
+  icon?: GlyphIcon;
 }
 
 /** Looks like a text field, opens a picker: nothing to type and nothing to get wrong. */
-function FieldShell({ label, display, error, onOpen, testID, hint }: FieldShellProps) {
+export function FieldShell({
+  label,
+  display,
+  error,
+  onOpen,
+  testID,
+  hint,
+  icon = Calendar,
+}: FieldShellProps) {
   const theme = useTheme();
   return (
     <View style={styles.wrap}>
@@ -101,7 +111,7 @@ function FieldShell({ label, display, error, onOpen, testID, hint }: FieldShellP
         <Text style={styles.grow} numberOfLines={1}>
           {display}
         </Text>
-        <Icon icon={Calendar} size={18} color={theme.colors.textMuted} />
+        <Icon icon={icon} size={18} color={theme.colors.textMuted} />
       </Pressable>
       {error ? (
         <Text
@@ -117,7 +127,7 @@ function FieldShell({ label, display, error, onOpen, testID, hint }: FieldShellP
   );
 }
 
-function Sheet({
+export function Sheet({
   title,
   onClose,
   children,
@@ -154,7 +164,14 @@ function Sheet({
         <Text variant="heading" accessibilityRole="header">
           {title}
         </Text>
-        {children}
+        {/* Long lists scroll inside the sheet; the sheet never grows past most of the screen. */}
+        <ScrollView
+          style={styles.sheetBody}
+          contentContainerStyle={styles.sheetContent}
+          keyboardShouldPersistTaps="handled"
+        >
+          {children}
+        </ScrollView>
       </SafeAreaView>
     </Modal>
   );
@@ -460,7 +477,9 @@ const styles = StyleSheet.create({
   },
   grow: { flexGrow: 1, flexShrink: 1 },
   backdrop: { flex: 1 },
-  sheet: { borderWidth: 1, padding: 20, gap: 12 },
+  sheet: { borderWidth: 1, padding: 20, gap: 12, maxHeight: '88%' },
+  sheetBody: { flexGrow: 0 },
+  sheetContent: { gap: 12 },
   monthRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   monthName: { textAlign: 'center', flexGrow: 1 },
   monthButton: { alignItems: 'center', justifyContent: 'center' },

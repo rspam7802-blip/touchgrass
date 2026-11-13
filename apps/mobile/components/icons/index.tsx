@@ -81,6 +81,7 @@ export const Moon = glyph('moon');
 export const Flower2 = glyph('flower');
 export const Waves = glyph('wave');
 export const Send = glyph('send');
+export const Photo = glyph('photo');
 export const Eye = glyph('eye');
 export const Trash = glyph('trash');
 export const Flag = glyph('flag');

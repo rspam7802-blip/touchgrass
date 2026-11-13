@@ -2,17 +2,29 @@ import { LIMITS, type Message, REACTIONS } from '@touchgrass/shared';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FlatList, Modal, Pressable, StyleSheet, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import {
+  ActivityIndicator,
+  FlatList,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  Pressable,
+  StyleSheet,
+  TextInput,
+  View,
+} from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Photo, Send } from '../../../../components/icons';
+import { fontFamilyFor } from '../../../../src/theme/fonts';
 import { MessageBubble } from '../../../../components/chat/MessageBubble';
 import {
   Button,
   ErrorState,
   FadeIn,
+  Icon,
   LoadingState,
   OfflineBanner,
   Text,
-  TextField,
 } from '../../../../components/ui';
 import {
   useClosePoll,
@@ -51,6 +63,7 @@ export default function ThreadScreen() {
   const { t, i18n } = useTranslation();
   const router = useRouter();
   const theme = useTheme();
+  const insets = useSafeAreaInsets();
   const { client } = useApi();
   const conv = useConversation(id);
   const msgs = useMessages(id);
@@ -233,281 +246,327 @@ export default function ThreadScreen() {
       edges={['bottom']}
       testID="thread-screen"
     >
-      <OfflineBanner />
-      <View style={[styles.header, { borderBottomColor: theme.colors.border }]}>
-        <Text variant="heading" accessibilityRole="header" style={styles.grow} numberOfLines={1}>
-          {c.title}
-        </Text>
-        <Button
-          label={c.muted ? t('chat.unmute') : t('chat.mute')}
-          variant="ghost"
-          loading={mute.isPending}
-          onPress={() => {
-            if (c.muted) mute.mutateAsync('off').catch(fail);
-            else setMuteOpen(true);
-          }}
-          testID="mute"
-        />
-        {c.canCreatePoll ? (
+      {/* Keeps the message box above the keyboard (edge-to-edge Android and iOS alike). */}
+      <KeyboardAvoidingView
+        behavior="padding"
+        keyboardVerticalOffset={insets.top + (Platform.OS === 'ios' ? 44 : 56)}
+        style={styles.screen}
+      >
+        <OfflineBanner />
+        <View style={[styles.header, { borderBottomColor: theme.colors.border }]}>
+          <Text variant="heading" accessibilityRole="header" style={styles.grow} numberOfLines={1}>
+            {c.title}
+          </Text>
           <Button
-            label={t('chat.newPoll')}
+            label={c.muted ? t('chat.unmute') : t('chat.mute')}
             variant="ghost"
+            loading={mute.isPending}
             onPress={() => {
-              router.push({ pathname: '/chats/[id]/poll', params: { id } });
+              if (c.muted) mute.mutateAsync('off').catch(fail);
+              else setMuteOpen(true);
             }}
-            testID="new-poll"
+            testID="mute"
           />
-        ) : null}
-      </View>
-      {banner}
-      <FlatList
-        inverted
-        keyboardShouldPersistTaps="handled"
-        data={rows}
-        keyExtractor={(r) => (r.kind === 'message' ? r.message.id : r.clientId)}
-        onEndReached={() => {
-          if (msgs.hasNextPage && !msgs.isFetchingNextPage) void msgs.fetchNextPage();
-        }}
-        contentContainerStyle={styles.list}
-        renderItem={({ item }) => {
-          const p =
-            item.kind === 'pending' ? pending.find((x) => x.clientId === item.clientId) : undefined;
-          const m = item.kind === 'message' ? item.message : null;
-          return (
-            <FadeIn distance={6}>
-              <MessageBubble
-                message={m}
-                pending={p}
-                group={group}
-                seenBy={m && m.mine ? (seenOn.get(m.id) ?? []).filter(Boolean) : []}
-                canVote={canWrite}
-                canClosePoll={m?.poll ? m.mine || c.canCreatePoll : false}
-                onLongPress={() => {
-                  if (m) setSelected(m);
-                }}
-                onRetry={() => {
-                  if (p) void retry(p);
-                }}
-                onVote={(pollId, optionIds) => {
-                  vote.mutate({ pollId, optionIds });
-                }}
-                onClosePoll={(pollId) => {
-                  closePoll.mutate(pollId);
-                }}
-              />
-            </FadeIn>
-          );
-        }}
-      />
-      {names.length > 0 ? (
-        <Text
-          variant="caption"
-          tone="muted"
-          accessibilityLiveRegion="polite"
-          style={styles.typing}
-          testID="typing"
-        >
-          {names.length === 1 ? t('chat.typing', { name: names[0] }) : t('chat.typingMany')}
-        </Text>
-      ) : null}
-      {error ? (
-        <Text
-          tone="danger"
-          accessibilityLiveRegion="assertive"
-          style={styles.typing}
-          testID="thread-error"
-        >
-          {error}
-        </Text>
-      ) : null}
-      {canWrite && c.state !== 'request_received' ? (
-        <View style={[styles.composer, { borderTopColor: theme.colors.border }]}>
-          {replyTo ? (
-            <View style={styles.row}>
-              <Text variant="caption" tone="muted" style={styles.grow} numberOfLines={1}>
-                {t('chat.replyingTo', { name: replyTo.sender?.displayName ?? '' })}:{' '}
-                {replyTo.body ?? ''}
-              </Text>
-              <Button
-                label={t('chat.cancelReply')}
-                variant="ghost"
-                onPress={() => {
-                  setReplyTo(null);
-                }}
-              />
-            </View>
-          ) : null}
-          <View style={styles.row}>
+          {c.canCreatePoll ? (
             <Button
-              label={t('chat.attachPhoto')}
+              label={t('chat.newPoll')}
               variant="ghost"
-              loading={uploading}
-              onPress={() => void attach()}
-              testID="attach"
+              onPress={() => {
+                router.push({ pathname: '/chats/[id]/poll', params: { id } });
+              }}
+              testID="new-poll"
             />
-            <View style={styles.grow}>
-              <TextField
-                label={t('chat.message')}
+          ) : null}
+        </View>
+        {banner}
+        <FlatList
+          inverted
+          keyboardShouldPersistTaps="handled"
+          data={rows}
+          keyExtractor={(r) => (r.kind === 'message' ? r.message.id : r.clientId)}
+          onEndReached={() => {
+            if (msgs.hasNextPage && !msgs.isFetchingNextPage) void msgs.fetchNextPage();
+          }}
+          contentContainerStyle={styles.list}
+          renderItem={({ item }) => {
+            const p =
+              item.kind === 'pending'
+                ? pending.find((x) => x.clientId === item.clientId)
+                : undefined;
+            const m = item.kind === 'message' ? item.message : null;
+            return (
+              <FadeIn distance={6}>
+                <MessageBubble
+                  message={m}
+                  pending={p}
+                  group={group}
+                  seenBy={m && m.mine ? (seenOn.get(m.id) ?? []).filter(Boolean) : []}
+                  canVote={canWrite}
+                  canClosePoll={m?.poll ? m.mine || c.canCreatePoll : false}
+                  onLongPress={() => {
+                    if (m) setSelected(m);
+                  }}
+                  onRetry={() => {
+                    if (p) void retry(p);
+                  }}
+                  onVote={(pollId, optionIds) => {
+                    vote.mutate({ pollId, optionIds });
+                  }}
+                  onClosePoll={(pollId) => {
+                    closePoll.mutate(pollId);
+                  }}
+                />
+              </FadeIn>
+            );
+          }}
+        />
+        {names.length > 0 ? (
+          <Text
+            variant="caption"
+            tone="muted"
+            accessibilityLiveRegion="polite"
+            style={styles.typing}
+            testID="typing"
+          >
+            {names.length === 1 ? t('chat.typing', { name: names[0] }) : t('chat.typingMany')}
+          </Text>
+        ) : null}
+        {error ? (
+          <Text
+            tone="danger"
+            accessibilityLiveRegion="assertive"
+            style={styles.typing}
+            testID="thread-error"
+          >
+            {error}
+          </Text>
+        ) : null}
+        {canWrite && c.state !== 'request_received' ? (
+          <View style={[styles.composer, { borderTopColor: theme.colors.border }]}>
+            {replyTo ? (
+              <View style={styles.row}>
+                <Text variant="caption" tone="muted" style={styles.grow} numberOfLines={1}>
+                  {t('chat.replyingTo', { name: replyTo.sender?.displayName ?? '' })}:{' '}
+                  {replyTo.body ?? ''}
+                </Text>
+                <Button
+                  label={t('chat.cancelReply')}
+                  variant="ghost"
+                  onPress={() => {
+                    setReplyTo(null);
+                  }}
+                />
+              </View>
+            ) : null}
+            <View style={styles.composerRow}>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={t('chat.attachPhoto')}
+                accessibilityState={{ disabled: uploading, busy: uploading }}
+                disabled={uploading}
+                onPress={() => void attach()}
+                testID="attach"
+                style={[
+                  styles.round,
+                  {
+                    backgroundColor: theme.colors.surfaceAlt,
+                    borderColor: theme.colors.border,
+                    opacity: uploading ? 0.5 : 1,
+                  },
+                ]}
+              >
+                {uploading ? (
+                  <ActivityIndicator color={theme.colors.primary} />
+                ) : (
+                  <Icon icon={Photo} size={22} color={theme.colors.text} />
+                )}
+              </Pressable>
+              <TextInput
+                accessibilityLabel={t('chat.message')}
                 placeholder={t('chat.messagePlaceholder')}
+                placeholderTextColor={theme.colors.textMuted}
                 value={text}
                 onChangeText={onTextChange}
                 maxLength={LIMITS.chat.maxMessageLength}
                 multiline
+                maxFontSizeMultiplier={2}
                 testID="composer"
+                style={[
+                  theme.typography.body,
+                  styles.input,
+                  {
+                    color: theme.colors.text,
+                    backgroundColor: theme.colors.surfaceAlt,
+                    borderColor: theme.colors.inputBorder,
+                    fontFamily: fontFamilyFor(theme.typography.body.fontWeight),
+                  },
+                ]}
               />
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={t('chat.send')}
+                accessibilityState={{ disabled: text.trim().length === 0 }}
+                disabled={text.trim().length === 0}
+                onPress={() => void submit()}
+                testID="send"
+                style={[
+                  styles.round,
+                  {
+                    backgroundColor: theme.colors.primary,
+                    borderColor: theme.colors.primary,
+                    opacity: text.trim().length === 0 ? 0.4 : 1,
+                  },
+                ]}
+              >
+                <Icon icon={Send} size={20} color={theme.colors.onPrimary} />
+              </Pressable>
             </View>
-            <Button
-              label={t('chat.send')}
-              disabled={text.trim().length === 0}
-              onPress={() => void submit()}
-              testID="send"
-            />
           </View>
-        </View>
-      ) : null}
+        ) : null}
 
-      <Modal
-        visible={selected !== null}
-        transparent
-        animationType="fade"
-        onRequestClose={() => {
-          setSelected(null);
-        }}
-      >
-        <Pressable
-          style={[styles.backdrop, { backgroundColor: theme.colors.overlay }]}
-          accessibilityRole="button"
-          accessibilityLabel={t('common.cancel')}
-          onPress={() => {
+        <Modal
+          visible={selected !== null}
+          transparent
+          animationType="fade"
+          onRequestClose={() => {
             setSelected(null);
           }}
         >
-          <View
-            style={[
-              styles.sheet,
-              { backgroundColor: theme.colors.surface, borderRadius: theme.radii.lg },
-            ]}
-            testID="message-actions"
+          <Pressable
+            style={[styles.backdrop, { backgroundColor: theme.colors.overlay }]}
+            accessibilityRole="button"
+            accessibilityLabel={t('common.cancel')}
+            onPress={() => {
+              setSelected(null);
+            }}
           >
             <View
-              style={styles.row}
-              accessibilityRole="radiogroup"
-              accessibilityLabel={t('chat.react')}
+              style={[
+                styles.sheet,
+                { backgroundColor: theme.colors.surface, borderRadius: theme.radii.lg },
+              ]}
+              testID="message-actions"
             >
-              {REACTIONS.map((emoji) => {
-                const on = selected?.reactions.some((r) => r.emoji === emoji && r.mine) ?? false;
-                return (
-                  <Button
-                    key={emoji}
-                    label={emoji}
-                    variant={on ? 'primary' : 'ghost'}
-                    selected={on}
-                    onPress={() => {
-                      if (selected)
-                        react.mutate(
-                          { messageId: selected.id, emoji, add: !on },
-                          { onError: fail },
-                        );
-                      setSelected(null);
-                    }}
-                    testID={`react-${emoji}`}
-                  />
-                );
-              })}
-            </View>
-            {canWrite ? (
+              <View
+                style={styles.row}
+                accessibilityRole="radiogroup"
+                accessibilityLabel={t('chat.react')}
+              >
+                {REACTIONS.map((emoji) => {
+                  const on = selected?.reactions.some((r) => r.emoji === emoji && r.mine) ?? false;
+                  return (
+                    <Button
+                      key={emoji}
+                      label={emoji}
+                      variant={on ? 'primary' : 'ghost'}
+                      selected={on}
+                      onPress={() => {
+                        if (selected)
+                          react.mutate(
+                            { messageId: selected.id, emoji, add: !on },
+                            { onError: fail },
+                          );
+                        setSelected(null);
+                      }}
+                      testID={`react-${emoji}`}
+                    />
+                  );
+                })}
+              </View>
+              {canWrite ? (
+                <Button
+                  label={t('chat.reply')}
+                  variant="secondary"
+                  onPress={() => {
+                    setReplyTo(selected);
+                    setSelected(null);
+                  }}
+                  testID="reply"
+                />
+              ) : null}
               <Button
-                label={t('chat.reply')}
+                label={t('chat.deleteForMe')}
                 variant="secondary"
                 onPress={() => {
-                  setReplyTo(selected);
+                  if (selected)
+                    del.mutate({ messageId: selected.id, scope: 'me' }, { onError: fail });
                   setSelected(null);
                 }}
-                testID="reply"
+                testID="delete-me"
               />
-            ) : null}
-            <Button
-              label={t('chat.deleteForMe')}
-              variant="secondary"
-              onPress={() => {
-                if (selected)
-                  del.mutate({ messageId: selected.id, scope: 'me' }, { onError: fail });
-                setSelected(null);
-              }}
-              testID="delete-me"
-            />
-            {selected?.mine &&
-            Date.now() - new Date(selected.createdAt).getTime() <
-              LIMITS.chat.deleteForEveryoneWindowMs ? (
-              <Button
-                label={t('chat.deleteForEveryone')}
-                variant="danger"
-                onPress={() => {
-                  del.mutate({ messageId: selected.id, scope: 'everyone' }, { onError: fail });
-                  setSelected(null);
-                }}
-                testID="delete-everyone"
-              />
-            ) : null}
-            {selected && !selected.mine ? (
-              <Button
-                label={t('chat.report')}
-                variant="ghost"
-                onPress={() => {
-                  router.push({
-                    pathname: '/report',
-                    params: {
-                      targetType: 'message',
-                      targetId: selected.id,
-                      name: selected.sender?.displayName ?? '',
-                    },
-                  });
-                  setSelected(null);
-                }}
-                testID="report-message"
-              />
-            ) : null}
-          </View>
-        </Pressable>
-      </Modal>
+              {selected?.mine &&
+              Date.now() - new Date(selected.createdAt).getTime() <
+                LIMITS.chat.deleteForEveryoneWindowMs ? (
+                <Button
+                  label={t('chat.deleteForEveryone')}
+                  variant="danger"
+                  onPress={() => {
+                    del.mutate({ messageId: selected.id, scope: 'everyone' }, { onError: fail });
+                    setSelected(null);
+                  }}
+                  testID="delete-everyone"
+                />
+              ) : null}
+              {selected && !selected.mine ? (
+                <Button
+                  label={t('chat.report')}
+                  variant="ghost"
+                  onPress={() => {
+                    router.push({
+                      pathname: '/report',
+                      params: {
+                        targetType: 'message',
+                        targetId: selected.id,
+                        name: selected.sender?.displayName ?? '',
+                      },
+                    });
+                    setSelected(null);
+                  }}
+                  testID="report-message"
+                />
+              ) : null}
+            </View>
+          </Pressable>
+        </Modal>
 
-      <Modal
-        visible={muteOpen}
-        transparent
-        animationType="fade"
-        onRequestClose={() => {
-          setMuteOpen(false);
-        }}
-      >
-        <Pressable
-          style={[styles.backdrop, { backgroundColor: theme.colors.overlay }]}
-          accessibilityRole="button"
-          accessibilityLabel={t('common.cancel')}
-          onPress={() => {
+        <Modal
+          visible={muteOpen}
+          transparent
+          animationType="fade"
+          onRequestClose={() => {
             setMuteOpen(false);
           }}
         >
-          <View
-            style={[
-              styles.sheet,
-              { backgroundColor: theme.colors.surface, borderRadius: theme.radii.lg },
-            ]}
+          <Pressable
+            style={[styles.backdrop, { backgroundColor: theme.colors.overlay }]}
+            accessibilityRole="button"
+            accessibilityLabel={t('common.cancel')}
+            onPress={() => {
+              setMuteOpen(false);
+            }}
           >
-            {(['hour', 'day', 'week', 'forever'] as const).map((d) => (
-              <Button
-                key={d}
-                label={t(`chat.mute_${d}`)}
-                variant="secondary"
-                onPress={() => {
-                  mute.mutateAsync(d).catch(fail);
-                  setMuteOpen(false);
-                }}
-                testID={`mute-${d}`}
-              />
-            ))}
-          </View>
-        </Pressable>
-      </Modal>
+            <View
+              style={[
+                styles.sheet,
+                { backgroundColor: theme.colors.surface, borderRadius: theme.radii.lg },
+              ]}
+            >
+              {(['hour', 'day', 'week', 'forever'] as const).map((d) => (
+                <Button
+                  key={d}
+                  label={t(`chat.mute_${d}`)}
+                  variant="secondary"
+                  onPress={() => {
+                    mute.mutateAsync(d).catch(fail);
+                    setMuteOpen(false);
+                  }}
+                  testID={`mute-${d}`}
+                />
+              ))}
+            </View>
+          </Pressable>
+        </Modal>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
@@ -525,7 +584,26 @@ const styles = StyleSheet.create({
   banner: { padding: 16, gap: 8 },
   list: { paddingHorizontal: 16, paddingVertical: 8 },
   typing: { paddingHorizontal: 16 },
-  composer: { borderTopWidth: 1, padding: 8, gap: 4 },
+  composer: { borderTopWidth: 1, paddingHorizontal: 10, paddingVertical: 8, gap: 4 },
+  composerRow: { flexDirection: 'row', alignItems: 'flex-end', gap: 8 },
+  round: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  input: {
+    flex: 1,
+    minHeight: 44,
+    maxHeight: 132,
+    borderWidth: 1.5,
+    borderRadius: 22,
+    paddingHorizontal: 16,
+    paddingTop: 11,
+    paddingBottom: 11,
+  },
   row: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8 },
   grow: { flexGrow: 1, flexShrink: 1 },
   backdrop: { flex: 1, justifyContent: 'flex-end', padding: 16 },

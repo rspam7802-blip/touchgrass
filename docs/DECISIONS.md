@@ -795,3 +795,10 @@ Emails use one layout (`common/email/branded.ts`): a forest header with the logo
 ## D-188 About us
 
 The website has an About page (`/about`, linked from the home page header and every page's footer) in English, Telugu and Hindi: why TouchGrass exists, the vision, the mission, four goals (start well in Hyderabad, safety first, free to join, open city by city across India) and the co-founders, Raghuram Srivatsa and Narain Malladi (`FOUNDERS` in shared constants). Copy lives under `landing.about`.
+
+## D-189 Plot, Start a vote and chat, tidied
+
+- **Category is a field, not a row of tiles.** With 79 interests a sideways chip row hid almost everything. Plot and Start a vote now use `SelectField`: it shows the choice and opens a sheet with the searchable, grouped `PickList` (the sheet scrolls and never covers more than most of the screen).
+- **"Who can come" on Plot** is a vertical list of all seven options instead of a sideways row.
+- **Start a vote** has a title, a one-line explanation and sections (the idea, who votes, when voting closes).
+- **Chat:** the message box stays above the keyboard (`KeyboardAvoidingView`, offset by the header), and is a rounded input between a round photo button and a round send button, instead of two text buttons and a labelled field that wrapped onto several lines.
