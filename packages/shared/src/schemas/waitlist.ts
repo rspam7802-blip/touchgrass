@@ -104,5 +104,7 @@ export const LaunchWaitlistInviteResult = z.object({
   code: z.string(),
   /** True when the code was also emailed to the entry's address. */
   emailed: z.boolean(),
+  /** Why the email did not go out (the mail service's answer), for the admin who sent it. */
+  emailError: z.string().nullable().optional(),
 });
 export type LaunchWaitlistInviteResult = z.infer<typeof LaunchWaitlistInviteResult>;

@@ -355,6 +355,7 @@ export const en = {
       codeFor: 'Invite code for {{name}}',
       emailed: 'Also emailed to {{email}}.',
       sendYourself: 'Send it to them yourself.',
+      emailFailed: 'The email did not go out: {{reason}}',
       remove: 'Remove',
       removeName: 'Remove {{name}}',
       confirmRemove: 'Remove {{name}} for good?',

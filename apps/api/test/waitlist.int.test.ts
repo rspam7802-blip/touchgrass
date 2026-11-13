@@ -1,7 +1,8 @@
 import { LaunchWaitlistInviteResult, paginated, LaunchWaitlistEntry } from '@touchgrass/shared';
 import request from 'supertest';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { FakeEmailSender } from '../src/adapters/email/fake.email.js';
+import { UpstreamError } from '../src/adapters/http/http-client.js';
 import { UsersService } from '../src/modules/users/users.service.js';
 import { SEED_ADMIN_PHONE } from '../src/seed/seed.js';
 import {
@@ -262,6 +263,24 @@ describe('admin waitlist (F-WEB-03, D-169)', () => {
         details: expect.objectContaining({ code: invited.code }),
       }),
     ]);
+  });
+
+  it('tells the admin why the email did not go out, and still gives them the code', async () => {
+    const mail = `refused-${String(Date.now())}@example.com`;
+    await join({ name: 'Refused mail', email: mail }).expect(200);
+    const [entry] = await rows('email = $1', [mail]);
+    const refusal = new UpstreamError('brevo', 401, '{"message":"unrecognised IP address"}');
+    const send = vi.spyOn(email, 'send').mockRejectedValueOnce(refusal);
+    const invited = await request(h.http)
+      .post(`/v1/admin/waitlist/${entry?.id ?? ''}/invite`)
+      .set(...bearer(admin))
+      .expect(200);
+    send.mockRestore();
+    expect(invited.body.emailed).toBe(false);
+    expect(invited.body.code).toMatch(/^[A-Z2-9]{4}-[A-Z2-9]{4}$/);
+    expect(invited.body.emailError).toBe(
+      'brevo request failed with status 401: {"message":"unrecognised IP address"}',
+    );
   });
 
   it('invites phone-only entries without email, removes with an audit entry, 404s on unknown ids', async () => {

@@ -11,6 +11,7 @@ export function InviteButton({ id, name }: { id: string; name: string }) {
   const [state, action, pending] = useActionState<InviteState, FormData>(inviteAction, {
     code: null,
     emailedTo: null,
+    emailError: null,
     error: null,
   });
   return (
@@ -24,6 +25,11 @@ export function InviteButton({ id, name }: { id: string; name: string }) {
           <span className="text-sm">
             {state.emailedTo ? t.emailed.replace('{{email}}', state.emailedTo) : t.sendYourself}
           </span>
+          {state.emailError ? (
+            <span role="alert" className="text-sm text-muted" data-testid="waitlist-email-error">
+              {t.emailFailed.replace('{{reason}}', state.emailError)}
+            </span>
+          ) : null}
         </div>
       ) : (
         <form action={action}>

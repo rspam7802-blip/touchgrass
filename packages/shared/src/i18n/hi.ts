@@ -354,6 +354,7 @@ export const hi: Translation = {
       codeFor: '{{name}} के लिए इनवाइट कोड',
       emailed: '{{email}} पर ईमेल भी किया गया।',
       sendYourself: 'इसे खुद उन्हें भेजो।',
+      emailFailed: 'ईमेल नहीं गया: {{reason}}',
       remove: 'हटाओ',
       removeName: '{{name}} को हटाओ',
       confirmRemove: '{{name}} को हमेशा के लिए हटाएँ?',

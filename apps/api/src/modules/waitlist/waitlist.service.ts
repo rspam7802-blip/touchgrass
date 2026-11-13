@@ -12,6 +12,7 @@ import {
 } from '@touchgrass/shared';
 import { and, desc, eq, isNull, lt, or, type SQL, sql } from 'drizzle-orm';
 import { uuidv7 } from 'uuidv7';
+import { UpstreamError } from '../../adapters/http/http-client.js';
 import { EmailSender } from '../../adapters/email/email.port.js';
 import { AuditService } from '../../common/audit/audit.service.js';
 import { AppError } from '../../common/errors/app-error.js';
@@ -196,6 +197,7 @@ export class WaitlistService {
       return { row: updated, code: invite.code };
     });
     let emailed = false;
+    let emailError: string | null = null;
     if (row.email) {
       try {
         await this.email.send(
@@ -210,10 +212,18 @@ export class WaitlistService {
         );
         emailed = true;
       } catch (err) {
-        this.logger.warn(`Waitlist invite email for ${row.id} failed: ${String(err)}`);
+        // The mail service's own answer (e.g. an unrecognised server address), so the admin can fix it.
+        emailError = (
+          err instanceof UpstreamError
+            ? `${err.message}: ${err.upstreamBody}`
+            : err instanceof Error
+              ? err.message
+              : String(err)
+        ).slice(0, 300);
+        this.logger.warn(`Waitlist invite email for ${row.id} failed: ${emailError}`);
       }
     }
-    return { entry: toEntry(row, code), code, emailed };
+    return { entry: toEntry(row, code), code, emailed, emailError };
   }
 
   /** Data-deletion requests and clean-up: the entry is deleted, not hidden. */

@@ -357,6 +357,7 @@ export const te: Translation = {
       codeFor: '{{name}} కోసం ఇన్వైట్ కోడ్',
       emailed: '{{email}}కి ఈమెయిల్ కూడా చేశాం.',
       sendYourself: 'నువ్వే వాళ్లకు పంపు.',
+      emailFailed: 'ఈమెయిల్ వెళ్ళలేదు: {{reason}}',
       remove: 'తీసేయి',
       removeName: '{{name}}ను తీసేయి',
       confirmRemove: '{{name}}ను శాశ్వతంగా తీసేయాలా?',

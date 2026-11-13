@@ -11,6 +11,8 @@ export interface InviteState {
   code: string | null;
   /** The address it was emailed to, if it was. */
   emailedTo: string | null;
+  /** Why the email did not go out, when the entry had an address. */
+  emailError: string | null;
   error: string | null;
 }
 
@@ -30,10 +32,12 @@ export async function inviteAction(_prev: InviteState, form: FormData): Promise<
     return {
       code: res.code,
       emailedTo: res.emailed ? res.entry.email : null,
+      emailError: res.emailError ?? null,
       error: null,
     };
   } catch (err) {
-    if (err instanceof AdminApiError) return { code: null, emailedTo: null, error: err.message };
+    if (err instanceof AdminApiError)
+      return { code: null, emailedTo: null, emailError: null, error: err.message };
     throw err;
   }
 }
