@@ -37,6 +37,23 @@ On this box, event detail meets the 300 ms target up to about **145 req/s**. The
 
 **The 1,000 req/s target is not demonstrated on this hardware.** It is a production-scale target; the plan below is how to get there and how to prove it.
 
+## Re-run after launch features (2026-11-13, D-194)
+
+Same box and scripts; the seed now also has 307 images (plan covers and profile photos), which the Phase 12 seed did not. The first run found the feed at half its old throughput: **every feed and detail response re-signed every image link** because the S3 adapter ignored the hourly `signingDate` the media service passes, so each link was new on every request (CPU spent in the AWS presigner, and phones could never cache an image). Fixed in D-194: links are signed at the hour and reused for that hour per process.
+
+| Scenario              | Offered load              | Before fix: achieved, p95 | After fix: achieved, p95 | p50 after | Errors | Correctness  |
+| --------------------- | ------------------------- | ------------------------- | ------------------------ | --------- | ------ | ------------ |
+| Event detail          | 100 req/s, 120 members    | 101 req/s, 114 ms (warm)  | 101 req/s, **25 ms**     | 12 ms     | 0      | —            |
+| Event detail          | 150 req/s                 | 145 req/s, 570 ms         | 148 req/s, **79 ms**     | 25 ms     | 0      | —            |
+| Event detail          | 200 req/s (over capacity) | 154 req/s, 1.25 s         | not re-run               | —         | 0      | —            |
+| Feed (+ map + search) | 40 iterations/s           | 43 req/s, 4.34 s          | **87 req/s**, 1.2 s      | 43 ms     | 0      | —            |
+| Feed (+ map + search) | 60 iterations/s           | 45 req/s, 5.63 s          | 116 req/s, 1.92 s        | 435 ms    | 0      | —            |
+| Feed, one API process | 12 iterations/s           | —                         | 268 ms                   | 26 ms     | 0      | —            |
+| RSVP (one hot plan)   | 20 iterations/s           | 43 req/s, 30 ms           | (unchanged)              | 20 ms     | 0      | 0 overbooked |
+| Chat send + history   | 20 iterations/s, 30 pairs | 68 req/s, 20 ms / 16 ms   | (unchanged)              | 15 ms     | 0      | 0 duplicates |
+
+After the fix the feed's API process is mostly idle at the measured rates; the remaining feed tail on this 4-core box is the load generator, Postgres and three API processes competing for the same cores, as in Phase 12.
+
 ## What Phase 12 changed
 
 | Change                                                                                                                               | Effect                                                                                             |

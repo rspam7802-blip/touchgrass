@@ -29,3 +29,33 @@ describe('S3ObjectStorage public endpoint', () => {
     expect(await s3.signedDownloadUrl('media/a/lg.webp', 60)).toMatch(/^http:\/\/localhost:9000\//);
   });
 });
+
+describe('S3ObjectStorage hourly links', () => {
+  const s3 = new S3ObjectStorage({ ...base, endpoint: 'http://localhost:9000' });
+  const hour = new Date('2026-11-13T10:00:00Z');
+
+  it('signs at the given hour, so the same image has the same link all hour (phones can cache it)', async () => {
+    const a = await s3.signedDownloadUrl('media/a/lg.webp', 7200, hour);
+    const b = await s3.signedDownloadUrl('media/a/lg.webp', 7200, new Date(hour));
+    expect(a).toBe(b);
+    expect(a).toContain('X-Amz-Date=20261113T100000Z');
+    expect(a).toContain('X-Amz-Expires=7200');
+    expect(await s3.signedDownloadUrl('media/b/lg.webp', 7200, hour)).not.toBe(a);
+  });
+
+  it('a new hour gives a new link', async () => {
+    const a = await s3.signedDownloadUrl('media/a/lg.webp', 7200, hour);
+    const next = await s3.signedDownloadUrl(
+      'media/a/lg.webp',
+      7200,
+      new Date(hour.getTime() + 3_600_000),
+    );
+    expect(next).not.toBe(a);
+    expect(next).toContain('X-Amz-Date=20261113T110000Z');
+  });
+
+  it('links without an hour are always fresh', async () => {
+    const a = await s3.signedDownloadUrl('media/a/lg.webp', 60);
+    expect(a).not.toContain('X-Amz-Date=20261113T100000Z');
+  });
+});

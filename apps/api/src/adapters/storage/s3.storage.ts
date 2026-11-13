@@ -13,6 +13,8 @@ import { createPresignedPost } from '@aws-sdk/s3-presigned-post';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { type ObjectHead, ObjectStorage, type PresignedUpload } from './storage.port.js';
 
+const SIGNED_CACHE_MAX = 50_000;
+
 export interface S3StorageConfig {
   bucket: string;
   region: string;
@@ -33,6 +35,9 @@ export class S3ObjectStorage extends ObjectStorage {
   private readonly client: S3Client;
   /** Signs URLs only (never connects), so the signature matches the host the phone will call. */
   private readonly signer: S3Client;
+  /** Links signed for the current hour bucket (per process; a cache, never shared state). */
+  private readonly signed = new Map<string, string>();
+  private signedFor = 0;
 
   constructor(private readonly config: S3StorageConfig) {
     super();
@@ -114,12 +119,33 @@ export class S3ObjectStorage extends ObjectStorage {
     await this.client.send(new DeleteObjectCommand({ Bucket: this.config.bucket, Key: key }));
   }
 
-  signedDownloadUrl(key: string, expiresInSeconds: number): Promise<string> {
-    return getSignedUrl(
-      this.signer,
-      new GetObjectCommand({ Bucket: this.config.bucket, Key: key }),
-      { expiresIn: expiresInSeconds },
-    );
+  /**
+   * With a `signingDate` (media links are signed at the start of the hour), the link is the same for everyone
+   * all hour, so phones can cache the image and we sign it once per process: signing runs the whole AWS
+   * middleware stack and was the feed's biggest CPU cost. Without one, every link is fresh.
+   */
+  async signedDownloadUrl(
+    key: string,
+    expiresInSeconds: number,
+    signingDate?: Date,
+  ): Promise<string> {
+    const command = new GetObjectCommand({ Bucket: this.config.bucket, Key: key });
+    if (!signingDate) return getSignedUrl(this.signer, command, { expiresIn: expiresInSeconds });
+    const bucket = signingDate.getTime();
+    if (bucket !== this.signedFor) {
+      this.signed.clear();
+      this.signedFor = bucket;
+    }
+    const id = `${String(expiresInSeconds)}|${key}`;
+    const hit = this.signed.get(id);
+    if (hit) return hit;
+    const url = await getSignedUrl(this.signer, command, {
+      expiresIn: expiresInSeconds,
+      signingDate,
+    });
+    if (this.signed.size >= SIGNED_CACHE_MAX) this.signed.clear();
+    this.signed.set(id, url);
+    return url;
   }
 
   publicUrl(key: string): string {
