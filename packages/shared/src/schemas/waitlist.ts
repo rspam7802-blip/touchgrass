@@ -114,14 +114,22 @@ export const LaunchWaitlistEntry = z.object({
   source: z.string().nullable().optional(),
   /** The member whose referral link brought them. */
   referrer: z.object({ id: z.uuid(), name: z.string() }).nullable().optional(),
+  /** When they signed up with the code we sent (D-195); null while they have not. */
+  joinedAt: z.iso.datetime().nullable().optional(),
+  /** Last time they were invited again, and how many times (D-195). */
+  reinvitedAt: z.iso.datetime().nullable().optional(),
+  reinviteCount: z.number().int().optional(),
 });
 export type LaunchWaitlistEntry = z.infer<typeof LaunchWaitlistEntry>;
+
+/** Someone can be invited again once a day at most (D-195). */
+export const WAITLIST_REINVITE_COOLDOWN_HOURS = 24;
 
 export const LaunchWaitlistQuery = z.object({
   cursor: z.string().min(1).max(512).optional(),
   limit: z.coerce.number().int().min(1).max(100).default(50),
-  /** `waiting` lists only people not invited yet. */
-  status: z.enum(['waiting', 'all']).default('waiting'),
+  /** `waiting`: not invited yet; `invited`: invited but not signed up yet (D-195); `all`: everyone. */
+  status: z.enum(['waiting', 'invited', 'all']).default('waiting'),
 });
 export type LaunchWaitlistQuery = z.infer<typeof LaunchWaitlistQuery>;
 

@@ -18,7 +18,8 @@ const cell = (v: string | null | undefined): string => {
 export async function GET(request: Request): Promise<Response> {
   if (!canAccessSection(await currentRoles(), 'waitlist'))
     return new Response('Forbidden', { status: 403 });
-  const status = new URL(request.url).searchParams.get('status') === 'all' ? 'all' : 'waiting';
+  const asked = new URL(request.url).searchParams.get('status');
+  const status = asked === 'all' || asked === 'invited' ? asked : 'waiting';
   const lines = [
     [
       'Name',
@@ -32,6 +33,8 @@ export async function GET(request: Request): Promise<Response> {
       'Signed up',
       'Invited',
       'Invite code',
+      'Invited again',
+      'Joined app',
     ]
       .map(cell)
       .join(','),
@@ -58,6 +61,8 @@ export async function GET(request: Request): Promise<Response> {
           e.createdAt,
           e.invitedAt,
           e.inviteCode,
+          e.reinviteCount ? String(e.reinviteCount) : '',
+          e.joinedAt ?? '',
         ]
           .map(cell)
           .join(','),

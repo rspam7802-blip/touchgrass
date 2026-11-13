@@ -480,6 +480,12 @@ export const hi: Translation = {
       },
     },
     waitlist: {
+      invitedNotJoined: 'न्योता भेजा, अभी नहीं जुड़े',
+      inviteAgain: 'फिर से न्योता भेजो',
+      inviteAgainName: '{{name}} को फिर से न्योता भेजो',
+      joinedOn: '{{date}} को जुड़े',
+      notJoinedYet: 'अभी नहीं जुड़े',
+      reinvited: '{{count}} बार फिर से न्योता भेजा (आख़िरी बार {{date}})',
       people: 'लोग',
       referredBy: '{{name}} ने रेफ़र किया',
       from: '{{source}} से',

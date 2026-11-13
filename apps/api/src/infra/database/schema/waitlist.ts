@@ -1,4 +1,4 @@
-import { customType, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { integer, customType, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 
 /** Phase 13 (D-169). Owner: `waitlist` → launch_waitlist. */
 const ts = (name: string) => timestamp(name, { withTimezone: true });
@@ -18,6 +18,9 @@ export const launchWaitlist = pgTable('launch_waitlist', {
   source: text('source'),
   /** The member whose referral link brought them, if any. */
   referrerUserId: uuid('referrer_user_id'),
+  /** Last time an admin invited them again with a fresh code (D-195), and how often. */
+  reinvitedAt: ts('reinvited_at'),
+  reinviteCount: integer('reinvite_count').notNull().default(0),
   createdAt: ts('created_at').notNull().defaultNow(),
   updatedAt: ts('updated_at').notNull().defaultNow(),
 });

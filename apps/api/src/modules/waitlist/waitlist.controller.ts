@@ -90,6 +90,18 @@ export class WaitlistAdminController {
     return this.waitlist.invite(admin.userId, id);
   }
 
+  /** Someone invited who never signed up gets a fresh code (D-195); same power as inviting. */
+  @Post(':id/reinvite')
+  @HttpCode(200)
+  @Roles(...ADMIN_SECTIONS.inviteCodes)
+  @ApiZodResponse(200, LaunchWaitlistInviteResult)
+  reinvite(
+    @CurrentUser() admin: AuthPrincipal,
+    @Param('id', new ParseUUIDPipe()) id: string,
+  ): Promise<Dto.LaunchWaitlistInviteResult> {
+    return this.waitlist.reinvite(admin.userId, id);
+  }
+
   @Delete(':id')
   @HttpCode(204)
   @Roles(...ADMIN_SECTIONS.waitlist)

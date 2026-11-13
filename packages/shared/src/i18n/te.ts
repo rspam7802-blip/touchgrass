@@ -490,6 +490,12 @@ export const te: Translation = {
       },
     },
     waitlist: {
+      invitedNotJoined: 'ఆహ్వానించాం, ఇంకా చేరలేదు',
+      inviteAgain: 'మళ్లీ ఆహ్వానించు',
+      inviteAgainName: '{{name}}ని మళ్లీ ఆహ్వానించు',
+      joinedOn: '{{date}}న చేరారు',
+      notJoinedYet: 'ఇంకా చేరలేదు',
+      reinvited: 'మళ్లీ {{count}} సార్లు ఆహ్వానించాం (చివరిసారి {{date}})',
       people: 'మనుషులు',
       referredBy: '{{name}} రిఫర్ చేశారు',
       from: '{{source}} నుంచి',

@@ -389,3 +389,87 @@ describe('waitlist insights (D-191)', () => {
       .expect(400);
   });
 });
+
+describe('inviting again people who never joined (D-195)', () => {
+  const post = (id: string, path: 'invite' | 'reinvite', token = admin) =>
+    request(h.http)
+      .post(`/v1/admin/waitlist/${id}/${path}`)
+      .set(...bearer(token));
+  const list = async (status: string) =>
+    Page.parse(
+      (
+        await request(h.http)
+          .get(`/v1/admin/waitlist?status=${status}&limit=100`)
+          .set(...bearer(admin))
+          .expect(200)
+      ).body,
+    ).items;
+
+  it('sends a fresh code (the old one stops working), at most once a day, and stops once they join', async () => {
+    const mail = `again.${tag()}@example.com`;
+    await join({ name: 'Slow Starter', email: mail }).expect(200);
+    const [entry] = await rows('email = $1', [mail]);
+    const id = entry?.id ?? '';
+    await post(id, 'reinvite').expect(409); // not invited yet
+    const first = LaunchWaitlistInviteResult.parse((await post(id, 'invite').expect(200)).body);
+
+    // Straight after inviting: too soon.
+    const soon = await post(id, 'reinvite').expect(409);
+    expect((soon.body as { error: { details: { reason: string } } }).error.details.reason).toBe(
+      'REINVITE_TOO_SOON',
+    );
+    expect((await list('invited')).some((e) => e.id === id)).toBe(true);
+
+    // A day later: a new code, emailed; the first code is revoked.
+    await h.pool.query(
+      `UPDATE launch_waitlist SET invited_at = invited_at - interval '25 hours' WHERE id = $1`,
+      [id],
+    );
+    const sentBefore = email.sent.length;
+    const again = LaunchWaitlistInviteResult.parse((await post(id, 'reinvite').expect(200)).body);
+    expect(again.code).not.toBe(first.code);
+    expect(again.emailed).toBe(true);
+    expect(email.sent.length).toBe(sentBefore + 1);
+    expect(again.entry).toMatchObject({ reinviteCount: 1, inviteCode: again.code, joinedAt: null });
+    const { rows: old } = await h.pool.query<{ revoked_at: Date | null }>(
+      'SELECT revoked_at FROM invite_codes WHERE code = $1',
+      [first.code],
+    );
+    expect(old[0]?.revoked_at).not.toBeNull();
+    await request(h.http)
+      .post('/v1/auth/invites/check')
+      .set(...fromIp())
+      .send({ code: first.code })
+      .expect((res) => {
+        expect((res.body as { valid: boolean }).valid).toBe(false);
+      });
+    const { rows: audit } = await h.pool.query<{ details: { times: number } }>(
+      `SELECT details FROM admin_actions WHERE action = 'waitlist.reinvite' AND target_id = $1`,
+      [id],
+    );
+    expect(audit[0]?.details.times).toBe(1);
+    // Twice in one day is refused.
+    await post(id, 'reinvite').expect(409);
+
+    // They sign up with the new code: no more re-invites, and they leave the "not joined" list.
+    await signIn(h, freshPhone(), { inviteCode: again.code });
+    await h.pool.query(
+      `UPDATE launch_waitlist SET reinvited_at = reinvited_at - interval '25 hours' WHERE id = $1`,
+      [id],
+    );
+    const joined = await post(id, 'reinvite').expect(409);
+    expect((joined.body as { error: { details: { reason: string } } }).error.details.reason).toBe(
+      'ALREADY_JOINED',
+    );
+    expect((await list('invited')).some((e) => e.id === id)).toBe(false);
+    const all = await list('all');
+    expect(all.find((e) => e.id === id)?.joinedAt).toBeTruthy();
+  });
+
+  it('only people who may invite can invite again', async () => {
+    const mail = `again2.${tag()}@example.com`;
+    await join({ name: 'Support asks', email: mail }).expect(200);
+    const [entry] = await rows('email = $1', [mail]);
+    await post(entry?.id ?? '', 'reinvite', await staff('support')).expect(403);
+  });
+});

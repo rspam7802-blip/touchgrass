@@ -25,7 +25,7 @@ export default async function WaitlistPage({
   const canInvite = canAccessSection(await currentRoles(), 'inviteCodes');
   const { cursor, status: rawStatus, days: rawDays } = await searchParams;
   const days = [7, 30, 90].find((d) => String(d) === rawDays) ?? 30;
-  const status = rawStatus === 'all' ? 'all' : 'waiting';
+  const status = rawStatus === 'all' || rawStatus === 'invited' ? rawStatus : 'waiting';
   const qs = new URLSearchParams({ limit: '50', status, ...(cursor ? { cursor } : {}) });
   const [page, insights] = await Promise.all([
     adminApi(
@@ -52,6 +52,7 @@ export default async function WaitlistPage({
           {t.show}
           <select id="waitlist-status" name="status" defaultValue={status} className={inputClass}>
             <option value="waiting">{t.waiting}</option>
+            <option value="invited">{t.invitedNotJoined}</option>
             <option value="all">{t.all}</option>
           </select>
         </label>
@@ -122,6 +123,21 @@ export default async function WaitlistPage({
                         {e.inviteCode ? (
                           <div className="select-all font-mono font-bold">{e.inviteCode}</div>
                         ) : null}
+                        {e.reinviteCount && e.reinvitedAt ? (
+                          <div className="text-sm text-muted">
+                            {t.reinvited
+                              .replace('{{count}}', String(e.reinviteCount))
+                              .replace('{{date}}', fmt.format(new Date(e.reinvitedAt)))}
+                          </div>
+                        ) : null}
+                        <div
+                          className={e.joinedAt ? 'font-semibold' : 'text-sm text-muted'}
+                          data-testid={`waitlist-joined-${e.id}`}
+                        >
+                          {e.joinedAt
+                            ? t.joinedOn.replace('{{date}}', fmt.format(new Date(e.joinedAt)))
+                            : t.notJoinedYet}
+                        </div>
                       </>
                     ) : (
                       t.waitingStatus
@@ -130,6 +146,9 @@ export default async function WaitlistPage({
                   <td className="p-2">
                     <div className="flex flex-col gap-2">
                       {canInvite && !e.invitedAt ? <InviteButton id={e.id} name={e.name} /> : null}
+                      {canInvite && e.invitedAt && !e.joinedAt ? (
+                        <InviteButton id={e.id} name={e.name} again />
+                      ) : null}
                       <RemoveButton id={e.id} name={e.name} />
                     </div>
                   </td>

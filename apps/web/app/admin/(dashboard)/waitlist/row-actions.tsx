@@ -2,18 +2,30 @@
 
 import { resources } from '@touchgrass/shared';
 import { useActionState, useState } from 'react';
-import { type InviteState, inviteAction, removeAction } from './actions';
+import { type InviteState, inviteAction, reinviteAction, removeAction } from './actions';
 
 const t = resources.en.admin.waitlist;
 const button = 'min-h-11 rounded-full border-2 border-border px-4 font-semibold';
 
-export function InviteButton({ id, name }: { id: string; name: string }) {
-  const [state, action, pending] = useActionState<InviteState, FormData>(inviteAction, {
-    code: null,
-    emailedTo: null,
-    emailError: null,
-    error: null,
-  });
+export function InviteButton({
+  id,
+  name,
+  again = false,
+}: {
+  id: string;
+  name: string;
+  /** Invite again someone who never signed up (D-195). */
+  again?: boolean;
+}) {
+  const [state, action, pending] = useActionState<InviteState, FormData>(
+    again ? reinviteAction : inviteAction,
+    {
+      code: null,
+      emailedTo: null,
+      emailError: null,
+      error: null,
+    },
+  );
   return (
     <div className="flex flex-col gap-2" aria-live="polite">
       {state.code ? (
@@ -37,10 +49,14 @@ export function InviteButton({ id, name }: { id: string; name: string }) {
           <button
             type="submit"
             disabled={pending}
-            className="min-h-11 rounded-full bg-primary px-4 font-bold text-on-primary disabled:opacity-50"
-            aria-label={t.inviteName.replace('{{name}}', name)}
+            className={
+              again
+                ? 'min-h-11 rounded-full border-2 border-primary px-4 font-bold disabled:opacity-50'
+                : 'min-h-11 rounded-full bg-primary px-4 font-bold text-on-primary disabled:opacity-50'
+            }
+            aria-label={(again ? t.inviteAgainName : t.inviteName).replace('{{name}}', name)}
           >
-            {t.invite}
+            {again ? t.inviteAgain : t.invite}
           </button>
         </form>
       )}

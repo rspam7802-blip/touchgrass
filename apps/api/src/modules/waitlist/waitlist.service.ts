@@ -11,6 +11,7 @@ import {
   LIMITS,
   type Paginated,
   TimeIdCursor,
+  WAITLIST_REINVITE_COOLDOWN_HOURS,
 } from '@touchgrass/shared';
 import { and, desc, eq, gte, isNotNull, isNull, lt, or, type SQL, sql } from 'drizzle-orm';
 import { uuidv7 } from 'uuidv7';
@@ -29,6 +30,13 @@ import { InvitesService } from '../invites/invites.service.js';
 import { waitlistInviteEmail } from './waitlist-email.js';
 
 type Row = typeof launchWaitlist.$inferSelect;
+const LIST_SCAN_BATCH = 200;
+const IST_TIME = new Intl.DateTimeFormat('en-IN', {
+  dateStyle: 'medium',
+  timeStyle: 'short',
+  timeZone: 'Asia/Kolkata',
+});
+const LIST_MAX_SCANS = 50;
 
 export interface ExistingContact {
   id: string;
@@ -223,27 +231,46 @@ export class WaitlistService {
   }
 
   async list(q: LaunchWaitlistQuery): Promise<Paginated<LaunchWaitlistEntry>> {
-    const after = q.cursor ? decodeCursor(q.cursor, TimeIdCursor) : null;
-    const rows = await this.db
-      .select()
-      .from(launchWaitlist)
-      .where(
-        and(
-          q.status === 'waiting' ? isNull(launchWaitlist.invitedAt) : undefined,
-          after
-            ? or(
-                lt(launchWaitlist.createdAt, new Date(after.t)),
-                and(
-                  eq(launchWaitlist.createdAt, new Date(after.t)),
-                  lt(launchWaitlist.id, after.id),
-                ),
-              )
-            : undefined,
-        ),
-      )
-      .orderBy(desc(launchWaitlist.createdAt), desc(launchWaitlist.id))
-      .limit(q.limit + 1);
-    const page = rows.slice(0, q.limit);
+    let after = q.cursor ? decodeCursor(q.cursor, TimeIdCursor) : null;
+    const picked: Row[] = [];
+    let joined = new Map<string, { userId: string; at: Date }>();
+    // "Invited, not joined" needs the invites module's answer, so scan invited rows in batches (D-195).
+    for (let scans = 0; scans < LIST_MAX_SCANS; scans += 1) {
+      const batch = q.status === 'invited' ? LIST_SCAN_BATCH : q.limit + 1;
+      const rows = await this.db
+        .select()
+        .from(launchWaitlist)
+        .where(
+          and(
+            q.status === 'waiting' ? isNull(launchWaitlist.invitedAt) : undefined,
+            q.status === 'invited' ? isNotNull(launchWaitlist.invitedAt) : undefined,
+            after
+              ? or(
+                  lt(launchWaitlist.createdAt, new Date(after.t)),
+                  and(
+                    eq(launchWaitlist.createdAt, new Date(after.t)),
+                    lt(launchWaitlist.id, after.id),
+                  ),
+                )
+              : undefined,
+          ),
+        )
+        .orderBy(desc(launchWaitlist.createdAt), desc(launchWaitlist.id))
+        .limit(batch);
+      const used = await this.invites.redemptionsByCodeIds(
+        rows.flatMap((r) => (r.inviteCodeId ? [r.inviteCodeId] : [])),
+      );
+      joined = new Map([...joined, ...used]);
+      for (const r of rows) {
+        if (picked.length > q.limit) break;
+        if (q.status === 'invited' && r.inviteCodeId && used.has(r.inviteCodeId)) continue;
+        picked.push(r);
+      }
+      const tail = rows[rows.length - 1];
+      if (picked.length > q.limit || rows.length < batch || !tail) break;
+      after = { t: tail.createdAt.toISOString(), id: tail.id };
+    }
+    const page = picked.slice(0, q.limit);
     const [codes, names] = await Promise.all([
       this.invites.codesByIds(page.flatMap((r) => (r.inviteCodeId ? [r.inviteCodeId] : []))),
       this.profiles.displayNames([
@@ -253,10 +280,15 @@ export class WaitlistService {
     const last = page[page.length - 1];
     return {
       items: page.map((r) =>
-        toEntry(r, r.inviteCodeId ? (codes.get(r.inviteCodeId) ?? null) : null, names),
+        toEntry(
+          r,
+          r.inviteCodeId ? (codes.get(r.inviteCodeId) ?? null) : null,
+          names,
+          r.inviteCodeId ? (joined.get(r.inviteCodeId)?.at ?? null) : null,
+        ),
       ),
       nextCursor:
-        rows.length > q.limit && last
+        picked.length > q.limit && last
           ? encodeCursor({ t: last.createdAt.toISOString(), id: last.id })
           : null,
     };
@@ -306,33 +338,114 @@ export class WaitlistService {
       );
       return { row: updated, code: invite.code };
     });
-    let emailed = false;
-    let emailError: string | null = null;
-    if (row.email) {
-      try {
-        await this.email.send(
-          waitlistInviteEmail({
-            to: row.email,
-            name: row.name,
-            code,
-            validDays,
-            siteUrl: this.env.WEB_PUBLIC_URL,
-            language: row.language,
-          }),
-        );
-        emailed = true;
-      } catch (err) {
-        // The mail service's own answer (e.g. an unrecognised server address), so the admin can fix it.
-        emailError = (
-          err instanceof UpstreamError
-            ? `${err.message}: ${err.upstreamBody}`
-            : err instanceof Error
-              ? err.message
-              : String(err)
-        ).slice(0, 300);
-        this.logger.warn(`Waitlist invite email for ${row.id} failed: ${emailError}`);
-      }
+    const { emailed, emailError } = await this.sendInvite(row, code, validDays);
+    return { entry: toEntry(row, code), code, emailed, emailError };
+  }
+
+  /** Emails the code when the entry has an address. Best effort: the admin always gets the code. */
+  private async sendInvite(
+    row: Row,
+    code: string,
+    validDays: number,
+  ): Promise<{ emailed: boolean; emailError: string | null }> {
+    if (!row.email) return { emailed: false, emailError: null };
+    try {
+      await this.email.send(
+        waitlistInviteEmail({
+          to: row.email,
+          name: row.name,
+          code,
+          validDays,
+          siteUrl: this.env.WEB_PUBLIC_URL,
+          language: row.language,
+        }),
+      );
+      return { emailed: true, emailError: null };
+    } catch (err) {
+      // The mail service's own answer (e.g. an unrecognised server address), so the admin can fix it.
+      const emailError = (
+        err instanceof UpstreamError
+          ? `${err.message}: ${err.upstreamBody}`
+          : err instanceof Error
+            ? err.message
+            : String(err)
+      ).slice(0, 300);
+      this.logger.warn(`Waitlist invite email for ${row.id} failed: ${emailError}`);
+      return { emailed: false, emailError };
     }
+  }
+
+  /**
+   * Invites again someone who was invited but never signed up (D-195): their old code is revoked and a fresh one,
+   * valid for the full period, is created and emailed. At most once a day per person; refused once they joined.
+   */
+  async reinvite(
+    adminUserId: string,
+    id: string,
+    now: Date = new Date(),
+  ): Promise<LaunchWaitlistInviteResult> {
+    const validDays = LIMITS.invites.defaultExpiryDays;
+    const { row, code } = await this.db.transaction(async (tx) => {
+      const [current] = await tx
+        .select()
+        .from(launchWaitlist)
+        .where(eq(launchWaitlist.id, id))
+        .for('update');
+      if (!current) throw AppError.notFound('Waitlist entry');
+      if (!current.invitedAt)
+        throw AppError.conflict('Not invited yet: use Invite', { reason: 'NOT_INVITED' });
+      if (current.inviteCodeId) {
+        const used = await this.invites.redemptionsByCodeIds([current.inviteCodeId]);
+        if (used.has(current.inviteCodeId))
+          throw AppError.conflict('They already joined', { reason: 'ALREADY_JOINED' });
+      }
+      const last = current.reinvitedAt ?? current.invitedAt;
+      const nextAt = new Date(last.getTime() + WAITLIST_REINVITE_COOLDOWN_HOURS * 3_600_000);
+      if (nextAt > now)
+        throw AppError.conflict(
+          `Invited less than ${String(WAITLIST_REINVITE_COOLDOWN_HOURS)} hours ago. Try again after ${IST_TIME.format(nextAt)} IST.`,
+          { reason: 'REINVITE_TOO_SOON', nextAt: nextAt.toISOString() },
+        );
+      if (current.inviteCodeId) await this.invites.revoke(current.inviteCodeId, tx);
+      const [invite] = await this.invites.createBulk(
+        adminUserId,
+        {
+          count: 1,
+          maxUses: 1,
+          expiresAt: new Date(now.getTime() + validDays * 86_400_000).toISOString(),
+          label: INVITE_LABEL,
+        },
+        tx,
+      );
+      if (!invite) throw new Error('No invite code was created');
+      const [updated] = await tx
+        .update(launchWaitlist)
+        .set({
+          inviteCodeId: invite.id,
+          reinvitedAt: now,
+          reinviteCount: sql`${launchWaitlist.reinviteCount} + 1`,
+        })
+        .where(eq(launchWaitlist.id, id))
+        .returning();
+      if (!updated) throw AppError.notFound('Waitlist entry');
+      await this.audit.record(
+        {
+          adminUserId,
+          action: 'waitlist.reinvite',
+          targetType: 'launch_waitlist',
+          targetId: id,
+          details: {
+            inviteCodeId: invite.id,
+            code: invite.code,
+            revokedInviteCodeId: current.inviteCodeId,
+            times: updated.reinviteCount,
+          },
+        },
+        tx,
+      );
+      return { row: updated, code: invite.code };
+    });
+    const { emailed, emailError } = await this.sendInvite(row, code, validDays);
     return { entry: toEntry(row, code), code, emailed, emailError };
   }
 
@@ -362,6 +475,7 @@ function toEntry(
   r: Row,
   code: string | null,
   names: Map<string, string> = new Map(),
+  joinedAt: Date | null = null,
 ): LaunchWaitlistEntry {
   return {
     id: r.id,
@@ -375,6 +489,9 @@ function toEntry(
     invitedAt: r.invitedAt?.toISOString() ?? null,
     inviteCode: code,
     source: r.source,
+    joinedAt: joinedAt?.toISOString() ?? null,
+    reinvitedAt: r.reinvitedAt?.toISOString() ?? null,
+    reinviteCount: r.reinviteCount,
     referrer: r.referrerUserId
       ? { id: r.referrerUserId, name: names.get(r.referrerUserId) ?? 'Member' }
       : null,

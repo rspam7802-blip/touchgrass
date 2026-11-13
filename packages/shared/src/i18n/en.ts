@@ -481,6 +481,12 @@ export const en = {
       },
     },
     waitlist: {
+      invitedNotJoined: 'Invited, not joined',
+      inviteAgain: 'Invite again',
+      inviteAgainName: 'Invite {{name}} again',
+      joinedOn: 'Joined {{date}}',
+      notJoinedYet: 'Not joined yet',
+      reinvited: 'Invited again {{count}}× (last {{date}})',
       people: 'People',
       referredBy: 'Referred by {{name}}',
       from: 'From {{source}}',

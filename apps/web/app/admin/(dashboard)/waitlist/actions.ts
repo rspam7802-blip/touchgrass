@@ -23,10 +23,19 @@ export interface InviteState {
  * can copy it; the next visit lists the entry as invited.
  */
 export async function inviteAction(_prev: InviteState, form: FormData): Promise<InviteState> {
+  return send(form, 'invite');
+}
+
+/** Invites again someone who never signed up (D-195): a fresh code, the old one stops working. */
+export async function reinviteAction(_prev: InviteState, form: FormData): Promise<InviteState> {
+  return send(form, 'reinvite');
+}
+
+async function send(form: FormData, path: 'invite' | 'reinvite'): Promise<InviteState> {
   const id = z.uuid().parse(form.get('id'));
   try {
     const res = await adminApi(
-      `/v1/admin/waitlist/${id}/invite`,
+      `/v1/admin/waitlist/${id}/${path}`,
       LaunchWaitlistInviteResult,
       { method: 'POST' },
       PATH,

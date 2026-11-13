@@ -104,3 +104,33 @@ test('insights: a sign-up from an Instagram link is counted, labelled and export
   expect(text).toContain(name);
   expect(text).toContain('"instagram"');
 });
+
+test('invited but not joined: the filter lists them with an Invite again button that says when it can be used (D-195)', async ({
+  page,
+  request,
+}) => {
+  const run = `${String(Date.now())}${String(Math.random()).slice(2, 6)}`;
+  const name = `Slow ${run}`;
+  const res = await request.post(`${API}/v1/public/waitlist`, {
+    headers: freshIp(),
+    data: { name, email: `slow-${run}@example.com`, consent: true },
+  });
+  expect(res.status(), await res.text()).toBe(200);
+
+  await page.goto('/admin/waitlist');
+  const row = page.getByRole('row', { name: new RegExp(name) });
+  await row.getByRole('button', { name: `Invite ${name}` }).click();
+  await expect(row.getByTestId('waitlist-new-code')).toBeVisible();
+
+  await page.goto('/admin/waitlist?status=invited');
+  await expect(page.getByLabel('Show')).toHaveValue('invited');
+  const again = page.getByRole('row', { name: new RegExp(name) });
+  await expect(again).toContainText('Not joined yet');
+  // Just invited: the API refuses a second code within a day and the admin sees why.
+  await again.getByRole('button', { name: `Invite ${name} again` }).click();
+  await expect(again.getByRole('alert')).toContainText('Try again after');
+  const results = await new AxeBuilder({ page })
+    .withTags(['wcag2a', 'wcag2aa', 'wcag21aa'])
+    .analyze();
+  expect(results.violations).toEqual([]);
+});
