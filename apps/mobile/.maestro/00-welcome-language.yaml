@@ -5,9 +5,9 @@ name: Welcome and language switching
 - launchApp:
     clearState: true
 - assertVisible: 'Log off. Pull up.'
-- assertVisible: 'Less scrolling. More showing up.'
+- assertVisible: 'Meet people through real plans.'
 - tapOn: 'తెలుగు'
-- assertVisible: 'ఫోన్ పక్కన పెట్టు. బయటకు రా.'
+- assertVisible: 'ఫోన్ పక్కన పెట్టు. బయటికి రా.'
 - tapOn: 'हिन्दी'
 - assertVisible: 'फ़ोन छोड़ो. बाहर आओ.'
 - tapOn: 'English'
