@@ -142,7 +142,12 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         // React Native Firebase 27 and the Firebase Android libraries it pulls in are built with Kotlin 2.4;
         // the Expo default (2.2) cannot read them ("incompatible version of Kotlin"). The Firebase modules
         // are autolinked even without the Firebase files, so this applies to every Android build.
-        android: { kotlinVersion: ANDROID_KOTLIN_VERSION },
+        android: {
+          kotlinVersion: ANDROID_KOTLIN_VERSION,
+          // Release builds refuse plain http. Allow it only when the build talks to a local http API (the
+          // Maestro emulator run, D-190); store builds use https and stay locked down.
+          usesCleartextTraffic: (env.EXPO_PUBLIC_API_URL ?? '').startsWith('http://'),
+        },
         // Firebase on iOS needs its pods linked as static frameworks.
         ...(FIREBASE ? { ios: { useFrameworks: 'static' } } : {}),
       },
