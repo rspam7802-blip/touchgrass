@@ -1,0 +1,44 @@
+name: Live smoke
+
+# Read-only checks against the real site (D-190): pages load in every language, the API and photo storage
+# answer, app-link files are served. Every three hours, after each push to main (once Railway has had time
+# to deploy), and on demand.
+
+on:
+  schedule:
+    - cron: '17 */3 * * *'
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: live-smoke
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    name: touchgrass.co.in
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Give Railway time to deploy a push
+        if: github.event_name == 'push'
+        run: sleep 480
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with: { node-version-file: .nvmrc, cache: pnpm }
+      - run: pnpm install --frozen-lockfile --filter @touchgrass/web...
+      - run: pnpm --filter @touchgrass/web exec playwright install --with-deps chromium
+      - name: Run
+        working-directory: apps/web
+        run: pnpm exec playwright test -c playwright.live.config.ts
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: live-smoke-report
+          path: apps/web/playwright-report
+          retention-days: 14
