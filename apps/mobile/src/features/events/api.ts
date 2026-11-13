@@ -9,6 +9,8 @@ import {
   InviteeList,
   InviteLink,
   InviteUsersResult,
+  JoinRequestList,
+  MyJoinRequest,
   RsvpResult,
   Ticket,
   type UpdateEventBody,
@@ -32,6 +34,7 @@ export const EVENT_KEYS = {
   slug: (slug: string) => ['events', 'slug', slug] as const,
   attendees: (id: string) => ['events', 'attendees', id] as const,
   invitees: (id: string) => ['events', 'invitees', id] as const,
+  joinRequests: (id: string) => ['events', 'join-requests', id] as const,
   ticket: (id: string) => ['events', 'ticket', id] as const,
   savedVenues: ['venues', 'saved'] as const,
 };
@@ -180,6 +183,47 @@ export function useInvite(id: string) {
       body: { userIds },
     }),
   );
+}
+
+/** Private plans (D-179): ask the host to join, or take the request back before they answer. */
+export function useJoinRequest(id: string) {
+  const { client } = useApi();
+  return useEventMutation(async (action: 'ask' | 'withdraw') => {
+    if (action === 'withdraw') {
+      await client.request(`/v1/events/${id}/join-request`, Empty, { method: 'DELETE' });
+      return null;
+    }
+    return client.request(`/v1/events/${id}/join-request`, MyJoinRequest, { method: 'POST' });
+  });
+}
+
+/** Hosts: people waiting for an answer, oldest first. */
+export function useJoinRequests(id: string) {
+  const { client } = useApi();
+  return useInfiniteQuery({
+    queryKey: EVENT_KEYS.joinRequests(id),
+    initialPageParam: undefined as string | undefined,
+    queryFn: ({ pageParam, signal }) =>
+      client.request(
+        `/v1/events/${id}/join-requests${pageParam ? `?cursor=${encodeURIComponent(pageParam)}` : ''}`,
+        JoinRequestList,
+        { signal },
+      ),
+    getNextPageParam: (last) => last.nextCursor ?? undefined,
+  });
+}
+
+/** Hosts: let someone in, or not. */
+export function useDecideJoinRequest(id: string) {
+  const { client } = useApi();
+  return useEventMutation(async (input: { userId: string; approve: boolean }) => {
+    await client.request(
+      `/v1/events/${id}/join-requests/${input.userId}/${input.approve ? 'approve' : 'decline'}`,
+      Empty,
+      { method: 'POST' },
+    );
+    return null;
+  });
 }
 
 export function useInviteLink(id: string) {

@@ -58,6 +58,7 @@ const VISIBILITIES: EventVisibility[] = [
   'public',
   'friends_of_friends',
   'invite_only',
+  'approval',
   'women_only',
   'men_only',
   'balanced',

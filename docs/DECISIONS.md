@@ -746,3 +746,12 @@ The app icon, adaptive icon, splash, in-app logo and website icons show the pixe
 ## D-178 Guest preference: everyone, women only or men only
 
 `men_only` joins `women_only` as an event visibility (migration `0019`), and both follow one rule, `genderOnly(visibility)` (shared) with `matchesGenderOnly` in the event policy: only members whose gender a reviewer has verified can see, host, co-host or pull up to such a plan, guest +1s are refused, and the refusal reason is `WOMEN_ONLY` or `MEN_ONLY` (or `VERIFICATION_REQUIRED` for the right gender, unverified). Discovery lists men-only plans only to verified men.
+
+## D-179 Private plans: ask to join, the host approves
+
+A plan with visibility `approval` shows its basics (title, time, area, hosts, how many are going) to anyone who could see a public plan, and nothing that lets someone turn up uninvited: the spot is published as a fuzzed centre exactly like a mystery plan's (`hidesSpot`), the guest list is empty and the chat stays closed until the person is going. Pulling up, or saying maybe, needs a host's yes (`APPROVAL_REQUIRED`).
+
+- **Asking:** `POST /v1/events/:id/join-request` (60 a day) records one `event_join_requests` row per person and plan (migration `0020`) and tells the host and co-hosts once (`join_requested`). The person can take it back while it is pending.
+- **Answering:** hosts and co-hosts list the people waiting, oldest first, and approve or decline each. Approving records an invite from that host, so everything that already works for invited people applies: they may pull up, seats and the waitlist are unchanged, and going reveals the spot, guests and chat. They are told (`join_approved`). Declining is final (`JOIN_DECLINED` on a second request) and is not announced.
+- A host can still invite people directly; that is the same yes without the request.
+- Requests are part of the events module's account export and are erased with the account.

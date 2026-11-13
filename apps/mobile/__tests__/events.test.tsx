@@ -6,6 +6,7 @@ import PlansScreen from '../app/(app)/(tabs)/plans';
 import AttendeesScreen from '../app/(app)/events/[id]/attendees';
 import CancelEventScreen from '../app/(app)/events/[id]/cancel';
 import EventScreen from '../app/(app)/events/[id]/index';
+import JoinRequestsScreen from '../app/(app)/events/[id]/requests';
 import InviteScreen from '../app/(app)/events/[id]/invite';
 import PlusOneScreen from '../app/(app)/events/[id]/plus-one';
 import ScanScreen from '../app/(app)/events/[id]/scan';
@@ -326,6 +327,97 @@ describe('Event detail', () => {
     await fireEvent.press(await screen.findByTestId('pull-up'));
     expect(await screen.findByTestId('event-error')).toHaveTextContent(
       'This plan is for verified women.',
+    );
+  });
+
+  it('private plan: asks the host to join, shows the wait, and hides the spot (D-179)', async () => {
+    const hidden = {
+      kind: 'approximate' as const,
+      center: { lat: 17.45, lng: 78.36 },
+      radiusMeters: 2000,
+      neighbourhoodName: 'Gachibowli',
+      revealsAt: '2026-11-03T10:30:00.000Z',
+      hiddenBy: 'approval' as const,
+    };
+    const closed = { canRsvp: false, blockedReason: 'APPROVAL_REQUIRED' };
+    // The server remembers the request, so every refetch after asking shows it as pending.
+    let request: 'pending' | null = null;
+    const plan = () =>
+      eventFixture(
+        { visibility: 'approval', location: hidden },
+        { ...closed, joinRequest: request },
+      );
+    api
+      .on('GET', `/v1/events/${EVENT_ID}`, () => ({ status: 200, body: plan() }))
+      .on('POST', `/v1/events/${EVENT_ID}/join-request`, () => {
+        request = 'pending';
+        return { status: 200, body: { status: 'pending', event: plan() } };
+      })
+      .on('DELETE', `/v1/events/${EVENT_ID}/join-request`, () => {
+        request = null;
+        return { status: 204 };
+      });
+    await renderWithProviders(<EventScreen />, { fetchFn: api.fetch });
+    expect(await screen.findByTestId('event-location-hidden')).toHaveTextContent(
+      /shared once the host lets you in/,
+    );
+    expect(screen.queryByTestId('pull-up')).toBeNull();
+    await fireEvent.press(screen.getByTestId('join-ask'));
+    expect(await screen.findByTestId('join-pending')).toHaveTextContent(
+      'Request sent. The host will let you know.',
+    );
+    expect(api.callsTo('POST', `/v1/events/${EVENT_ID}/join-request`)).toHaveLength(1);
+    await fireEvent.press(screen.getByTestId('join-withdraw'));
+    await waitFor(() =>
+      expect(api.callsTo('DELETE', `/v1/events/${EVENT_ID}/join-request`)).toHaveLength(1),
+    );
+  });
+
+  it('private plan: a declined request says so and offers nothing else', async () => {
+    api.on('GET', `/v1/events/${EVENT_ID}`, {
+      status: 200,
+      body: eventFixture(
+        { visibility: 'approval' },
+        { canRsvp: false, blockedReason: 'APPROVAL_REQUIRED', joinRequest: 'declined' },
+      ),
+    });
+    await renderWithProviders(<EventScreen />, { fetchFn: api.fetch });
+    expect(await screen.findByTestId('join-declined')).toBeOnTheScreen();
+    expect(screen.queryByTestId('join-ask')).toBeNull();
+    expect(screen.queryByTestId('pull-up')).toBeNull();
+  });
+
+  it('private plan: the host sees who is waiting and lets them in or not', async () => {
+    api
+      .on('GET', `/v1/events/${EVENT_ID}`, {
+        status: 200,
+        body: eventFixture(
+          { visibility: 'approval', pendingJoinRequests: 2 },
+          { isHost: true, hostRole: 'host', canRsvp: false, blockedReason: 'HOST' },
+        ),
+      })
+      .on('GET', `/v1/events/${EVENT_ID}/join-requests`, {
+        status: 200,
+        body: {
+          items: [{ person: host, status: 'pending', requestedAt: '2026-11-01T06:00:00.000Z' }],
+          nextCursor: null,
+        },
+      })
+      .on('POST', `/v1/events/${EVENT_ID}/join-requests/${ids.other}/approve`, { status: 204 });
+    await renderWithProviders(<EventScreen />, { fetchFn: api.fetch });
+    expect(await screen.findByTestId('join-requests')).toHaveTextContent('Requests to join (2)');
+    await fireEvent.press(screen.getByTestId('join-requests'));
+    expect(mockRouter.push).toHaveBeenCalledWith({
+      pathname: '/events/[id]/requests',
+      params: { id: EVENT_ID },
+    });
+
+    await renderWithProviders(<JoinRequestsScreen />, { fetchFn: api.fetch });
+    await fireEvent.press(await screen.findByTestId(`join-approve-${ids.other}`));
+    await waitFor(() =>
+      expect(
+        api.callsTo('POST', `/v1/events/${EVENT_ID}/join-requests/${ids.other}/approve`),
+      ).toHaveLength(1),
     );
   });
 

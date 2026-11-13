@@ -9,7 +9,7 @@ import { useTranslation } from 'react-i18next';
 import { Alert, Share, StyleSheet, View } from 'react-native';
 import MapView, { Circle, Marker } from 'react-native-maps';
 import { usePriorityPass, useReferrals } from '../src/features/engagement/api';
-import { useCheckIn, useRsvp } from '../src/features/events/api';
+import { useCheckIn, useJoinRequest, useRsvp } from '../src/features/events/api';
 import { useRefundQuote } from '../src/features/payments/api';
 import { money, refundPolicyText } from '../src/features/payments/format';
 import {
@@ -57,6 +57,8 @@ export function EventDetailView({
   const router = useRouter();
   const theme = useTheme();
   const rsvp = useRsvp(event.id);
+  const join = useJoinRequest(event.id);
+  const pendingRequests = event.pendingJoinRequests ?? 0;
   const checkIn = useCheckIn(event.id);
   const pass = usePriorityPass(event.id);
   const rewards = useReferrals(event.viewer.rsvp === 'waitlisted');
@@ -83,6 +85,7 @@ export function EventDetailView({
       | '/events/[id]/scan'
       | '/events/[id]/attendees'
       | '/events/[id]/plus-one'
+      | '/events/[id]/requests'
       | '/events/[id]/checkout',
   ): void => {
     router.push({ pathname, params: { id: event.id } });
@@ -99,6 +102,16 @@ export function EventDetailView({
     } catch (err) {
       setError(errorMessage(t, err));
       return false;
+    }
+  };
+
+  const askToJoin = async (action: 'ask' | 'withdraw'): Promise<void> => {
+    setError(null);
+    setNotice(null);
+    try {
+      await join.mutateAsync(action);
+    } catch (err) {
+      setError(errorMessage(t, err));
     }
   };
 
@@ -206,8 +219,10 @@ export function EventDetailView({
             {locationLabel(t, loc)}
           </IconText>
           {loc.kind === 'approximate' ? (
-            <Text variant="caption" tone="muted">
-              {t('events.mysteryRevealsAt', { time: formatWhen(loc.revealsAt, i18n.language) })}
+            <Text variant="caption" tone="muted" testID="event-location-hidden">
+              {loc.hiddenBy === 'approval'
+                ? t('events.privateSpotHidden')
+                : t('events.mysteryRevealsAt', { time: formatWhen(loc.revealsAt, i18n.language) })}
             </Text>
           ) : null}
           <Text>{capacityLabel(t, event)}</Text>
@@ -355,10 +370,47 @@ export function EventDetailView({
               testID="open-payment"
             />
           ) : null}
+          {/* Private plans (D-179): ask the host, wait for their answer, or hear that it was a no. */}
+          {open && !v.isHost && v.blockedReason === 'APPROVAL_REQUIRED' ? (
+            v.joinRequest === 'pending' ? (
+              <>
+                <Text tone="primary" accessibilityLiveRegion="polite" testID="join-pending">
+                  {t('events.joinPending')}
+                </Text>
+                <Button
+                  label={t('events.joinWithdraw')}
+                  variant="ghost"
+                  loading={join.isPending}
+                  onPress={() => void askToJoin('withdraw')}
+                  testID="join-withdraw"
+                />
+              </>
+            ) : v.joinRequest === 'declined' ? (
+              <Text tone="muted" testID="join-declined">
+                {t('events.joinDeclined')}
+              </Text>
+            ) : (
+              <>
+                <Text tone="muted">{t('events.privateBody')}</Text>
+                <Button
+                  label={t('events.joinAsk')}
+                  loading={join.isPending}
+                  onPress={() => void askToJoin('ask')}
+                  testID="join-ask"
+                />
+              </>
+            )
+          ) : null}
+          {open && v.canRsvp && v.joinRequest === 'approved' ? (
+            <Text tone="primary" testID="join-approved">
+              {t('events.joinApproved')}
+            </Text>
+          ) : null}
           {open &&
           !v.canRsvp &&
           v.blockedReason &&
           !v.isHost &&
+          v.blockedReason !== 'APPROVAL_REQUIRED' &&
           v.blockedReason !== 'ALREADY_IN' ? (
             <Text tone="muted" testID="blocked-reason">
               {reasonText(t, v.blockedReason, { until: v.cooldownUntil })}
@@ -646,6 +698,16 @@ export function EventDetailView({
               <Text variant="heading" accessibilityRole="header">
                 {t('events.hostTools')}
               </Text>
+              {event.visibility === 'approval' && v.hostRole !== 'welcome_host' ? (
+                <Button
+                  label={t('events.joinRequests', { count: pendingRequests })}
+                  variant={pendingRequests > 0 ? 'primary' : 'secondary'}
+                  onPress={() => {
+                    go('/events/[id]/requests');
+                  }}
+                  testID="join-requests"
+                />
+              ) : null}
               <Button
                 label={t('events.scan')}
                 variant="secondary"

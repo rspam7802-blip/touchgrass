@@ -199,7 +199,7 @@ export const EventLocationView = z.discriminatedUnion('kind', [
     neighbourhoodName: z.string().nullable(),
     revealsAt: z.iso.datetime(),
     /** Why the spot is hidden: a mystery plan before its reveal, or a private plan until the host lets you in. */
-    hiddenBy: z.enum(['mystery', 'approval']).default('mystery'),
+    hiddenBy: z.enum(['mystery', 'approval']).optional(),
   }),
 ]);
 export type EventLocationView = z.infer<typeof EventLocationView>;
@@ -210,7 +210,7 @@ export type EventHost = z.infer<typeof EventHost>;
 export const ViewerState = z.object({
   rsvp: RsvpStatus.nullable(),
   /** The viewer's request to join a private plan, if they made one (D-179). */
-  joinRequest: JoinRequestStatus.nullable().default(null),
+  joinRequest: JoinRequestStatus.nullable().optional(),
   isHost: z.boolean(),
   hostRole: HostRole.nullable(),
   invitedBy: PersonCard.nullable(),
@@ -275,7 +275,7 @@ export type EventSummary = z.infer<typeof EventSummary>;
 
 export const EventDetail = EventSummary.extend({
   /** Hosts of a private plan: how many people are waiting for an answer (D-179). Zero for everyone else. */
-  pendingJoinRequests: z.number().int().default(0),
+  pendingJoinRequests: z.number().int().optional(),
   description: z.string(),
   hosts: z.array(EventHost),
   interests: z.array(Interest),
