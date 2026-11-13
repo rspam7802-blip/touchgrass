@@ -779,3 +779,7 @@ The search screen used to be blank until two letters were typed. It now opens wi
 ## D-184 A console that looks the part
 
 The admin console gets a proper shell: a sidebar with its sections grouped under headings (Overview, People, Plans and places, Content, Growth, System), the current section highlighted, and the menu folding under a button on phones. The home page is now an overview: queue counts that need someone today (selfies to review, reports and held content, host applications, waitlist not yet invited), the last 30 days' numbers with a daily chart, then every section the person can open. Each block appears only for roles that can open its section. Shared styles under `.admin-main` give every existing page the same cards, tables and form controls without rewriting them one by one.
+
+## D-185 Telugu that sounds like people talk
+
+The Telugu was rewritten throughout for meaning rather than word for word: informal singular to the person (నువ్వు, చెయ్), the English loanwords Hyderabad actually uses written in Telugu script (ప్లాన్, ఫోటో, పేమెంట్, క్యాన్సిల్, డిలీట్) instead of literary words (చెల్లింపు, తొలగించు, ఐచ్ఛికం), and consistent app terms (ప్లాన్ వెయ్ for Plot, జ్ఞాపకాలు for Lore). Safety copy stays plain and calm; venue-staff strings keep the polite form. Keys and placeholders are unchanged (checked against English). Tests now read Telugu from the resources instead of repeating it, so copy edits don't break them.

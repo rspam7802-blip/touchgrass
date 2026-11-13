@@ -1,3 +1,4 @@
+import { resources } from '@touchgrass/shared';
 import NetInfo from '@react-native-community/netinfo';
 import { fireEvent, screen, waitFor } from '@testing-library/react-native';
 import WelcomeScreen from '../app/index';
@@ -86,7 +87,7 @@ describe('WelcomeScreen', () => {
   it('switches to Telugu and Hindi and persists the choice', async () => {
     await renderWithProviders(<WelcomeScreen />, { fetchFn: config() });
     await fireEvent.press(screen.getByRole('radio', { name: 'తెలుగు' }));
-    expect(await screen.findByText('ఫోన్ పక్కన పెట్టు. బయటకు రా.')).toBeOnTheScreen();
+    expect(await screen.findByText(resources.te.brand.tagline)).toBeOnTheScreen();
     expect(useSettingsStore.getState().language).toBe('te');
     await fireEvent.press(screen.getByRole('radio', { name: 'हिन्दी' }));
     expect(await screen.findByText('फ़ोन छोड़ो. बाहर आओ.')).toBeOnTheScreen();

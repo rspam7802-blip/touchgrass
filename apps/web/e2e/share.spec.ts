@@ -1,3 +1,4 @@
+import { resources } from '@touchgrass/shared';
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
 
@@ -80,7 +81,7 @@ test('cancelled plans say so; unknown plans 404', async ({ page }) => {
 test('plays well in Telugu', async ({ page }) => {
   await page.goto(`/e/${PUBLIC}?lang=te`);
   await expect(page.locator('main')).toHaveAttribute('lang', 'te');
-  await expect(page.getByRole('link', { name: 'TouchGrass లో ఓపెన్ చేయి' })).toBeVisible();
+  await expect(page.getByRole('link', { name: resources.te.share.openInApp })).toBeVisible();
 });
 
 test('unknown +1 claim links explain they are used up', async ({ page }) => {
