@@ -755,3 +755,7 @@ A plan with visibility `approval` shows its basics (title, time, area, hosts, ho
 - **Answering:** hosts and co-hosts list the people waiting, oldest first, and approve or decline each. Approving records an invite from that host, so everything that already works for invited people applies: they may pull up, seats and the waitlist are unchanged, and going reveals the spot, guests and chat. They are told (`join_approved`). Declining is final (`JOIN_DECLINED` on a second request) and is not announced.
 - A host can still invite people directly; that is the same yes without the request.
 - Requests are part of the events module's account export and are erased with the account.
+
+## D-180 SOS from the plan
+
+People going to a plan and its hosts get an SOS button on the plan screen while it is published. It does what SOS always does (one confirmation, dials 112, starts a live share, F-SAF-04) and the text to their trusted contacts (up to three) also names the plan, when it is, and where: the place and address with a maps link when this person can see the exact spot, otherwise only the area. Because the server sends no SMS (D-166), the phone's Messages app now opens by itself with every contact and the message filled in; the button stays for a second try. With no trusted contacts saved, the plan screen says so and links to adding them.

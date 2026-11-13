@@ -1821,6 +1821,13 @@ export const en = {
     sosTextYourself: 'We couldn’t text your contacts for you. Send it from your phone:',
     sosTextContacts: 'Text my contacts',
     sosMessage: '{{name}} pressed SOS on TouchGrass and may need help. Live location: {{url}}',
+    sosMessagePlan:
+      '{{name}} pressed SOS on TouchGrass and may need help. They are at the plan "{{title}}", {{when}}, at {{place}}. Live location: {{url}}',
+    sosPlanTitle: 'Feeling unsafe?',
+    sosPlanBody:
+      'SOS calls 112 and sends this plan, where it is and your live location to your trusted contacts.',
+    sosNoContacts: 'Add up to {{max}} trusted contacts so SOS can reach them.',
+    sosAddContacts: 'Add trusted contacts',
     sosSent: 'Your contacts were alerted.',
     sosFailed: 'Your contacts were not alerted.',
     sosRetry: 'Alert my contacts again',

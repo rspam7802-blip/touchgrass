@@ -12,6 +12,7 @@ import * as Linking from 'expo-linking';
 import { Alert, type AlertButton } from 'react-native';
 import ContactsScreen from '../app/(app)/safety/contacts';
 import SafetyScreen from '../app/(app)/safety/index';
+import { SosButton } from '../components/SosButton';
 import ShareScreen from '../app/(app)/safety/share';
 import VerificationScreen from '../app/(app)/verification';
 import { MessageBubble } from '../components/chat/MessageBubble';
@@ -197,12 +198,49 @@ describe('safety centre (F-SAF-07)', () => {
     });
     expect(await screen.findByTestId('safety-sos-text-yourself')).toBeOnTheScreen();
     expect(screen.queryByTestId('safety-sos-sent')).toBeNull();
-    await fireEvent.press(screen.getByTestId('safety-sos-text-contacts'));
+    // Messages opens by itself; the button is there for a second try.
     await waitFor(() => expect(SMS.sendSMSAsync).toHaveBeenCalled());
+    expect(screen.getByTestId('safety-sos-text-contacts')).toBeOnTheScreen();
     const [to, message] = (SMS.sendSMSAsync as jest.Mock).mock.calls[0] as [string[], string];
     expect(to.length).toBeGreaterThan(0);
     expect(message).toContain(share().link);
     expect(message).toMatch(/pressed SOS/);
+  });
+
+  it('SOS from a plan opens Messages at once with the plan, its place and the live link (D-180)', async () => {
+    (Location.getForegroundPermissionsAsync as jest.Mock).mockResolvedValue({ granted: false });
+    (SMS.sendSMSAsync as jest.Mock).mockClear();
+    api.on('POST', '/v1/safety/sos', {
+      status: 200,
+      body: { share: share({ sosAt: new Date().toISOString(), contactsNotified: 0 }) },
+    });
+    await renderWithProviders(
+      <SosButton
+        testID="event-sos-button"
+        plan={{
+          title: 'Sunset frisbee',
+          when: 'Tue 3 Nov, 6:00 pm',
+          place: 'Lake View Park, 42 Lake Road',
+          mapUrl: 'https://maps.google.com/?q=17.44,78.35',
+        }}
+      />,
+      { fetchFn: api.fetch },
+    );
+    await fireEvent.press(await screen.findByTestId('event-sos-button'));
+    await act(async () => {
+      pressAlert('Send SOS and call 112');
+      await Promise.resolve();
+    });
+    // No second tap: the composer opens by itself, addressed to every trusted contact.
+    await waitFor(() => expect(SMS.sendSMSAsync).toHaveBeenCalledTimes(1));
+    const [to, message] = (SMS.sendSMSAsync as jest.Mock).mock.calls[0] as [string[], string];
+    expect(to.length).toBeGreaterThan(0);
+    expect(message).toContain('"Sunset frisbee"');
+    expect(message).toContain('Tue 3 Nov, 6:00 pm');
+    expect(message).toContain(
+      'Lake View Park, 42 Lake Road https://maps.google.com/?q=17.44,78.35',
+    );
+    expect(message).toContain(share().link);
   });
 
   it('shows a running share and hides the verify button once verified', async () => {

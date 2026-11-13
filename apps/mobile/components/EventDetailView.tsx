@@ -24,6 +24,8 @@ import { useTheme } from '../src/theme/theme';
 import { readAppEnvironment } from '../src/config';
 import { calendarFields, saveToCalendar } from '../src/features/calendar/device';
 import { CalendarButton } from './CalendarButton';
+import { SosButton } from './SosButton';
+import { useTrustedContacts } from '../src/features/safety/api';
 import { PersonRow } from './PersonRow';
 import { useTrack } from '../src/features/analytics/analytics';
 import { Button, FadeIn, IconText, Pop, Text, TextField } from './ui';
@@ -58,6 +60,7 @@ export function EventDetailView({
   const theme = useTheme();
   const rsvp = useRsvp(event.id);
   const join = useJoinRequest(event.id);
+  const trusted = useTrustedContacts();
   const pendingRequests = event.pendingJoinRequests ?? 0;
   const checkIn = useCheckIn(event.id);
   const pass = usePriorityPass(event.id);
@@ -549,6 +552,42 @@ export function EventDetailView({
               }}
               testID="event-share-location"
             />
+          ) : null}
+          {/* SOS from the plan (D-180): for people going and hosts, until the plan is over. */}
+          {(holdsSeat || v.isHost) && event.status === 'published' ? (
+            <View style={styles.wrap} testID="event-sos">
+              <Text variant="heading" accessibilityRole="header">
+                {t('safety.sosPlanTitle')}
+              </Text>
+              <Text tone="muted">{t('safety.sosPlanBody')}</Text>
+              <SosButton
+                testID="event-sos-button"
+                plan={{
+                  title: event.title,
+                  when: formatWhen(event.startsAt, i18n.language, event.timezone),
+                  place: locationLabel(t, loc),
+                  mapUrl:
+                    loc.kind === 'exact'
+                      ? `https://maps.google.com/?q=${String(loc.point.lat)},${String(loc.point.lng)}`
+                      : null,
+                }}
+              />
+              {trusted.data && trusted.data.items.length === 0 ? (
+                <>
+                  <Text tone="muted" testID="event-sos-no-contacts">
+                    {t('safety.sosNoContacts', { max: LIMITS.safety.maxTrustedContacts })}
+                  </Text>
+                  <Button
+                    label={t('safety.sosAddContacts')}
+                    variant="secondary"
+                    onPress={() => {
+                      router.push('/safety/contacts');
+                    }}
+                    testID="event-sos-add-contacts"
+                  />
+                </>
+              ) : null}
+            </View>
           ) : null}
           <MapView
             style={[styles.map, { borderRadius: theme.radii.md }]}
