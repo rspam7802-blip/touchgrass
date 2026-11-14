@@ -56,14 +56,16 @@ name: Plot a plan and manage it
     id: who-is-going
 - assertVisible: "Who's pulling up"
 - back
+# Hosts check guests in; they have no check-in code of their own.
 - scrollUntilVisible:
-    element:
-      id: open-ticket
+    element: 'Scan check-ins'
     direction: DOWN
+- assertVisible: 'Edit plan'
+# Their new plan is listed on Plans (Upcoming and Hosting rows).
+- back
 - tapOn:
-    id: open-ticket
-- assertVisible: 'Your check-in code'
-- back
-- back
-- tapOn: 'Hosting'
+    id: dock-plans
+- scrollUntilVisible:
+    element: 'Hosting'
+    direction: DOWN
 - assertVisible: 'Maestro chai walk'

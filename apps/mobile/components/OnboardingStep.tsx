@@ -110,5 +110,7 @@ export function OnboardingStep(props: OnboardingStepProps) {
 const styles = StyleSheet.create({
   track: { height: 6, width: '100%', overflow: 'hidden' },
   fill: { height: 6 },
-  content: { gap: 12, flexGrow: 1 },
+  // No flexGrow: Continue sits right under the fields, so it stays above the keyboard while typing a name or
+  // birthday (it was pinned to the bottom of the screen, under the keyboard).
+  content: { gap: 12 },
 });

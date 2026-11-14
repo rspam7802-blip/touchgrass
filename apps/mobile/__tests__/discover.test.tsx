@@ -268,7 +268,8 @@ describe('Discover tab (F-DSC-01..08)', () => {
         ),
       ).toBe(true),
     );
-    expect(screen.getByTestId('hero-carousel')).toBeOnTheScreen();
+    // The refetch briefly shows the loading state, then the same layout comes back.
+    expect(await screen.findByTestId('hero-carousel', {}, { timeout: 20_000 })).toBeOnTheScreen();
   }, 40_000);
 
   it('quick chips and the filter panel change the query; clear resets it', async () => {
