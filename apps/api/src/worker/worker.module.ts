@@ -49,6 +49,7 @@ import { RemindersModule } from '../modules/reminders/reminders.module.js';
 import { LoreHandlers } from '../modules/lore/lore.handlers.js';
 import { EventCommentsHandlers } from '../modules/event-comments/event-comments.handlers.js';
 import { ReliabilityHandlers } from '../modules/reliability/reliability.handlers.js';
+import { DiscoveryHandlers } from '../modules/discovery/discovery.handlers.js';
 import { HostingModule } from '../modules/hosting/hosting.module.js';
 import { PaymentsModule } from '../modules/payments/payments.module.js';
 import { PerksModule } from '../modules/perks/perks.module.js';
@@ -87,6 +88,7 @@ export class WorkerModule implements OnApplicationBootstrap, OnApplicationShutdo
     private readonly loreHandlers: LoreHandlers,
     private readonly eventCommentsHandlers: EventCommentsHandlers,
     private readonly reliabilityHandlers: ReliabilityHandlers,
+    private readonly discoveryHandlers: DiscoveryHandlers,
     private readonly availabilityHandlers: AvailabilityHandlers,
     private readonly crewsHandlers: CrewsHandlers,
     private readonly proposalsHandlers: ProposalsHandlers,
@@ -160,6 +162,7 @@ export class WorkerModule implements OnApplicationBootstrap, OnApplicationShutdo
     this.loreHandlers.registerOn(this.bus);
     this.eventCommentsHandlers.registerOn(this.bus);
     this.reliabilityHandlers.registerOn(this.bus);
+    this.discoveryHandlers.registerOn(this.bus);
     this.availabilityHandlers.registerOn(this.bus);
     this.crewsHandlers.registerOn(this.bus);
     this.proposalsHandlers.registerOn(this.bus);

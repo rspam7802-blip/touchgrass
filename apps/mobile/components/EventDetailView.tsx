@@ -447,7 +447,7 @@ export function EventDetailView({
             />
           ) : null}
 
-          {holdsSeat && open ? (
+          {holdsSeat && open && !v.isHost ? (
             <>
               <Button
                 label={t('events.ticket')}

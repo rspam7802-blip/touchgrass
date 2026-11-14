@@ -17,6 +17,13 @@ import { FadeIn, Icon, staggerDelay, Text } from './ui';
  * Search and the list/map switch float on top (`overlay`); the plans in view are a swipeable row of cards at
  * the bottom, so screen-reader users never depend on the map itself.
  */
+/** Google Maps style (Android): hide businesses, attractions and transit so plans are the only pins. */
+const PLAIN_MAP = [
+  { featureType: 'poi', stylers: [{ visibility: 'off' }] },
+  { featureType: 'transit', stylers: [{ visibility: 'off' }] },
+  { featureType: 'road', elementType: 'labels.icon', stylers: [{ visibility: 'off' }] },
+];
+
 export function DiscoverMap({
   center,
   filters,
@@ -56,6 +63,12 @@ export function DiscoverMap({
         ref={map}
         style={StyleSheet.absoluteFill}
         userInterfaceStyle={theme.scheme}
+        // A plain map: only our plans are pinned, not Google's shops, restaurants and bus stops.
+        customMapStyle={PLAIN_MAP}
+        showsPointsOfInterests={false}
+        showsBuildings={false}
+        showsIndoors={false}
+        toolbarEnabled={false}
         initialRegion={initial}
         onRegionChangeComplete={(r: Region) => {
           setBox(regionToBox(r));

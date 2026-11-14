@@ -32,7 +32,7 @@ import {
   type EventViewerFacts,
   type ViewerContext,
 } from '../events/event-access.service.js';
-import { canViewEvent, holdsSeat } from '../events/event.policy.js';
+import { canViewEvent } from '../events/event.policy.js';
 import {
   type CandidateArea,
   type CandidateFilters,
@@ -57,6 +57,8 @@ const SNAPSHOT_KEY = (userId: string, requestId: string): string =>
   `feed:v1:snap:${userId}:${requestId}`;
 /** A repeat of the same first-page request within this window reuses the ranked snapshot (cached feed). */
 const LAST_KEY = (userId: string, hash: string): string => `feed:v1:last:${userId}:${hash}`;
+/** Bumped whenever a plan is published, changed or cancelled (DiscoveryHandlers); part of the reuse key. */
+export const FEED_EPOCH_KEY = 'feed:v1:epoch';
 const LAST_TTL_SECONDS = 60;
 
 const FeedCursor = z.object({ r: z.uuid(), o: z.number().int().min(0) });
@@ -114,7 +116,9 @@ export class DiscoveryService {
       // The ranked list moved on; the client starts again from the top (keeps paging consistent).
       if (!snapshot) throw new AppError('INVALID_CURSOR', 'The feed was refreshed; reload it');
     } else {
-      const hash = filterHash(q);
+      // Only reuse a snapshot ranked since the last plan change, so a new plan shows up straight away.
+      const epoch = (await this.redis.get(FEED_EPOCH_KEY)) ?? '0';
+      const hash = `${filterHash(q)}:${epoch}`;
       const reused = await this.redis.get(LAST_KEY(userId, hash));
       snapshot = reused ? await this.loadSnapshot(userId, reused) : null;
       if (reused && snapshot) requestId = reused;
@@ -360,10 +364,8 @@ export class DiscoveryService {
     const visible = entries.flatMap((e) => {
       const c = cores.get(e.id);
       const f = facts.get(e.id);
-      // A reused snapshot may predate the viewer joining or co-hosting: those now live in "Your plans".
-      const joined =
-        f !== undefined && (f.hostRole !== null || holdsSeat(f.rsvp) || f.rsvp === 'waitlisted');
-      return c && f && !joined && c.status === 'published' && canViewEvent(f, c)
+      // Plans the viewer hosts or joined stay listed (everyone sees every plan on Explore and the map).
+      return c && f && c.status === 'published' && canViewEvent(f, c)
         ? [{ entry: e, core: c, facts: f }]
         : [];
     });

@@ -7,6 +7,8 @@ import { FakeWeatherProvider } from '../src/adapters/weather/fake.weather.js';
 import { DB, type Database } from '../src/infra/database/database.module.js';
 import { PartitionService } from '../src/infra/database/partitions.js';
 import { WeatherService } from '../src/modules/discovery/weather.service.js';
+import { FEED_EPOCH_KEY } from '../src/modules/discovery/discovery.service.js';
+import { REDIS } from '../src/infra/redis/redis.module.js';
 import { timeWindow } from '../src/modules/discovery/ranking.js';
 import { ADDRESS, idem, PLACE, plot, rsvp, SPOT, verifiedMember } from './event-helpers.js';
 import { bearer, befriend, createHarness, type Harness, member, type Member } from './harness.js';
@@ -77,9 +79,10 @@ describe('feed (F-DSC-01/04/05/07)', () => {
     expect(item?.distanceMeters).toBeLessThan(10);
     expect(item?.viewer.canRsvp).toBe(true);
 
-    expect(ids(await allItems(host))).not.toContain(e.id);
+    // Everyone sees the plan on Explore, its host and people already going included.
+    expect(ids(await allItems(host))).toContain(e.id);
     await rsvp(h, me, e.id).expect(200);
-    expect(ids(await allItems(me, { radiusKm: 2 }))).not.toContain(e.id);
+    expect(ids(await allItems(me, { radiusKm: 2 }))).toContain(e.id);
   });
 
   it('pages through one ranked snapshot without duplicates and reuses it for a minute', async () => {
@@ -148,6 +151,20 @@ describe('feed (F-DSC-01/04/05/07)', () => {
       .query({ cursor: 'garbage' })
       .set(...bearer(me.token))
       .expect(400);
+  });
+});
+
+describe('new plans reach everyone (D-196)', () => {
+  it('a plan plotted after someone opened Explore shows up on their next load, host included', async () => {
+    const host = await verifiedMember(h);
+    const me = await member(h);
+    // `me` loads the feed (this ranks and caches it), then a new plan goes live nearby.
+    await feed(me);
+    const fresh = await plot(h, host, { title: uniqueTitle('Fresh') });
+    // The worker bumps the epoch on event.created; do what it does.
+    await h.app.get<Redis>(REDIS).incr(FEED_EPOCH_KEY);
+    expect(ids(await allItems(me))).toContain(fresh.id);
+    expect(ids(await allItems(host))).toContain(fresh.id);
   });
 });
 

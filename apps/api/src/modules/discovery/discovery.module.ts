@@ -13,6 +13,7 @@ import { VenuesModule } from '../venues/venues.module.js';
 import { AdminWeightsController } from './admin-weights.controller.js';
 import { RankingWeightsService } from './ranking-weights.service.js';
 import { DiscoveryController } from './discovery.controller.js';
+import { DiscoveryHandlers } from './discovery.handlers.js';
 import { DiscoveryService } from './discovery.service.js';
 import { SearchService } from './search.service.js';
 import { WeatherService } from './weather.service.js';
@@ -32,8 +33,14 @@ import { WeatherService } from './weather.service.js';
     VenuesModule,
   ],
   controllers: [DiscoveryController, AdminWeightsController],
-  providers: [DiscoveryService, SearchService, WeatherService, RankingWeightsService],
-  exports: [DiscoveryService, WeatherService],
+  providers: [
+    DiscoveryService,
+    SearchService,
+    WeatherService,
+    RankingWeightsService,
+    DiscoveryHandlers,
+  ],
+  exports: [DiscoveryService, WeatherService, DiscoveryHandlers],
 })
 export class DiscoveryModule implements OnModuleInit {
   constructor(

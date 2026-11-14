@@ -17,6 +17,7 @@ import { useApi } from '../../src/providers/api-context';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ScrollView, type ScrollViewInstance, StyleSheet, View } from 'react-native';
+import { CoverPicker, type CoverValue } from '../../components/CoverPicker';
 import MapView, { Marker, type MapPressEvent } from 'react-native-maps';
 import { ChipGroup } from '../../components/ChipGroup';
 import { DateField, TimeField } from '../../components/DateTimeFields';
@@ -213,6 +214,12 @@ function PlotForm({
   // One key for this form: a second tap (or a retry after a lost response) returns the same plan.
   const [createKey] = useState(() => `plot-${Crypto.randomUUID()}`);
   const scrollRef = useRef<ScrollViewInstance>(null);
+  // Cover photo (D-196): sent only when changed, so an edit never drops a cover it did not touch.
+  const [cover, setCover] = useState<CoverValue>(() => ({
+    id: null,
+    uri: existing?.cover?.md ?? null,
+  }));
+  const [coverTouched, setCoverTouched] = useState(false);
   /** Where the place search starts in the scroll content, to lift it above the keyboard. */
   const placeY = useRef(0);
   const create = useCreateEvent(createKey);
@@ -307,6 +314,7 @@ function PlotForm({
       // Paid plans have no +1s: every seat is a ticket.
       allowPlusOnes: canSell && pricePaise > 0 ? false : form.allowPlusOnes,
       chatEnabled: form.chatEnabled,
+      ...(coverTouched ? { coverMediaId: cover.id } : {}),
       indoor: form.indoor,
       accessibility: {
         stepFree: form.stepFree,
@@ -458,6 +466,13 @@ function PlotForm({
         }}
         error={errors.categoryId || null}
         testID="plot-category"
+      />
+      <CoverPicker
+        value={cover}
+        onChange={(next) => {
+          setCover(next);
+          setCoverTouched(true);
+        }}
       />
 
       <Text

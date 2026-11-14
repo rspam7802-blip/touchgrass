@@ -49,7 +49,7 @@ import { NotificationBell } from '../../../components/NotificationBell';
 import { useFlag } from '../../../src/features/app-config/use-flag';
 
 const WHENS: FeedWhen[] = ['any', 'tonight', 'tomorrow', 'weekend'];
-const RADII = [2, 5, 10, 25];
+const RADII = [2, 5, 10, 25, 50];
 const QUICK: Toggle[] = ['free', 'soloFriendly', 'squadGoing', 'smallGroup'];
 
 /**

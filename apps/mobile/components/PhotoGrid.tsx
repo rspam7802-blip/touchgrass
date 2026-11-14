@@ -1,6 +1,7 @@
 import { X } from './icons';
 import type { ProfilePhoto } from '@touchgrass/shared';
 import { Image } from 'expo-image';
+import { useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../src/theme/theme';
@@ -19,8 +20,14 @@ export interface PhotoGridProps {
 export function PhotoGrid({ photos, max, canAdd, adding, onAdd, onRemove }: PhotoGridProps) {
   const { t } = useTranslation();
   const theme = useTheme();
+  // Tiles get an exact size from the grid's measured width. A percentage width with aspectRatio collapsed
+  // to the border on Android (photos looked missing, so people uploaded them again).
+  const [gridWidth, setGridWidth] = useState(0);
+  const tileWidth = gridWidth > 0 ? Math.floor((gridWidth - GAP * (COLUMNS - 1)) / COLUMNS) : 0;
+  const size = tileWidth > 0 ? { width: tileWidth, height: Math.round((tileWidth * 5) / 4) } : null;
   const slot = [
     styles.slot,
+    size ?? styles.slotFallback,
     {
       borderRadius: theme.radii.md,
       borderColor: theme.colors.border,
@@ -28,7 +35,12 @@ export function PhotoGrid({ photos, max, canAdd, adding, onAdd, onRemove }: Phot
     },
   ];
   return (
-    <View style={styles.grid}>
+    <View
+      style={styles.grid}
+      onLayout={(e) => {
+        setGridWidth(e.nativeEvent.layout.width);
+      }}
+    >
       {photos.map((p, i) => (
         <View key={p.mediaAssetId} style={slot}>
           {p.urls ? (
@@ -84,7 +96,7 @@ export function PhotoGrid({ photos, max, canAdd, adding, onAdd, onRemove }: Phot
           accessibilityState={{ busy: adding, disabled: adding }}
           disabled={adding}
           onPress={onAdd}
-          style={[slot, styles.center]}
+          style={[slot, styles.addTile]}
           testID="add-photo"
         >
           {adding ? (
@@ -99,9 +111,15 @@ export function PhotoGrid({ photos, max, canAdd, adding, onAdd, onRemove }: Phot
   );
 }
 
+const COLUMNS = 3;
+const GAP = 8;
+
 const styles = StyleSheet.create({
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  slot: { width: '31%', aspectRatio: 4 / 5, borderWidth: 2, overflow: 'hidden' },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: GAP },
+  slot: { borderWidth: 2, overflow: 'hidden' },
+  /** Until the grid is measured (first frame, and tests): a fixed tile so nothing collapses. */
+  slotFallback: { width: 104, height: 130 },
+  addTile: { alignItems: 'center', justifyContent: 'center', gap: 4 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 4 },
   remove: {
     position: 'absolute',

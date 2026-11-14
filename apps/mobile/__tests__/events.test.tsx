@@ -480,6 +480,9 @@ describe('Event detail', () => {
       params: { id: EVENT_ID },
     });
     expect(screen.queryByTestId('leave')).toBeNull();
+    // Hosts scan guests in; they never get a check-in code (or self check-in) of their own.
+    expect(screen.queryByTestId('open-ticket')).toBeNull();
+    expect(screen.queryByTestId('self-check-in')).toBeNull();
   });
 
   it('cancels a plan with a reason', async () => {

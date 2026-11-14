@@ -19,7 +19,8 @@ export interface DiscoverFilters {
 export const DEFAULT_FILTERS: DiscoverFilters = {
   when: 'any',
   sort: 'recommended',
-  radiusKm: 10,
+  // The whole city by default (a plan across town still shows); people can narrow it.
+  radiusKm: 50,
   categoryId: null,
   vibeTagIds: [],
   free: false,

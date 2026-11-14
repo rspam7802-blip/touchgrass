@@ -56,7 +56,7 @@ const Coords = {
 export const FeedQuery = z
   .object({
     ...Coords,
-    radiusKm: z.coerce.number().int().min(1).max(50).default(10),
+    radiusKm: z.coerce.number().int().min(1).max(50).default(50),
     sort: FeedSort.default('recommended'),
     cursor: z.string().max(512).optional(),
     limit: z.coerce.number().int().min(1).max(30).default(20),

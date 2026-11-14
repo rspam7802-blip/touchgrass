@@ -82,9 +82,7 @@ export class EventSearchService {
       area.kind === 'radius'
         ? sql`ST_DWithin(e.approx_center, ${point}, ${area.meters})`
         : sql`e.approx_center && ST_MakeEnvelope(${area.minLng}, ${area.minLat}, ${area.maxLng}, ${area.maxLat}, 4326)::geography`,
-      // Already on it or hosting: those live in "Your plans".
-      sql`NOT EXISTS (SELECT 1 FROM event_hosts h WHERE h.event_id = e.id AND h.user_id = ${me})`,
-      sql`NOT EXISTS (SELECT 1 FROM rsvps r WHERE r.event_id = e.id AND r.user_id = ${me} AND r.status IN ('going','checked_in','waitlisted'))`,
+      // Plans you host or pulled up to stay on Explore and the map too: everyone sees every plan they may join.
       sql`(
         e.visibility IN ('public','balanced','approval')
         OR (e.visibility = 'women_only' AND ${viewer.verifiedWoman})

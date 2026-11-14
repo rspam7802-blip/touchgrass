@@ -44,6 +44,10 @@ export default function LoreScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const theme = useTheme();
+  // Three square tiles a row, sized from the grid's width (a % width with aspectRatio collapsed on Android).
+  const [gridWidth, setGridWidth] = useState(0);
+  const tile = gridWidth > 0 ? Math.floor((gridWidth - 6 * 2) / 3) : 104;
+  const tileSize = { width: tile, height: tile };
   const { client } = useApi();
   const q = useLore(id);
   const add = useAddLore(id);
@@ -182,7 +186,13 @@ export default function LoreScreen() {
         <EmptyState title={t('lore.empty')} />
       ) : (
         <>
-          <View style={styles.grid} testID="lore-grid">
+          <View
+            style={styles.grid}
+            testID="lore-grid"
+            onLayout={(e) => {
+              setGridWidth(e.nativeEvent.layout.width);
+            }}
+          >
             {items.map((item) => (
               <Pressable
                 key={item.id}
@@ -196,7 +206,7 @@ export default function LoreScreen() {
                 onPress={() => {
                   setOpen(item);
                 }}
-                style={[styles.tile, { borderRadius: theme.radii.md }]}
+                style={[styles.tile, tileSize, { borderRadius: theme.radii.md }]}
                 testID={`lore-item-${item.id}`}
               >
                 <Image
@@ -316,7 +326,7 @@ export default function LoreScreen() {
 const styles = StyleSheet.create({
   section: { gap: 8 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
-  tile: { width: '32%', aspectRatio: 1, overflow: 'hidden' },
+  tile: { overflow: 'hidden' },
   fill: { width: '100%', height: '100%' },
   backdrop: { flex: 1, justifyContent: 'center', padding: 16 },
   sheet: { padding: 16, gap: 10 },

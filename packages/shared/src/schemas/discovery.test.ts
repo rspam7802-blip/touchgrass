@@ -6,7 +6,7 @@ const ID = '0192f3a4-5b6c-7d8e-9f01-23456789abcd';
 describe('discovery schemas (F-DSC-01/02/03/09)', () => {
   it('feed query defaults and query-string parsing', () => {
     expect(FeedQuery.parse({})).toMatchObject({
-      radiusKm: 10,
+      radiusKm: 50,
       sort: 'recommended',
       limit: 20,
       when: 'any',
