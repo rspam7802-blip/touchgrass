@@ -63,6 +63,9 @@ jobs:
           arch: x86_64
           profile: pixel_7
           script: |
+            # The emulator's own launcher sometimes shows "isn't responding" over the app and blocks every tap.
+            adb shell settings put global hide_error_dialogs 1
+            adb shell am broadcast -a android.intent.action.CLOSE_SYSTEM_DIALOGS || true
             adb reverse tcp:4000 tcp:4000
             adb reverse tcp:9000 tcp:9000
             adb install apps/mobile/android/app/build/outputs/apk/release/app-release.apk

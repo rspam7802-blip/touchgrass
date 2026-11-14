@@ -10,6 +10,8 @@ for f in apps/mobile/.maestro/*.yaml; do
   # Sign-up needs a number nobody has used yet.
   case "$name" in 01-signup*) extra=(-e "PHONE=7$(date +%H%M%S)123") ;; esac
   echo "::group::$name"
+  # Close any system popup (e.g. an emulator "isn't responding" dialog) left over from the last flow.
+  adb shell am broadcast -a android.intent.action.CLOSE_SYSTEM_DIALOGS >/dev/null 2>&1 || true
   if ! "$maestro" test "${extra[@]}" --format junit --output "/tmp/maestro-$name.xml" "$f"; then
     failed="$failed $name"
   fi
