@@ -12,5 +12,10 @@ appId: app.touchgrass
       visible:
         id: after-screen
     commands:
+      # "Later" sits under the rating form, below the fold on a phone.
+      - scrollUntilVisible:
+          element:
+            id: after-later
+          direction: DOWN
       - tapOn:
           id: after-later

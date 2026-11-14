@@ -28,9 +28,14 @@ name: Post-event feedback and Lore
       id: send-feedback
 - tapOn:
     id: send-feedback
-- assertVisible:
-    id: feedback-thanks
-- assertVisible: 'People you met'
+# Sending keeps the scroll position, so the thanks note sits above and "People you met" below.
+- scrollUntilVisible:
+    element:
+      id: feedback-thanks
+    direction: UP
+- scrollUntilVisible:
+    element: 'People you met'
+    direction: DOWN
 - scrollUntilVisible:
     element:
       id: after-lore

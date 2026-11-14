@@ -19,9 +19,8 @@ name: Chats inbox, send, react and mute
 - tapOn: 'Chats'
 - assertVisible:
     id: chats-screen
-- tapOn:
-    id: 'conv-.*'
-    index: 0
+# Their squad chat with member #2 (the newest chat is a message request, which has no composer).
+- tapOn: 'Thinking of the sunset frisbee.*'
 - assertVisible:
     id: thread-screen
 - tapOn:

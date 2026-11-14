@@ -19,8 +19,15 @@ name: Discover, filter, map and search
     id: 'dock-discover'
 - assertVisible:
     id: discover-screen
-- assertVisible:
-    id: 'event-seedev.*'
+# The plan list sits under stories, "Free now" and the featured card.
+- scrollUntilVisible:
+    element:
+      id: 'event-seedev.*'
+    direction: DOWN
+- scrollUntilVisible:
+    element:
+      id: toggle-soloFriendly
+    direction: UP
 - tapOn:
     id: toggle-soloFriendly
 - tapOn:
