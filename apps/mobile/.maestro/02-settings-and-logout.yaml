@@ -17,6 +17,9 @@ name: Settings, language and logout
 - assertVisible: 'యాప్ భాష'
 - tapOn: 'English'
 - back
+- scrollUntilVisible:
+    element: 'Replay tutorial'
+    direction: DOWN
 - tapOn: 'Replay tutorial'
 - assertVisible: 'How TouchGrass works'
 - tapOn: 'Skip tutorial'
@@ -29,5 +32,8 @@ name: Settings, language and logout
       id: 'open-settings'
 - tapOn:
     id: 'open-settings'
+- scrollUntilVisible:
+    element: 'Log out'
+    direction: DOWN
 - tapOn: 'Log out'
 - assertVisible: 'Log off. Pull up.'

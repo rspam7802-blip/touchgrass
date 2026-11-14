@@ -47,6 +47,10 @@ name: Hosting insights, payouts and receipts
       id: 'open-settings'
 - tapOn:
     id: 'open-settings'
+- scrollUntilVisible:
+    element:
+      id: row-payments
+    direction: DOWN
 - tapOn:
     id: row-payments
 - assertVisible:

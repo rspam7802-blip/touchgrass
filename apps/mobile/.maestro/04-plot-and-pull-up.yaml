@@ -52,6 +52,10 @@ name: Plot a plan and manage it
     id: who-is-going
 - assertVisible: "Who's pulling up"
 - back
+- scrollUntilVisible:
+    element:
+      id: open-ticket
+    direction: DOWN
 - tapOn:
     id: open-ticket
 - assertVisible: 'Your check-in code'

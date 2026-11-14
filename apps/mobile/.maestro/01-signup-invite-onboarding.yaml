@@ -67,13 +67,39 @@ env:
 - inputText: '1998'
 - tapOn: 'Continue'
 - tapOn: 'Skip'
+# Long lists (81 cities, 79 interests) are searched, as people do (D-189).
+- tapOn:
+    id: city-search
+- inputText: 'Hyder'
 - tapOn: 'Hyderabad'
+- hideKeyboard
 - tapOn: 'Continue'
+- runFlow:
+    when:
+      visible:
+        id: hood-search
+    commands:
+      - tapOn:
+          id: hood-search
+      - inputText: 'Madha'
 - tapOn: 'Madhapur'
+- hideKeyboard
 - tapOn: 'Continue'
+- tapOn:
+    id: interest-search
+- inputText: 'Chai'
 - tapOn: '.*Chai runs'
+- tapOn:
+    id: interest-search
+- eraseText
+- inputText: 'Biryani'
 - tapOn: '.*Biryani hunts'
+- tapOn:
+    id: interest-search
+- eraseText
+- inputText: 'hopping'
 - tapOn: '.*Café hopping'
+- hideKeyboard
 - tapOn: 'Continue'
 - tapOn: 'Skip'
 - tapOn: 'Not now'
