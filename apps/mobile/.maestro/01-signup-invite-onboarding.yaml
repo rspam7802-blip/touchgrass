@@ -86,7 +86,7 @@ env:
           id: hood-search
       - inputText: 'Madha'
 - tapOn: 'Madhapur'
-- hideKeyboard
+# No keyboard on this step (on Android, hideKeyboard without one acts as Back).
 - tapOn: 'Continue'
 - tapOn:
     id: interest-search
