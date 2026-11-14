@@ -37,10 +37,13 @@ env:
     times: 3
     commands:
       - tapOn: 'Add photo'
+      # Android's system photo picker: the pushed test picture is the first tile under "Recent". Tiles have no
+      # text, so tap it by position.
+      - extendedWaitUntil:
+          visible: 'Recent'
+          timeout: 10000
       - tapOn:
-          text: '.*'
-          index: 0
-          optional: true
+          point: '16%,34%'
       - tapOn:
           text: 'Crop|Done|Choose'
           optional: true

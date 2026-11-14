@@ -4,6 +4,7 @@ import * as Location from 'expo-location';
 import DiscoverScreen from '../app/(app)/(tabs)/discover';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import SearchScreen from '../app/(app)/search';
+import { AllPlansRail } from '../components/explore/AllPlansRail';
 import {
   activeFilterCount,
   DEFAULT_FILTERS,
@@ -508,5 +509,15 @@ describe('Search (F-DSC-09)', () => {
     await fireEvent.press(screen.getByTestId('search-clear-recent'));
     expect(screen.queryByTestId(`search-recent-${idea}`)).toBeNull();
     expect(await AsyncStorage.getItem('search:recent')).toBeNull();
+  });
+});
+
+describe('plan rows and the keyboard', () => {
+  it('a tap on a result card opens it while the search keyboard is up (one tap, not two)', async () => {
+    await renderWithProviders(
+      <AllPlansRail items={[item(1)]} gutter={20} onOpen={() => undefined} testID="rows" />,
+    );
+    // The row's own scroll view must let taps through, or the first tap only closes the keyboard.
+    expect(JSON.stringify(screen.toJSON())).toContain('"keyboardShouldPersistTaps":"handled"');
   });
 });

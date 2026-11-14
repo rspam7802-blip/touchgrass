@@ -44,6 +44,8 @@ export function AllPlansRail<T extends EventSummary>({
       <FlatList
         data={items}
         horizontal
+        // A tap on a card opens it even while the keyboard is up (search results), instead of only closing it.
+        keyboardShouldPersistTaps="handled"
         keyExtractor={(i) => i.id}
         showsHorizontalScrollIndicator={false}
         snapToInterval={cardWidth + GAP}

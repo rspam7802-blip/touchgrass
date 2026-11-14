@@ -95,6 +95,7 @@ name: Discover, filter, map and search
 - inputText: 'board'
 - assertVisible:
     id: 'event-seedev.*'
+- hideKeyboard
 - tapOn:
     id: 'event-seedev.*'
     index: 0

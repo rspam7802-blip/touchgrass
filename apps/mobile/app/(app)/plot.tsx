@@ -545,6 +545,7 @@ function PlotForm({
               </Text>
               <ScrollView
                 horizontal
+                keyboardShouldPersistTaps="handled"
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={styles.chipRow}
               >
@@ -621,6 +622,7 @@ function PlotForm({
       </Text>
       <ScrollView
         horizontal
+        keyboardShouldPersistTaps="handled"
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.chipRow}
       >
