@@ -1,6 +1,15 @@
 import { type ReactNode, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import {
+  Keyboard,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../src/theme/theme';
 import { ArrowLeft, ArrowRight, Calendar } from './icons';
@@ -97,7 +106,11 @@ export function FieldShell({
         accessibilityRole="button"
         accessibilityLabel={`${label}: ${display}`}
         accessibilityHint={hint}
-        onPress={onOpen}
+        onPress={() => {
+          // A field typed in just before would keep the keyboard over the sheet's choices.
+          Keyboard.dismiss();
+          onOpen();
+        }}
         style={[
           styles.field,
           {
@@ -142,37 +155,43 @@ export function Sheet({
   const { t } = useTranslation();
   return (
     <Modal visible transparent animationType="slide" onRequestClose={onClose}>
-      <Pressable
-        style={[styles.backdrop, { backgroundColor: theme.colors.overlay }]}
-        onPress={onClose}
-        accessibilityRole="button"
-        accessibilityLabel={t('common.close')}
-      />
-      <SafeAreaView
-        edges={['bottom']}
-        testID={testID}
-        style={[
-          styles.sheet,
-          {
-            backgroundColor: theme.colors.surface,
-            borderColor: theme.colors.border,
-            borderTopLeftRadius: theme.radii.lg,
-            borderTopRightRadius: theme.radii.lg,
-          },
-        ]}
+      {/* Searching inside the sheet opens the keyboard: lift the sheet so the choices stay visible. */}
+      <KeyboardAvoidingView
+        style={styles.backdrop}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
-        <Text variant="heading" accessibilityRole="header">
-          {title}
-        </Text>
-        {/* Long lists scroll inside the sheet; the sheet never grows past most of the screen. */}
-        <ScrollView
-          style={styles.sheetBody}
-          contentContainerStyle={styles.sheetContent}
-          keyboardShouldPersistTaps="handled"
+        <Pressable
+          style={[styles.backdrop, { backgroundColor: theme.colors.overlay }]}
+          onPress={onClose}
+          accessibilityRole="button"
+          accessibilityLabel={t('common.close')}
+        />
+        <SafeAreaView
+          edges={['bottom']}
+          testID={testID}
+          style={[
+            styles.sheet,
+            {
+              backgroundColor: theme.colors.surface,
+              borderColor: theme.colors.border,
+              borderTopLeftRadius: theme.radii.lg,
+              borderTopRightRadius: theme.radii.lg,
+            },
+          ]}
         >
-          {children}
-        </ScrollView>
-      </SafeAreaView>
+          <Text variant="heading" accessibilityRole="header">
+            {title}
+          </Text>
+          {/* Long lists scroll inside the sheet; the sheet never grows past most of the screen. */}
+          <ScrollView
+            style={styles.sheetBody}
+            contentContainerStyle={styles.sheetContent}
+            keyboardShouldPersistTaps="handled"
+          >
+            {children}
+          </ScrollView>
+        </SafeAreaView>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }

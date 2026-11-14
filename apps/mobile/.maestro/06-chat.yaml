@@ -37,4 +37,10 @@ name: Chats inbox, send, react and mute
 - tapOn:
     id: mute
 - tapOn: 'For an hour'
+- assertVisible: 'Unmute'
+# Back to the Chats list to look at message requests.
+- hideKeyboard
+- back
+- assertVisible:
+    id: chats-screen
 - tapOn: 'Requests'

@@ -15,7 +15,8 @@ env:
     id: invite-input
 - inputText: GRASS-2026
 - tapOn: 'Check code'
-- assertVisible: 'Invite code accepted'
+# A valid code goes straight on to the phone number.
+- assertVisible: "What's your number?"
 - tapOn:
     id: phone-input
 - inputText: ${PHONE}

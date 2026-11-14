@@ -20,6 +20,11 @@ name: Hosting insights, payouts and receipts
     id: 'dock-discover'
 - tapOn:
     id: 'open-profile'
+# Shortcuts (Hosting, Badges, Safety…) sit under the profile card and upcoming plans.
+- scrollUntilVisible:
+    element:
+      id: open-hosting
+    direction: DOWN
 - tapOn:
     id: open-hosting
 - assertVisible:

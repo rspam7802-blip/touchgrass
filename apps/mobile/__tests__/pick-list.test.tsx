@@ -1,6 +1,8 @@
 import { fireEvent, screen } from '@testing-library/react-native';
 import { useState } from 'react';
+import { Keyboard } from 'react-native';
 import { PickList } from '../components/PickList';
+import { SelectField } from '../components/SelectField';
 import { renderWithProviders } from '../test-utils';
 
 const CITIES = [
@@ -74,5 +76,25 @@ describe('PickList (D-182)', () => {
       />,
     );
     expect(screen.queryByTestId('few-search')).toBeNull();
+  });
+});
+
+describe('SelectField and the keyboard', () => {
+  it('closes the keyboard when the list opens, so the choices are not hidden behind it', async () => {
+    const dismiss = jest.spyOn(Keyboard, 'dismiss');
+    await renderWithProviders(
+      <SelectField
+        label="Category"
+        placeholder="Choose a category"
+        options={[{ id: 'chai', label: 'Chai runs' }]}
+        value={null}
+        onChange={() => undefined}
+        testID="cat"
+      />,
+    );
+    await fireEvent.press(screen.getByTestId('cat'));
+    expect(dismiss).toHaveBeenCalled();
+    expect(screen.getByTestId('cat-sheet')).toBeTruthy();
+    dismiss.mockRestore();
   });
 });

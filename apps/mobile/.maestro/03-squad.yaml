@@ -25,6 +25,10 @@ name: Squad, requests and reporting
 - tapOn:
     id: 'person-.*'
     index: 0
+# Report sits under the profile details.
+- scrollUntilVisible:
+    element: 'Report profile'
+    direction: DOWN
 - tapOn: 'Report profile'
 - tapOn: 'Spam'
 - tapOn: 'Send report'

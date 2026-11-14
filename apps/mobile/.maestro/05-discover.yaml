@@ -19,10 +19,12 @@ name: Discover, filter, map and search
     id: 'dock-discover'
 - assertVisible:
     id: discover-screen
-# The plan list sits under stories, "Free now" and the featured card.
+# Explore leads with the featured carousel, then rows of plans.
+- assertVisible:
+    id: 'hero-seedev.*'
 - scrollUntilVisible:
     element:
-      id: 'event-seedev.*'
+      id: 'tile-.*-seedev.*'
     direction: DOWN
 - scrollUntilVisible:
     element:
