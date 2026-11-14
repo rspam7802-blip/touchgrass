@@ -14,9 +14,9 @@ import * as Crypto from 'expo-crypto';
 import * as Location from 'expo-location';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useApi } from '../../src/providers/api-context';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, type ScrollViewInstance, StyleSheet, View } from 'react-native';
 import MapView, { Marker, type MapPressEvent } from 'react-native-maps';
 import { ChipGroup } from '../../components/ChipGroup';
 import { DateField, TimeField } from '../../components/DateTimeFields';
@@ -212,6 +212,9 @@ function PlotForm({
   const saved = useSavedVenues();
   // One key for this form: a second tap (or a retry after a lost response) returns the same plan.
   const [createKey] = useState(() => `plot-${Crypto.randomUUID()}`);
+  const scrollRef = useRef<ScrollViewInstance>(null);
+  /** Where the place search starts in the scroll content, to lift it above the keyboard. */
+  const placeY = useRef(0);
   const create = useCreateEvent(createKey);
   const [leaving, setLeaving] = useState(false);
   const { client } = useApi();
@@ -425,7 +428,7 @@ function PlotForm({
   const categoryOptions = interestOptions(interests.data?.items ?? [], t, i18n.language);
 
   return (
-    <Screen testID="plot-screen">
+    <Screen testID="plot-screen" scrollRef={scrollRef}>
       <Text variant="title" accessibilityRole="header">
         {existing ? t('events.edit') : t('events.plotTitle')}
       </Text>
@@ -457,7 +460,13 @@ function PlotForm({
         testID="plot-category"
       />
 
-      <Text variant="heading" accessibilityRole="header">
+      <Text
+        variant="heading"
+        accessibilityRole="header"
+        onLayout={(e) => {
+          placeY.current = e.nativeEvent.layout.y;
+        }}
+      >
         {t('events.where')}
       </Text>
       {picked && !changingPlace ? (
@@ -478,6 +487,10 @@ function PlotForm({
         <>
           <TextField
             label={t('events.searchPlace')}
+            onFocus={() => {
+              // Suggestions open under the box: lift it to the top so the keyboard does not cover them.
+              scrollRef.current?.scrollTo({ y: Math.max(0, placeY.current - 24), animated: true });
+            }}
             placeholder={t('events.searchPlaceHint')}
             value={query}
             onChangeText={setQuery}

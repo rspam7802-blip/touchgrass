@@ -278,6 +278,7 @@ export default function DiscoverScreen() {
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.chips}
+        testID="discover-chips"
       >
         {WHENS.map((w) => (
           <Chip

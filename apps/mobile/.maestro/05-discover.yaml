@@ -26,14 +26,46 @@ name: Discover, filter, map and search
     element:
       id: 'tile-.*-seedev.*'
     direction: DOWN
+# Back up to the filter chips. They scroll sideways (time, quick toggles, then Filters), so swipe that row,
+# not the screen (a sideways screen swipe would move the featured carousel instead).
 - scrollUntilVisible:
     element:
-      id: toggle-soloFriendly
+      id: discover-chips
     direction: UP
-- tapOn:
-    id: toggle-soloFriendly
+- repeat:
+    times: 4
+    while:
+      notVisible:
+        id: when-weekend
+    commands:
+      - swipe:
+          from:
+            id: discover-chips
+          direction: LEFT
 - tapOn:
     id: when-weekend
+- repeat:
+    times: 4
+    while:
+      notVisible:
+        id: toggle-soloFriendly
+    commands:
+      - swipe:
+          from:
+            id: discover-chips
+          direction: LEFT
+- tapOn:
+    id: toggle-soloFriendly
+- repeat:
+    times: 4
+    while:
+      notVisible:
+        id: more-filters
+    commands:
+      - swipe:
+          from:
+            id: discover-chips
+          direction: LEFT
 - tapOn:
     id: more-filters
 - tapOn:

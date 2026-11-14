@@ -42,9 +42,11 @@ name: Hosting insights, payouts and receipts
     id: 'dock-discover'
 - tapOn:
     id: 'open-profile'
+# The profile keeps its scroll position from the Hosting tile, so Settings is above.
 - scrollUntilVisible:
     element:
       id: 'open-settings'
+    direction: UP
 - tapOn:
     id: 'open-settings'
 - scrollUntilVisible:

@@ -32,6 +32,10 @@ name: Plot a plan and manage it
 - tapOn:
     id: plot-place-search
 - inputText: 'mall'
+- scrollUntilVisible:
+    element:
+      id: 'place-.*'
+    direction: DOWN
 - tapOn:
     id: 'place-.*'
     index: 0
