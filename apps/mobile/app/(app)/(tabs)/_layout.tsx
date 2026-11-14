@@ -7,6 +7,9 @@ import { useTheme } from '../../../src/theme/theme';
  * Bottom dock (D-144): Explore, Plans, the Plot button, Chats, Squad. Profile and settings stay tabs so their
  * state survives switching, but open from the avatar on Explore and from Profile instead of the dock.
  */
+/** Explore is home. Without this the tabs opened on the first file alphabetically (Chats). */
+export const unstable_settings = { initialRouteName: 'discover' };
+
 export default function TabsLayout() {
   const { t } = useTranslation();
   const theme = useTheme();

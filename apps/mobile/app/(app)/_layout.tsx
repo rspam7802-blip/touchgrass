@@ -1,5 +1,5 @@
-import { Stack } from 'expo-router';
-import { useEffect } from 'react';
+import { Stack, useRouter } from 'expo-router';
+import { useEffect, useRef } from 'react';
 import { UpdatePrompt } from '../../components/UpdatePrompt';
 import { useTrack } from '../../src/features/analytics/analytics';
 import { IcebreakerOverlay } from '../../components/at-event/IcebreakerOverlay';
@@ -7,6 +7,7 @@ import { AfterEventPrompter } from '../../src/features/after/prompter';
 import { RealtimeConnector } from '../../src/features/chat/realtime';
 import { PushLinkHandler } from '../../src/features/notifications/push-links';
 import { useTranslation } from 'react-i18next';
+import { useAuthStore } from '../../src/stores/auth-store';
 import { useTheme } from '../../src/theme/theme';
 
 export default function AppLayout() {
@@ -19,6 +20,7 @@ export default function AppLayout() {
       <PushLinkHandler />
       <AfterEventPrompter />
       <AppOpened />
+      <TutorialGate />
       <Stack
         screenOptions={{
           headerTintColor: theme.colors.primary,
@@ -110,6 +112,23 @@ export default function AppLayout() {
 }
 
 /** One `app_opened` per launch into the signed-in app (F-PLT-05). */
+/**
+ * New members see the tutorial first. The root asks for it the moment onboarding completes, but that request
+ * can land before this group exists and be dropped (new members then opened on a tab instead); asking again
+ * once the group is mounted makes it stick.
+ */
+function TutorialGate() {
+  const router = useRouter();
+  const pending = useAuthStore((s) => s.session?.user.tutorialComplete === false);
+  const asked = useRef(false);
+  useEffect(() => {
+    if (!pending || asked.current) return;
+    asked.current = true;
+    router.replace('/tutorial');
+  }, [pending, router]);
+  return null;
+}
+
 function AppOpened() {
   const track = useTrack();
   useEffect(() => {

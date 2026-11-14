@@ -36,4 +36,7 @@ name: Settings, language and logout
     element: 'Log out'
     direction: DOWN
 - tapOn: 'Log out'
+# Confirm in the system dialog ("Log out of TouchGrass on this phone?").
+- tapOn:
+    id: 'android:id/button1'
 - assertVisible: 'Log off. Pull up.'
